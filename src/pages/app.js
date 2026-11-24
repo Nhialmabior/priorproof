@@ -25,6 +25,7 @@ export function portfolioPage(){
  const d=getData();
  const safeDate=value=>value?escapeHtml(value):'Not provided';
  const evidenceFor=experienceId=>d.evidence.filter(e=>e.experienceId===experienceId);
+ const reportedSkills=[...new Set(d.experiences.flatMap(e=>e.skills||[]).map(s=>String(s).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
  const content=`<section class="portfolio-sheet">
   <div class="portfolio-top"><img src="/logo.svg" alt="PriorProof"><span class="pill">PERSONAL SKILLS PORTFOLIO</span></div>
   <header class="portfolio-profile">
@@ -33,6 +34,12 @@ export function portfolioPage(){
    <p class="portfolio-role">${escapeHtml(d.user.targetOccupation||'Professional profile')}</p>
    <div class="portfolio-contact">${d.user.email?`<span>${escapeHtml(d.user.email)}</span>`:''}${d.user.location?`<span>${escapeHtml(d.user.location)}</span>`:''}</div>
   </header>
+  <section class="portfolio-snapshot" aria-label="Portfolio summary">
+   <div><strong>${d.experiences.length}</strong><span>Experience records</span></div>
+   <div><strong>${d.evidence.length}</strong><span>Evidence items</span></div>
+   <div><strong>${reportedSkills.length}</strong><span>Skills reported</span></div>
+   <div><strong>${d.competencies.length}</strong><span>Potential competencies</span></div>
+  </section>
   <div class="portfolio-disclaimer"><b>About this portfolio</b><p>This document organises information supplied by the individual. It is not an accredited qualification, formal competency assessment or independent verification of claims.</p></div>
   <section class="portfolio-section"><h3>01 · Profile overview</h3><p>This portfolio presents a record of learning, work, volunteering and other experiences, alongside the supporting evidence listed by the individual. It may be used to support conversations with employers, training providers or authorised recognition bodies.</p></section>
   <section class="portfolio-section"><h3>02 · Experience history <span class="section-count">${d.experiences.length} record(s)</span></h3>
@@ -46,13 +53,18 @@ export function portfolioPage(){
     </div>
    </article>`).join(''):'<p>No experience records have been added.</p>'}
   </section>
-  <section class="portfolio-section"><h3>03 · Potential competencies <span class="section-count">${d.competencies.length} suggestion(s)</span></h3>
+  <section class="portfolio-section"><h3>03 · Skills reported <span class="section-count">${reportedSkills.length} skill(s)</span></h3>
+   <p class="helper-text">These skills were entered by the individual in their experience records. Listing them does not establish proficiency or independent verification.</p>
+   ${reportedSkills.length?'<div class="portfolio-skill-list">'+reportedSkills.map(skill=>'<span>'+escapeHtml(skill)+'</span>').join('')+'</div>':'<p>No skills have been listed in experience records.</p>'}
+  </section>
+  <section class="portfolio-section"><h3>04 · Potential competencies <span class="section-count">${d.competencies.length} suggestion(s)</span></h3>
    <p class="helper-text">Competencies below are suggested from recorded experience. They have not been formally assessed or verified by PriorProof.</p>
    ${d.competencies.length?`<div class="portfolio-competency-list">${d.competencies.map(item=>`<div class="portfolio-competency"><b>${escapeHtml(item.name)}</b><small>${escapeHtml(item.category||'General')} · ${(item.experienceIds||[]).length} linked experience(s) · ${(item.evidenceIds||[]).length} linked evidence item(s)</small></div>`).join('')}</div>`:'<p>No competency suggestions have been generated yet.</p>'}
   </section>
-  <section class="portfolio-section"><h3>04 · Evidence register <span class="section-count">${d.evidence.length} item(s)</span></h3>
+  <section class="portfolio-section"><h3>05 · Evidence register <span class="section-count">${d.evidence.length} item(s)</span></h3>
    ${d.evidence.length?`<div class="portfolio-evidence-register">${d.evidence.map(item=>`<div class="portfolio-evidence-item"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.type)} · ${escapeHtml(item.status||'Self-reported')} · ${escapeHtml(d.experiences.find(e=>e.id===item.experienceId)?.title||'Not linked to an experience')}${item.fileName?' · '+escapeHtml(item.fileName):' · No file attached'}</small>${item.description?`<p>${escapeHtml(item.description)}</p>`:''}</div>`).join('')}</div>`:'<p>No evidence records have been added.</p>'}
   </section>
+  <p class="portfolio-attachment-note">Attachment note: this PDF lists attached filenames where available. Original files remain separately stored in this browser and are not embedded in the exported PDF.</p>
   <footer class="portfolio-footer"><p>Prepared using PriorProof · Your skills deserve recognition.</p><p>Generated on ${new Date().toLocaleDateString()} · Information is user-submitted unless otherwise stated.</p></footer>
   <button class="btn btn-primary no-print portfolio-print" id="printPortfolio">Print / Save as PDF</button>
  </section>`;
