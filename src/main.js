@@ -5,13 +5,13 @@ import './styles/dashboard.css';
 import './styles/responsive.css';
 import { currentRoute, navigate } from './utils/router.js';
 import { bindLayout } from './components/layout.js';
-import { homePage, aboutPage, howPage } from './pages/public.js';
+import { homePage, aboutPage, howPage, privacyPage, termsPage } from './pages/public.js';
 import { dashboardPage, profilePage, experiencePage, evidencePage, competenciesPage, gapPage, portfolioPage, assessmentsPage, settingsPage, helpPage, authPage, bindAppActions } from './pages/app.js';
 import { getData, saveData } from './services/storage.js';
 
 function render(){
  const route=currentRoute();let html;
- const pages={'/':homePage,'/about':aboutPage,'/how-it-works':howPage,'/app/dashboard':dashboardPage,'/app/profile':profilePage,'/app/experience':experiencePage,'/app/evidence':evidencePage,'/app/competencies':competenciesPage,'/app/gap-analysis':gapPage,'/app/portfolio':portfolioPage,'/app/assessments':assessmentsPage,'/app/settings':settingsPage,'/app/help':helpPage};
+ const pages={'/':homePage,'/about':aboutPage,'/how-it-works':howPage,'/privacy':privacyPage,'/terms':termsPage,'/app/dashboard':dashboardPage,'/app/profile':profilePage,'/app/experience':experiencePage,'/app/evidence':evidencePage,'/app/competencies':competenciesPage,'/app/gap-analysis':gapPage,'/app/portfolio':portfolioPage,'/app/assessments':assessmentsPage,'/app/settings':settingsPage,'/app/help':helpPage};
  if(route==='/login'||route==='/register')html=authPage(route==='/login'?'login':'register');
  else html=(pages[route]||homePage)();
  document.querySelector('#app').innerHTML=html;
