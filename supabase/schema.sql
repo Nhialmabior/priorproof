@@ -51,3 +51,62 @@ create trigger set_user_workspaces_updated_at
   before update on public.user_workspaces
   for each row
   execute function public.set_user_workspaces_updated_at();
+
+
+-- Private evidence attachments in Supabase Storage.
+-- Object path format: <authenticated-user-id>/<evidence-id>/<filename>
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'priorproof-evidence',
+  'priorproof-evidence',
+  false,
+  5242880,
+  array[
+    'application/pdf',
+    'image/png',
+    'image/jpeg',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain'
+  ]
+)
+on conflict (id) do update
+set public = false,
+    file_size_limit = 5242880,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Users can read their own PriorProof evidence files" on storage.objects;
+create policy "Users can read their own PriorProof evidence files"
+  on storage.objects for select to authenticated
+  using (
+    bucket_id = 'priorproof-evidence'
+    and (storage.foldername(name))[1] = (select auth.uid()::text)
+  );
+
+drop policy if exists "Users can upload their own PriorProof evidence files" on storage.objects;
+create policy "Users can upload their own PriorProof evidence files"
+  on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'priorproof-evidence'
+    and (storage.foldername(name))[1] = (select auth.uid()::text)
+  );
+
+drop policy if exists "Users can update their own PriorProof evidence files" on storage.objects;
+create policy "Users can update their own PriorProof evidence files"
+  on storage.objects for update to authenticated
+  using (
+    bucket_id = 'priorproof-evidence'
+    and (storage.foldername(name))[1] = (select auth.uid()::text)
+  )
+  with check (
+    bucket_id = 'priorproof-evidence'
+    and (storage.foldername(name))[1] = (select auth.uid()::text)
+  );
+
+drop policy if exists "Users can delete their own PriorProof evidence files" on storage.objects;
+create policy "Users can delete their own PriorProof evidence files"
+  on storage.objects for delete to authenticated
+  using (
+    bucket_id = 'priorproof-evidence'
+    and (storage.foldername(name))[1] = (select auth.uid()::text)
+  );
