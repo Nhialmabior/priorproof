@@ -150,3 +150,12 @@
 #evidenceNoResults{margin:12px 0}
 @media(max-width:850px){.evidence-card-list{grid-template-columns:1fr}}
 @media(max-width:650px){.evidence-filters{grid-template-columns:1fr}.evidence-summary-grid{grid-template-columns:1fr}.evidence-metadata{grid-template-columns:1fr 1fr}}
+
+
+/* Profile onboarding and portfolio introduction */
+.journey-row[href]{text-decoration:none;color:inherit;border-radius:7px;padding-left:7px;padding-right:7px;transition:background .15s ease}
+.journey-row[href]:hover{background:#f7f9fc}
+.form-grid textarea{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;background:#fff;color:#24334a;font:inherit;font-size:12px;resize:vertical;min-height:100px}
+.portfolio-summary{max-width:680px;font-size:12px!important;line-height:1.7;color:#53647a;margin:12px 0 8px}
+.portfolio-interests{font-size:11px!important;line-height:1.6;color:#53647a;margin:8px 0 12px}
+.portfolio-interests b{color:#34445b}
