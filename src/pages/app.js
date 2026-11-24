@@ -18,7 +18,43 @@ export function dashboardPage(){
 function simplePage(title,desc,body,active,action=''){const d=getData();return appShell(`${heading('YOUR WORKSPACE',title,desc,action)}${body}`,active,d.user);}
 export function profilePage(){const d=getData();return simplePage('My profile','Keep your background and career interests up to date.',`<section class="panel form-panel"><form id="profileForm" class="form-grid"><label>Full name<input name="fullName" value="${escapeHtml(d.user.fullName)}" required></label><label>Email address<input type="email" name="email" value="${escapeHtml(d.user.email)}"></label><label>Target occupation or field<input name="targetOccupation" value="${escapeHtml(d.user.targetOccupation)}" placeholder="e.g. Community development"></label><label>Location<input name="location" value="${escapeHtml(d.user.location||'')}"></label><div class="form-full"><button class="btn btn-primary">Save profile</button></div></form></section>`,'/app/profile');}
 export function experiencePage(){const d=getData();return simplePage('My experience','Capture the places where you have learned, contributed and developed skills.',`<section class="panel"><div class="panel-head"><div><h2>Experience timeline</h2><p>${d.experiences.length} record(s)</p></div>${btn('Add experience','addExperience')}</div>${d.experiences.length?d.experiences.map(e=>`<article class="experience-item"><div class="timeline-dot"></div><div><div class="row-between"><h3>${escapeHtml(e.title)}</h3><span class="pill">${escapeHtml(e.category)}</span></div><p class="muted">${escapeHtml(e.organisation)} · ${escapeHtml(e.startDate)} – ${escapeHtml(e.endDate||'Present')}</p><p>${escapeHtml(e.description)}</p><small><b>Skills:</b> ${escapeHtml((e.skills||[]).join(', ')||'Not listed')}</small><div style="margin-top:10px"><button class="btn btn-outline btn-small" data-delete-experience="${escapeHtml(e.id)}">Remove record</button></div></div></article>`).join(''):'<div class="empty-state">No experience added yet.</div>'}</section>`,'/app/experience');}
-export function evidencePage(){const d=getData();return simplePage('My evidence','Organise the materials that support your experience and competency claims.',`<section class="panel"><div class="panel-head"><div><h2>Evidence repository</h2><p>${d.evidence.length} evidence record(s)</p></div>${btn('Add evidence','addEvidence')}</div>${d.evidence.length?d.evidence.map(e=>`<div class="record-row"><div class="record-icon">▧</div><div><b>${escapeHtml(e.title)}</b><small>${escapeHtml(e.type)} · Linked experience: ${escapeHtml(d.experiences.find(x=>x.id===e.experienceId)?.title||'Not linked')}</small></div><span class="pill">${escapeHtml(e.status)}</span>${e.fileName?`<button class="btn btn-outline btn-small" data-download-evidence="${escapeHtml(e.id)}">Download file</button>`:'<small class="muted">No file attached</small>'}<button class="btn btn-outline btn-small" data-delete-evidence="${escapeHtml(e.id)}">Remove</button></div>${e.description?`<p class="helper-text">${escapeHtml(e.description)}</p>`:''}`).join(''):'<div class="empty-state">No evidence records yet.</div>'}<p class="helper-text">Files attached here are stored in this browser on this device (up to 5 MB each). They are not uploaded to a server or independently verified.</p></section>`,'/app/evidence');}
+export function evidencePage(){
+ const d=getData();
+ const types=[...new Set(d.evidence.map(e=>e.type).filter(Boolean))].sort();
+ const sizeLabel=n=>{if(!n)return '';return n<1024? n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(2)+' MB';};
+ const records=d.evidence.map(e=>{
+  const exp=d.experiences.find(x=>x.id===e.experienceId);
+  const linked=d.competencies.filter(c=>(c.evidenceIds||[]).includes(e.id));
+  const status=e.status||'Self-reported';
+  return `<article class="panel evidence-card" data-evidence-card data-evidence-type="${escapeHtml(String(e.type||'').toLowerCase())}" data-evidence-status="${escapeHtml(String(status).toLowerCase())}">
+   <div class="evidence-card-head"><div class="evidence-card-title"><span class="record-icon">▧</span><div><h3>${escapeHtml(e.title)}</h3><small>${escapeHtml(e.type||'Supporting material')}</small></div></div><span class="pill">${escapeHtml(status)}</span></div>
+   ${e.description?`<p class="evidence-description">${escapeHtml(e.description)}</p>`:''}
+   <dl class="evidence-metadata">
+    <div><dt>Related experience</dt><dd>${escapeHtml(exp?.title||'Not linked')}</dd></div>
+    <div><dt>Source / issuer</dt><dd>${escapeHtml(e.source||'Not provided')}</dd></div>
+    <div><dt>Date recorded</dt><dd>${escapeHtml(e.evidenceDate||'Not provided')}</dd></div>
+    <div><dt>Attachment</dt><dd>${e.fileName?escapeHtml(e.fileName)+(e.fileSize?' · '+sizeLabel(e.fileSize):''):'No file attached'}</dd></div>
+   </dl>
+   <div class="evidence-linked-skills"><b>Linked competencies</b><div>${linked.length?linked.map(c=>`<span>${escapeHtml(c.name)}</span>`).join(''):'<small>No competencies linked yet</small>'}</div></div>
+   <div class="evidence-card-actions">${e.fileName?`<button class="btn btn-outline btn-small" data-download-evidence="${escapeHtml(e.id)}">Download attachment</button>`:''}<button class="btn btn-outline btn-small" data-delete-evidence="${escapeHtml(e.id)}">Remove record</button></div>
+  </article>`;
+ }).join('');
+ const content=`<section class="evidence-summary-grid">
+  <div><strong>${d.evidence.length}</strong><span>Total evidence records</span></div>
+  <div><strong>${d.evidence.filter(e=>e.fileName).length}</strong><span>With file attachments</span></div>
+  <div><strong>${d.evidence.filter(e=>(e.status||'Self-reported').toLowerCase()==='self-reported').length}</strong><span>Self-reported records</span></div>
+ </section>
+ <section class="panel evidence-repository-panel">
+  <div class="panel-head"><div><h2>Evidence repository</h2><p id="evidenceResultCount" aria-live="polite">${d.evidence.length} record(s)</p></div>${btn('Add evidence','addEvidence')}</div>
+  ${d.evidence.length?`<div class="evidence-filters">
+   <label>Search records<input type="search" id="evidenceSearch" placeholder="Search title, source, description..."></label>
+   <label>Evidence type<select id="evidenceTypeFilter"><option value="">All types</option>${types.map(t=>`<option value="${escapeHtml(t.toLowerCase())}">${escapeHtml(t)}</option>`).join('')}</select></label>
+   <label>Status<select id="evidenceStatusFilter"><option value="">All statuses</option><option value="self-reported">Self-reported</option><option value="reference-confirmed">Reference-confirmed</option><option value="ai-analysed">AI-analysed</option><option value="assessor-reviewed">Assessor-reviewed</option><option value="independently verified">Independently verified</option></select></label>
+  </div><div class="evidence-card-list">${records}</div><p id="evidenceNoResults" class="empty-state" hidden>No records match these filters. Try changing your search or filters.</p>`:'<div class="empty-state">No evidence records yet. Add your first supporting item to begin.</div>'}
+  <p class="helper-text">Attachments are stored in this browser on this device (up to 5 MB each). They are not uploaded to a server or independently verified. Keep your original documents in a safe location.</p>
+ </section>`;
+ return simplePage('My evidence','Organise, search and review the materials that support your experience and competency claims.',content,'/app/evidence');
+}
 export function competenciesPage(){
  const d=getData();
  const body=`<div class="notice"><b>Important:</b> Competencies are suggestions based on information entered by the individual. Evidence links show supporting material selected by the user; they do not verify skill or establish an assessment outcome.</div>
@@ -150,7 +186,7 @@ function openEntryDialog(kind){
   dialog.querySelector('#entryNote').textContent='Describe your actual experience. Skill suggestions are preliminary and are not formal assessment outcomes.';
  }else{
   const opts='<option value="">Not linked yet</option>'+data.experiences.map(e=>'<option value="'+escapeHtml(e.id)+'">'+escapeHtml(e.title)+'</option>').join('');
-  fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">'+label('Evidence title *',input('title','e.g. Project report or work sample',true),true)+label('Evidence type',select('type',['Project report','Work sample','Certificate','Reference','Photograph','Training record','Other supporting material']))+label('Related experience','<select name="experienceId" style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px">'+opts+'</select>')+label('Description / source','<textarea name="description" maxlength="800" placeholder="What does this item contain and where did it come from?" style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;min-height:90px"></textarea>',true)+label('Attach a file (optional)','<input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt" style="display:block;width:100%;margin-top:6px">',true)+'</div>';
+  fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">'+label('Evidence title *',input('title','e.g. Project report or work sample',true),true)+label('Evidence type',select('type',['Project report','Work sample','Certificate','Reference','Photograph','Training record','Other supporting material']))+label('Related experience','<select name="experienceId" style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px">'+opts+'</select>')+label('Source / issuer',input('source','e.g. Training provider, employer or project'))+label('Date created or received',input('evidenceDate','','','date'))+label('Description / context','<textarea name="description" maxlength="800" placeholder="What does this item contain? What does it help demonstrate?" style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;min-height:90px"></textarea>',true)+label('Attach a file (optional)','<input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt" style="display:block;width:100%;margin-top:6px">',true)+'</div>';
   dialog.querySelector('#entryNote').textContent='Optional PDF, image, Word or text files up to 5 MB are saved locally in this browser. Files are not uploaded to a server or verified. Evidence is initially marked self-reported.';
  }
  document.body.appendChild(dialog);
@@ -169,7 +205,7 @@ function openEntryDialog(kind){
   }else{
    const file=f.get('file'),evId=crypto.randomUUID();
    if(file&&file.size){try{await saveEvidenceFile(evId,file);}catch(error){alert(error.message||'The file could not be saved.');return;}}
-   const ev={id:evId,title:String(f.get('title')).trim(),type:f.get('type'),experienceId:f.get('experienceId')||null,description:String(f.get('description')||'').trim(),status:'Self-reported',fileId:file&&file.size?evId:null,fileName:file&&file.size?file.name:'',fileSize:file&&file.size?file.size:0,fileType:file&&file.size?file.type:''};
+   const ev={id:evId,title:String(f.get('title')).trim(),type:f.get('type'),experienceId:f.get('experienceId')||null,source:String(f.get('source')||'').trim(),evidenceDate:f.get('evidenceDate')||'',description:String(f.get('description')||'').trim(),status:'Self-reported',fileId:file&&file.size?evId:null,fileName:file&&file.size?file.name:'',fileSize:file&&file.size?file.size:0,fileType:file&&file.size?file.type:''};
    d.evidence.unshift(ev);
    if(ev.experienceId)d.competencies.forEach(c=>{if((c.experienceIds||[]).includes(ev.experienceId))c.evidenceIds=[...new Set([...(c.evidenceIds||[]),ev.id])];});
   }
@@ -186,6 +222,12 @@ export function bindAppActions(){
  document.querySelectorAll('[data-delete-evidence]').forEach(button=>button.addEventListener('click',async()=>{if(!confirm('Remove this evidence record?'))return;const d=getData(),id=button.dataset.deleteEvidence,item=d.evidence.find(e=>e.id===id);if(item?.fileId)await deleteEvidenceFile(item.fileId);d.evidence=d.evidence.filter(e=>e.id!==id);d.competencies.forEach(c=>c.evidenceIds=(c.evidenceIds||[]).filter(x=>x!==id));saveData(d);}));
  document.querySelectorAll('[data-map-form]').forEach(form=>form.addEventListener('submit',e=>{e.preventDefault();const d=getData(),competency=d.competencies.find(c=>c.id===form.dataset.mapForm),evidenceId=new FormData(form).get('evidenceId');if(!competency||!evidenceId)return;const item=d.evidence.find(x=>x.id===evidenceId);if(!item)return;competency.evidenceIds=[...new Set([...(competency.evidenceIds||[]),evidenceId])];saveData(d);}));
  document.querySelectorAll('[data-unlink-evidence]').forEach(button=>button.addEventListener('click',()=>{const d=getData(),competency=d.competencies.find(c=>c.id===button.dataset.unlinkEvidence);if(!competency)return;competency.evidenceIds=(competency.evidenceIds||[]).filter(id=>id!==button.dataset.evidenceId);saveData(d);}));
+ const evidenceSearch=document.getElementById('evidenceSearch'),evidenceType=document.getElementById('evidenceTypeFilter'),evidenceStatus=document.getElementById('evidenceStatusFilter');
+ if(evidenceSearch&&evidenceType&&evidenceStatus){
+  const cards=[...document.querySelectorAll('[data-evidence-card]')],count=document.getElementById('evidenceResultCount'),empty=document.getElementById('evidenceNoResults');
+  const applyEvidenceFilters=()=>{const q=evidenceSearch.value.trim().toLowerCase(),type=evidenceType.value,status=evidenceStatus.value;let visible=0;cards.forEach(card=>{const match=card.textContent.toLowerCase().includes(q)&&(!type||card.dataset.evidenceType===type)&&(!status||card.dataset.evidenceStatus===status);card.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+cards.length+' record(s)';if(empty)empty.hidden=visible!==0;};
+  evidenceSearch.addEventListener('input',applyEvidenceFilters);evidenceType.addEventListener('change',applyEvidenceFilters);evidenceStatus.addEventListener('change',applyEvidenceFilters);
+ }
  document.querySelectorAll('[data-download-evidence]').forEach(button=>button.addEventListener('click',async()=>{try{const file=await getEvidenceFile(button.dataset.downloadEvidence);if(!file){alert('The file is not available in this browser.');return;}const url=URL.createObjectURL(file.blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}catch(error){alert(error.message||'Could not retrieve the file.');}}));
 
  document.querySelectorAll('#addExperience').forEach(button=>button.addEventListener('click',()=>openEntryDialog('experience')));
