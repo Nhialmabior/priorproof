@@ -59,3 +59,20 @@
  .portfolio-sheet .pill{print-color-adjust:exact;-webkit-print-color-adjust:exact}
  .portfolio-print{display:none!important}
 }
+
+
+/* Competency-to-evidence mapping */
+.competency-map-card{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+.competency-map-card>h3{margin:2px 0}
+.competency-map-card>p{font-size:11px;margin:0}
+.mapping-block{border-top:1px solid #edf0f4;padding-top:10px;margin-top:4px}
+.mapping-block>b{display:block;font-size:10px;color:#43536a;margin-bottom:7px}
+.mapping-block>small{display:block;font-size:10px;padding:4px 0}
+.mapping-evidence{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-top:1px solid #f0f2f6}
+.mapping-evidence>span{font-size:10px;min-width:0;overflow-wrap:anywhere}
+.mapping-evidence>span small{display:inline;font-size:9px}
+.mapping-evidence .btn{flex-shrink:0}
+.mapping-form{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;border-top:1px solid #edf0f4;padding-top:12px;margin-top:auto}
+.mapping-form label{grid-column:1/-1;font-size:10px;font-weight:700;color:#43536a}
+.mapping-form select{min-width:0;width:100%;padding:9px;border:1px solid #d7dee8;border-radius:7px;background:#fff;font-size:11px}
+.mapping-form .btn{white-space:nowrap}
