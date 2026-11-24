@@ -95,6 +95,27 @@ export async function deleteEvidenceFile(id, path = null) {
 }
 
 export async function clearEvidenceFiles() {
+  // Remove this user's cloud attachments before clearing the legacy browser cache.
+  const user = await currentUser();
+  const storage = getSupabase().storage.from(BUCKET);
+  const objectPaths = [];
+
+  async function collectFiles(folder) {
+    const { data, error } = await storage.list(folder, { limit: 1000 });
+    if (error) throw new Error('Could not list your evidence files: ' + error.message);
+    for (const entry of data || []) {
+      const path = folder + '/' + entry.name;
+      if (entry.id) objectPaths.push(path);
+      else await collectFiles(path);
+    }
+  }
+
+  await collectFiles(user.id);
+  if (objectPaths.length) {
+    const { error } = await storage.remove(objectPaths);
+    if (error) throw new Error('Could not clear your cloud evidence files: ' + error.message);
+  }
+
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite');
