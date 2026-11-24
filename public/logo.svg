@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" role="img" aria-label="PriorProof">
+<rect x="5" y="9" width="78" height="78" rx="19" fill="#142B50"/>
+<path d="M25 28h27l12 12v31H25z" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+<path d="M52 28v13h12" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+<path d="m34 55 8 8 17-19" fill="none" stroke="#16A394" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="99" y="52" font-family="Manrope,Arial,sans-serif" font-size="36" font-weight="800" fill="#142B50">PriorProof</text>
+<text x="101" y="76" font-family="Arial,sans-serif" font-size="13" letter-spacing=".5" fill="#667085">Your skills deserve recognition.</text>
+</svg>
