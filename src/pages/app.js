@@ -276,7 +276,8 @@ function openEntryDialog(kind,editId=null){
    const hasNewFile=Boolean(file&&file.size);
    const ev={id:evId,title:String(f.get('title')).trim(),type:f.get('type'),experienceId:f.get('experienceId')||null,source:String(f.get('source')||'').trim(),evidenceDate:f.get('evidenceDate')||'',description:String(f.get('description')||'').trim(),status:editRecord?.status||'Self-reported',fileId:hasNewFile?evId:(editRecord?.fileId||null),fileName:hasNewFile?file.name:(editRecord?.fileName||''),fileSize:hasNewFile?file.size:(editRecord?.fileSize||0),fileType:hasNewFile?file.type:(editRecord?.fileType||'')};
    if(editRecord){const index=d.evidence.findIndex(item=>item.id===editRecord.id);if(index>=0)d.evidence[index]=ev;}else d.evidence.unshift(ev);
-   if(ev.experienceId)d.competencies.forEach(c=>{if((c.experienceIds||[]).includes(ev.experienceId))c.evidenceIds=[...new Set([...(c.evidenceIds||[]),ev.id])];});
+   // Rebuild this evidence item's competency links when its related experience changes.
+   d.competencies.forEach(c=>{c.evidenceIds=(c.evidenceIds||[]).filter(id=>id!==ev.id);if(ev.experienceId&&(c.experienceIds||[]).includes(ev.experienceId))c.evidenceIds=[...new Set([...(c.evidenceIds||[]),ev.id])];});
   }
   saveData(d);close();window.dispatchEvent(new PopStateEvent('popstate'));
  });
