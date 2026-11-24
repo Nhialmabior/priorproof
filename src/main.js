@@ -22,6 +22,7 @@ const setFeedback = (message, type = '') => {
 
 async function render() {
   const route = currentRoute();
+  if (route === '/auth/popup-callback') return;
   const protectedRoute = route.startsWith('/app/');
   if (protectedRoute && !currentSession) {
     navigate('/login');
@@ -126,10 +127,30 @@ async function render() {
     }
   });
   document.getElementById('googleSignIn')?.addEventListener('click', async () => {
+    const width = 520;
+    const height = 680;
+    const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2);
+    const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2);
+    const popup = window.open(
+      'about:blank',
+      'priorproof-google-sign-in',
+      `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    );
+
+    if (!popup) {
+      setFeedback('Your browser blocked the sign-in pop-up. Allow pop-ups for this site and try again.', 'error');
+      return;
+    }
+
+    setFeedback('Opening secure Google sign-in…');
     try {
-      const { error } = await signInWithGoogle();
+      const { data, error } = await signInWithGoogle();
       if (error) throw error;
+      if (!data?.url) throw new Error('Google did not return a sign-in address. Please try again.');
+      popup.location.href = data.url;
+      popup.focus();
     } catch (error) {
+      popup.close();
       setFeedback(error.message || 'Google sign-in could not be started.', 'error');
     }
   });
@@ -153,6 +174,14 @@ async function render() {
 async function start() {
   try {
     currentSession = await getCurrentSession();
+
+    // Supabase completes the OAuth code exchange on this same-origin popup page.
+    // The session is persisted in shared browser storage before this window closes.
+    if (currentRoute() === '/auth/popup-callback' && window.opener) {
+      window.close();
+      return;
+    }
+
     if (!authListenerReady) {
       onAuthStateChange((event, session) => {
         currentSession = session;
