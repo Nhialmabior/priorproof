@@ -24,7 +24,10 @@ export async function signInWithGoogle() {
   const supabase = getSupabase();
   return supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: `${window.location.origin}/app/dashboard` }
+    options: {
+      redirectTo: `${window.location.origin}/auth/popup-callback`,
+      skipBrowserRedirect: true
+    }
   });
 }
 
