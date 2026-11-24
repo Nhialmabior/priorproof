@@ -104,6 +104,7 @@ function openEntryDialog(kind){
  dialog.showModal();
 }
 export function bindAppActions(){
+ document.getElementById('printPortfolio')?.addEventListener('click',()=>window.print());
  document.getElementById('profileForm')?.addEventListener('submit',e=>{e.preventDefault();const d=getData(),f=new FormData(e.currentTarget);d.user={...d.user,fullName:String(f.get('fullName')).trim(),email:String(f.get('email')).trim(),targetOccupation:String(f.get('targetOccupation')).trim(),location:String(f.get('location')).trim()};saveData(d);});
  document.getElementById('resetDemo')?.addEventListener('click',async()=>{if(confirm('Reset all PriorProof demonstration data in this browser?')){try{await clearEvidenceFiles();resetData();navigate('/app/dashboard');}catch(error){alert(error.message||'Could not reset local files.');}}});
  document.getElementById('exportData')?.addEventListener('click',()=>{const blob=new Blob([JSON.stringify(getData(),null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='priorproof-my-data.json';a.click();URL.revokeObjectURL(url);});
