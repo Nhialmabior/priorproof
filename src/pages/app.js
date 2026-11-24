@@ -37,7 +37,52 @@ export function competenciesPage(){
  }).join('')||'<div class="empty-state">No competency suggestions yet. Add experience with skills to begin.</div>'}</div>`;
  return simplePage('Competencies','Review suggested skills and manage the evidence you associate with each one.',body,'/app/competencies');
 }
-export function gapPage(){const d=getData();const weak=d.competencies.filter(c=>!c.evidenceIds?.length);return simplePage('Gap analysis','Understand where your competency claims may need stronger supporting evidence.',`<section class="panel"><h2>Evidence coverage</h2><p class="muted">A simple demonstration based on the evidence links in your current workspace.</p><div class="coverage-number">${d.competencies.length-weak.length}<span> / ${d.competencies.length}</span></div><p>Competencies with at least one linked evidence item</p><div class="progress"><i style="width:${d.competencies.length?((d.competencies.length-weak.length)/d.competencies.length*100):0}%"></i></div><h3 class="subheading">Suggested next steps</h3>${weak.length?weak.map(c=>`<div class="record-row"><div class="record-icon">!</div><div><b>${escapeHtml(c.name)}</b><small>Consider adding a relevant work sample, reference or activity record.</small></div><span class="pill pending">Needs evidence</span></div>`).join(''):'<p class="success-text">Every current suggestion has at least one linked evidence record. This does not mean the competency has been verified.</p>'}</section>`,'/app/gap-analysis');}
+export function gapPage(){
+ const d=getData();
+ const rows=d.competencies.map(c=>{
+  const items=(c.evidenceIds||[]).map(id=>d.evidence.find(e=>e.id===id)).filter(Boolean);
+  const reviewed=items.filter(e=>['assessor-reviewed','assessor reviewed'].includes(String(e.status||'').toLowerCase())).length;
+  const independentlyVerified=items.filter(e=>['independently verified','independently-verified'].includes(String(e.status||'').toLowerCase())).length;
+  const experienceIds=new Set(c.experienceIds||[]);
+  const unrelated=items.filter(e=>e.experienceId&&!experienceIds.has(e.experienceId));
+  return {competency:c,items,reviewed,independentlyVerified,unrelated};
+ });
+ const total=rows.length,withEvidence=rows.filter(r=>r.items.length).length,missing=total-withEvidence;
+ const selfReported=rows.filter(r=>r.items.length&&!r.reviewed&&!r.independentlyVerified).length;
+ const reviewedCount=rows.filter(r=>r.reviewed).length,verifiedCount=rows.filter(r=>r.independentlyVerified).length;
+ const pct=total?Math.round(withEvidence/total*100):0;
+ const cards=rows.map(({competency:c,items,reviewed,independentlyVerified,unrelated})=>{
+  let recommendation='';
+  if(!items.length) recommendation='Add a relevant work sample, activity record, training output or reference. You can add evidence from the Evidence page.';
+  else if(!reviewed&&!independentlyVerified) recommendation='Your linked items are currently user-submitted. Consider adding a reference or seeking feedback from an authorised reviewer where available.';
+  else if(!independentlyVerified) recommendation='Review the feedback available and check whether an appropriate independent recognition or verification route exists.';
+  else recommendation='Keep the original supporting records and check that the verification scope matches the skill being claimed.';
+  return `<article class="panel gap-card">
+   <div class="gap-card-head"><div><span class="eyebrow">${escapeHtml(c.category||'General')}</span><h3>${escapeHtml(c.name)}</h3></div><span class="pill ${items.length?'':'pending'}">${items.length?'Evidence linked':'No evidence linked'}</span></div>
+   <div class="gap-metrics"><span><b>${items.length}</b> linked item(s)</span><span><b>${reviewed}</b> assessor-reviewed</span><span><b>${independentlyVerified}</b> independently verified</span></div>
+   <div class="gap-evidence-list"><b>Evidence register</b>
+    ${items.length?items.map(e=>`<div class="gap-evidence-row"><div><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml(e.type||'Supporting material')}${e.fileName?' · File attached':''}</small></div><span class="pill">${escapeHtml(e.status||'Self-reported')}</span></div>`).join(''):'<p class="muted">No evidence is currently linked to this competency.</p>'}
+   </div>
+   ${unrelated.length?'<p class="gap-caution">Check relevance: '+unrelated.length+' linked item(s) are associated with a different experience record. They may still be relevant, but review the connection.</p>':''}
+   <div class="gap-recommendation"><b>Suggested action</b><p>${recommendation}</p></div>
+  </article>`;
+ }).join('');
+ const content=`<section class="panel gap-overview">
+  <div class="gap-overview-top"><div><h2>Evidence coverage</h2><p class="muted">Based on evidence links in this workspace, not a formal skills assessment.</p></div><span class="gap-percent">${pct}%</span></div>
+  <div class="coverage-number">${withEvidence}<span> / ${total}</span></div><p>Competencies with at least one linked evidence item</p>
+  <div class="progress"><i style="width:${pct}%"></i></div>
+  <div class="gap-summary-grid">
+   <div><strong>${missing}</strong><span>No linked evidence</span></div>
+   <div><strong>${selfReported}</strong><span>Only user-submitted evidence</span></div>
+   <div><strong>${reviewedCount}</strong><span>Have assessor-reviewed items</span></div>
+   <div><strong>${verifiedCount}</strong><span>Have independently verified items</span></div>
+  </div>
+  <p class="gap-disclaimer"><b>How to read this:</b> An uploaded file or a user-selected evidence link does not establish authenticity or competence. “Assessor-reviewed” and “independently verified” are shown only when the record has that status; PriorProof does not perform those reviews in this prototype.</p>
+ </section>
+ <div class="gap-section-heading"><div><h2>Competency-by-competency review</h2><p>Use these suggestions to decide what to strengthen next.</p></div><a href="/app/competencies" data-link>Manage evidence links →</a></div>
+ <div class="gap-card-list">${cards||'<section class="panel empty-state"><h3>No competency suggestions yet</h3><p>Add experience records and list the skills you developed. PriorProof will create preliminary suggestions for you to review.</p><a class="btn btn-primary" href="/app/experience" data-link>Go to experience</a></section>'}</div>`;
+ return simplePage('Gap analysis','See which competency suggestions have supporting material and where more documentation may help.',content,'/app/gap-analysis');
+}
 export function portfolioPage(){
  const d=getData();
  const safeDate=value=>value?escapeHtml(value):'Not provided';
