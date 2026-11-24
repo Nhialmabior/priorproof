@@ -6,6 +6,29 @@ import { saveEvidenceFile, getEvidenceFile, deleteEvidenceFile, clearEvidenceFil
 const stat=(label,value,sub,icon)=>`<article class="stat-card"><div class="stat-top"><span>${label}</span><i>${icon}</i></div><strong>${value}</strong><small>${sub}</small></article>`;
 const heading=(eyebrow,title,desc,action='')=>`<div class="page-heading"><div><span class="eyebrow">${eyebrow}</span><h1>${title}</h1><p>${desc}</p></div>${action}</div>`;
 const btn=(label,id)=>`<button class="btn btn-primary" id="${id}">${label} <span>+</span></button>`;
+const skillCatalog={
+ communication:{name:'Communication',category:'Interpersonal'},
+ teamwork:{name:'Teamwork',category:'Interpersonal'},
+ collaboration:{name:'Teamwork',category:'Interpersonal'},
+ leadership:{name:'Leadership',category:'Leadership'},
+ coordination:{name:'Activity coordination',category:'Organisational'},
+ 'activity coordination':{name:'Activity coordination',category:'Organisational'},
+ 'project coordination':{name:'Activity coordination',category:'Organisational'},
+ 'record keeping':{name:'Records management',category:'Administrative'},
+ 'records management':{name:'Records management',category:'Administrative'},
+ planning:{name:'Planning',category:'Organisational'},
+ 'problem solving':{name:'Problem solving',category:'Analytical'},
+ research:{name:'Research',category:'Analytical'},
+ 'data analysis':{name:'Data analysis',category:'Digital and analytical'},
+ 'digital literacy':{name:'Digital literacy',category:'Digital'},
+ teaching:{name:'Teaching and learning support',category:'Learning and development'},
+ facilitation:{name:'Facilitation',category:'Learning and development'},
+ 'project management':{name:'Project management',category:'Organisational'},
+ budgeting:{name:'Budgeting',category:'Financial'},
+ reporting:{name:'Reporting',category:'Communication'}
+};
+const skillDefinition=value=>{const key=String(value||'').trim().toLowerCase().replace(/\\s+/g,' ');return {key,...(skillCatalog[key]||{name:String(value||'').trim(),category:'General'})};};
+
 export function dashboardPage(){
  const d=getData(),profileFields=[d.user.fullName,d.user.email,d.user.targetOccupation,d.user.location,d.user.summary,d.user.interests],profile=Math.round((profileFields.filter(value=>String(value||'').trim()).length/6)*100),profileReady=profileFields.filter(value=>String(value||'').trim()).length===6;
  const content=`${heading('YOUR WORKSPACE',`Welcome back, ${escapeHtml((d.user.fullName||'there').split(' ')[0])}.`,'Here is a snapshot of your recognition journey.',btn('Add experience','addExperience'))}
@@ -57,21 +80,23 @@ export function evidencePage(){
 }
 export function competenciesPage(){
  const d=getData();
- const body=`<div class="notice"><b>Important:</b> Competencies are suggestions based on information entered by the individual. Evidence links show supporting material selected by the user; they do not verify skill or establish an assessment outcome.</div>
+ const body=`<div class="notice"><b>How suggestions are generated:</b> PriorProof uses the skill names you enter in experience records and a small, transparent set of category/alias rules. It does not use AI to assess you. Review every suggestion and edit your experience if a skill is inaccurate. Evidence links are user-selected and do not verify competence.</div>
  <div class="competency-grid">${d.competencies.map(c=>{
   const linked=(c.evidenceIds||[]).map(id=>d.evidence.find(e=>e.id===id)).filter(Boolean);
   const experience=(c.experienceIds||[]).map(id=>d.experiences.find(e=>e.id===id)).filter(Boolean);
+  const reasons=experience.flatMap(e=>(e.skills||[]).filter(skill=>skillDefinition(skill).name.toLowerCase()===c.name.toLowerCase()).map(skill=>({skill,experience:e.title})));
   const options=d.evidence.filter(e=>!linked.some(item=>item.id===e.id));
   return `<article class="panel competency-card competency-map-card">
    <span class="eyebrow">${escapeHtml(c.category||'General')}</span><h3>${escapeHtml(c.name)}</h3>
    <p>${experience.length} linked experience(s) · ${linked.length} supporting evidence item(s)</p>
    <span class="pill">${escapeHtml(c.status||'Suggested')}</span>
-   <div class="mapping-block"><b>Linked experience</b>${experience.length?experience.map(e=>`<small>${escapeHtml(e.title)}</small>`).join(''):'<small>No experience linked.</small>'}</div>
+   <div class="mapping-block"><b>Why this was suggested</b>${reasons.length?reasons.map(reason=>`<small>You listed “${escapeHtml(reason.skill)}” in “${escapeHtml(reason.experience)}”.</small>`).join(''):'<small>This is an existing competency record. Edit a linked experience and include the relevant skill to show its source here.</small>'}</div>
+   <div class="mapping-block"><b>Linked experience</b>${experience.length?experience.map(e=>`<small>${escapeHtml(e.title)}${e.contribution?' — '+escapeHtml(e.contribution):''}</small>`).join(''):'<small>No experience linked.</small>'}</div>
    <div class="mapping-block"><b>Supporting evidence</b>${linked.length?linked.map(item=>`<div class="mapping-evidence"><span>${escapeHtml(item.title)} <small>· ${escapeHtml(item.status||'Self-reported')}</small></span><button type="button" class="btn btn-outline btn-small" data-unlink-evidence="${escapeHtml(c.id)}" data-evidence-id="${escapeHtml(item.id)}">Unlink</button></div>`).join(''):'<small>No evidence linked yet.</small>'}</div>
    ${options.length?`<form class="mapping-form" data-map-form="${escapeHtml(c.id)}"><label for="map-${escapeHtml(c.id)}">Add supporting evidence</label><select id="map-${escapeHtml(c.id)}" name="evidenceId" required><option value="">Choose an evidence item</option>${options.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.title)}</option>`).join('')}</select><button class="btn btn-primary btn-small" type="submit">Link evidence</button></form>`:'<p class="helper-text">No unlinked evidence items available.</p>'}
   </article>`;
  }).join('')||'<div class="empty-state">No competency suggestions yet. Add experience with skills to begin.</div>'}</div>`;
- return simplePage('Competencies','Review suggested skills and manage the evidence you associate with each one.',body,'/app/competencies');
+ return simplePage('Competencies','Explore skills suggested from your own experience records, understand their source and manage supporting evidence.',body,'/app/competencies');
 }
 export function gapPage(){
  const d=getData();
@@ -208,9 +233,8 @@ function openEntryDialog(kind,editId=null){
    const skills=String(f.get('skills')||'').split(',').map(s=>s.trim()).filter(Boolean);
    const exp={id:editRecord?editRecord.id:crypto.randomUUID(),title:String(f.get('title')).trim(),organisation:String(f.get('organisation')||'').trim()||'Independent experience',category:f.get('category'),description:String(f.get('description')).trim(),contribution:String(f.get('contribution')||'').trim(),outcome:String(f.get('outcome')||'').trim(),learning:String(f.get('learning')||'').trim(),startDate:f.get('startDate')||'',endDate:f.get('endDate')||'',skills};
    if(editRecord){const index=d.experiences.findIndex(item=>item.id===editRecord.id);if(index>=0)d.experiences[index]=exp;}else d.experiences.unshift(exp);
-   const categories={communication:'Interpersonal',teamwork:'Interpersonal',leadership:'Leadership',coordination:'Organisational','record keeping':'Administrative',planning:'Organisational','problem solving':'Analytical',research:'Analytical','data analysis':'Digital and analytical','digital literacy':'Digital',teaching:'Learning and development',facilitation:'Learning and development','project management':'Organisational',budgeting:'Financial',reporting:'Communication'};
    d.competencies.forEach(c=>{c.experienceIds=(c.experienceIds||[]).filter(id=>id!==exp.id);});
-   skills.forEach(skill=>{let competency=d.competencies.find(c=>c.name.toLowerCase()===skill.toLowerCase());if(!competency){competency={id:crypto.randomUUID(),name:skill,category:categories[skill.toLowerCase()]||'General',status:'Suggested',experienceIds:[],evidenceIds:[]};d.competencies.push(competency);}competency.experienceIds=[...new Set([...(competency.experienceIds||[]),exp.id])];});
+   skills.forEach(skill=>{const definition=skillDefinition(skill);let competency=d.competencies.find(c=>skillDefinition(c.name).name.toLowerCase()===definition.name.toLowerCase());if(!competency){competency={id:crypto.randomUUID(),name:definition.name,category:definition.category,status:'Suggested',experienceIds:[],evidenceIds:[]};d.competencies.push(competency);}competency.category=definition.category==='General'?(competency.category||'General'):definition.category;competency.sourceSkills=[...new Set([...(competency.sourceSkills||[]),skill])];competency.experienceIds=[...new Set([...(competency.experienceIds||[]),exp.id])];});
   }else{
    const file=f.get('file'),evId=editRecord?editRecord.id:crypto.randomUUID();
    if(file&&file.size){try{await saveEvidenceFile(evId,file);}catch(error){alert(error.message||'The file could not be saved.');return;}}
