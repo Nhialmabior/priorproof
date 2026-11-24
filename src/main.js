@@ -192,21 +192,24 @@ async function start() {
     }
 
     if (!authListenerReady) {
-      onAuthStateChange(async (event, session) => {
+      onAuthStateChange((event, session) => {
         currentSession = session;
-        try {
-          if (session?.user) await loadUserWorkspace(session.user);
-          else clearActiveWorkspace();
-        } catch (error) {
-          console.error('PriorProof workspace sync:', error);
-          const feedback = document.getElementById('authFeedback');
-          if (feedback) {
-            feedback.textContent = error.message || 'Could not load your workspace.';
-            feedback.className = 'auth-feedback error';
+        // Defer Supabase data queries until the auth callback has returned.
+        window.setTimeout(async () => {
+          try {
+            if (session?.user) await loadUserWorkspace(session.user);
+            else clearActiveWorkspace();
+          } catch (error) {
+            console.error('PriorProof workspace sync:', error);
+            const feedback = document.getElementById('authFeedback');
+            if (feedback) {
+              feedback.textContent = error.message || 'Could not load your workspace.';
+              feedback.className = 'auth-feedback error';
+            }
+            return;
           }
-          return;
-        }
-        if (['SIGNED_IN', 'SIGNED_OUT', 'PASSWORD_RECOVERY', 'INITIAL_SESSION', 'TOKEN_REFRESHED'].includes(event)) render();
+          if (['SIGNED_IN', 'SIGNED_OUT', 'PASSWORD_RECOVERY', 'INITIAL_SESSION', 'TOKEN_REFRESHED'].includes(event)) render();
+        }, 0);
       });
       authListenerReady = true;
     }
