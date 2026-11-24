@@ -1,52 +1,105 @@
-const DB_NAME='priorproof-evidence-files';
-const STORE_NAME='files';
+import { getSupabase } from './supabase.js';
 
-function openDatabase(){
- return new Promise((resolve,reject)=>{
-  if(!('indexedDB' in window)){reject(new Error('This browser does not support local file storage.'));return;}
-  const request=indexedDB.open(DB_NAME,1);
-  request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains(STORE_NAME))db.createObjectStore(STORE_NAME,{keyPath:'id'});};
-  request.onsuccess=()=>resolve(request.result);
-  request.onerror=()=>reject(request.error||new Error('Could not open local file storage.'));
- });
+const DB_NAME = 'priorproof-evidence-files';
+const STORE_NAME = 'files';
+const BUCKET = 'priorproof-evidence';
+
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    if (!('indexedDB' in window)) {
+      reject(new Error('This browser does not support local file storage.'));
+      return;
+    }
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('Could not open local file storage.'));
+  });
 }
-export async function saveEvidenceFile(id,file){
- if(!file||!file.size)return null;
- if(file.size>5*1024*1024)throw new Error('Please choose a file smaller than 5 MB.');
- const db=await openDatabase();
- return new Promise((resolve,reject)=>{
-  const tx=db.transaction(STORE_NAME,'readwrite');
-  tx.objectStore(STORE_NAME).put({id,name:file.name,type:file.type,size:file.size,blob:file});
-  tx.oncomplete=()=>{db.close();resolve({id,name:file.name,type:file.type,size:file.size});};
-  tx.onerror=()=>{db.close();reject(tx.error||new Error('Could not save the file.'));};
-  tx.onabort=()=>{db.close();reject(tx.error||new Error('File storage was interrupted.'));};
- });
+
+async function currentUser() {
+  const { data, error } = await getSupabase().auth.getUser();
+  if (error) throw error;
+  if (!data?.user?.id) throw new Error('Please sign in again before managing evidence files.');
+  return data.user;
 }
-export async function getEvidenceFile(id){
- const db=await openDatabase();
- return new Promise((resolve,reject)=>{
-  const tx=db.transaction(STORE_NAME,'readonly');
-  const request=tx.objectStore(STORE_NAME).get(id);
-  request.onsuccess=()=>{db.close();resolve(request.result||null);};
-  request.onerror=()=>{db.close();reject(request.error||new Error('Could not retrieve the file.'));};
- });
+
+function safeFileName(name) {
+  const cleaned = String(name || 'evidence-file')
+    .normalize('NFKD')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 100);
+  return cleaned || 'evidence-file';
 }
-export async function deleteEvidenceFile(id){
- if(!id)return;
- const db=await openDatabase();
- return new Promise((resolve,reject)=>{
-  const tx=db.transaction(STORE_NAME,'readwrite');
-  tx.objectStore(STORE_NAME).delete(id);
-  tx.oncomplete=()=>{db.close();resolve();};
-  tx.onerror=()=>{db.close();reject(tx.error||new Error('Could not remove the file.'));};
- });
+
+export async function saveEvidenceFile(id, file, previousPath = null) {
+  if (!file || !file.size) return null;
+  if (file.size > 5 * 1024 * 1024) throw new Error('Please choose a file smaller than 5 MB.');
+
+  const user = await currentUser();
+  const path = user.id + '/' + id + '/' + safeFileName(file.name);
+  const { error } = await getSupabase().storage
+    .from(BUCKET)
+    .upload(path, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
+
+  if (error) throw new Error('Could not upload your evidence file: ' + error.message);
+
+  if (previousPath && previousPath !== path) {
+    const { error: removeError } = await getSupabase().storage.from(BUCKET).remove([previousPath]);
+    if (removeError) console.warn('PriorProof could not remove the replaced attachment:', removeError.message);
+  }
+
+  return { id, name: file.name, type: file.type, size: file.size, path };
 }
-export async function clearEvidenceFiles(){
- const db=await openDatabase();
- return new Promise((resolve,reject)=>{
-  const tx=db.transaction(STORE_NAME,'readwrite');
-  tx.objectStore(STORE_NAME).clear();
-  tx.oncomplete=()=>{db.close();resolve();};
-  tx.onerror=()=>{db.close();reject(tx.error||new Error('Could not clear local files.'));};
- });
+
+export async function getEvidenceFile(id, path = null) {
+  if (path) {
+    const user = await currentUser();
+    if (!path.startsWith(user.id + '/')) throw new Error('You do not have permission to access this evidence file.');
+    const { data, error } = await getSupabase().storage.from(BUCKET).download(path);
+    if (error) throw new Error('Could not download your evidence file: ' + error.message);
+    return { id, name: path.split('/').pop() || 'evidence-file', type: data.type, size: data.size, blob: data };
+  }
+
+  // Compatibility for attachments saved by an earlier browser-only version.
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const request = tx.objectStore(STORE_NAME).get(id);
+    request.onsuccess = () => { db.close(); resolve(request.result || null); };
+    request.onerror = () => { db.close(); reject(request.error || new Error('Could not retrieve the file.')); };
+  });
+}
+
+export async function deleteEvidenceFile(id, path = null) {
+  if (path) {
+    const user = await currentUser();
+    if (!path.startsWith(user.id + '/')) throw new Error('You do not have permission to remove this evidence file.');
+    const { error } = await getSupabase().storage.from(BUCKET).remove([path]);
+    if (error) throw new Error('Could not remove your evidence file: ' + error.message);
+    return;
+  }
+
+  if (!id) return;
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).delete(id);
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error || new Error('Could not remove the file.')); };
+  });
+}
+
+export async function clearEvidenceFiles() {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).clear();
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error || new Error('Could not clear local files.')); };
+  });
 }
