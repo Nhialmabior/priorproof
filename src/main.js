@@ -7,7 +7,7 @@ import { currentRoute, navigate } from './utils/router.js';
 import { bindLayout } from './components/layout.js';
 import { homePage, aboutPage, howPage, privacyPage, termsPage } from './pages/public.js';
 import { dashboardPage, profilePage, experiencePage, evidencePage, competenciesPage, gapPage, portfolioPage, assessmentsPage, settingsPage, helpPage, authPage, bindAppActions } from './pages/app.js';
-import { getData } from './services/storage.js';
+import { getData, loadUserWorkspace, clearActiveWorkspace } from './services/storage.js';
 import { getSupabase, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, sendPasswordReset, signOut, onAuthStateChange } from './services/supabase.js';
 
 let currentSession = null;
@@ -81,6 +81,7 @@ async function render() {
         if (error) throw error;
         if (data.session) {
           currentSession = data.session;
+          await loadUserWorkspace(currentSession.user);
           navigate('/app/dashboard');
         } else {
           setFeedback('Account created. Check your email for the confirmation link before signing in.');
@@ -89,6 +90,7 @@ async function render() {
         const { data, error } = await signInWithPassword(email, password);
         if (error) throw error;
         currentSession = data.session;
+        await loadUserWorkspace(currentSession.user);
         navigate('/app/dashboard');
       }
     } catch (error) {
@@ -163,6 +165,7 @@ async function render() {
       const { error } = await signOut();
       if (error) throw error;
       currentSession = null;
+      clearActiveWorkspace();
       navigate('/login');
     } catch (error) {
       event.currentTarget.disabled = false;
@@ -182,10 +185,28 @@ async function start() {
       return;
     }
 
+    if (currentSession?.user) {
+      await loadUserWorkspace(currentSession.user);
+    } else {
+      clearActiveWorkspace();
+    }
+
     if (!authListenerReady) {
-      onAuthStateChange((event, session) => {
+      onAuthStateChange(async (event, session) => {
         currentSession = session;
-        if (['SIGNED_IN', 'SIGNED_OUT', 'PASSWORD_RECOVERY'].includes(event)) render();
+        try {
+          if (session?.user) await loadUserWorkspace(session.user);
+          else clearActiveWorkspace();
+        } catch (error) {
+          console.error('PriorProof workspace sync:', error);
+          const feedback = document.getElementById('authFeedback');
+          if (feedback) {
+            feedback.textContent = error.message || 'Could not load your workspace.';
+            feedback.className = 'auth-feedback error';
+          }
+          return;
+        }
+        if (['SIGNED_IN', 'SIGNED_OUT', 'PASSWORD_RECOVERY', 'INITIAL_SESSION', 'TOKEN_REFRESHED'].includes(event)) render();
       });
       authListenerReady = true;
     }
