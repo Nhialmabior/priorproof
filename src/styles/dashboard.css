@@ -76,3 +76,43 @@
 .mapping-form label{grid-column:1/-1;font-size:10px;font-weight:700;color:#43536a}
 .mapping-form select{min-width:0;width:100%;padding:9px;border:1px solid #d7dee8;border-radius:7px;background:#fff;font-size:11px}
 .mapping-form .btn{white-space:nowrap}
+
+
+/* Competency-level evidence gap analysis */
+.gap-overview{margin-bottom:25px}
+.gap-overview-top,.gap-section-heading,.gap-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.gap-overview-top h2,.gap-section-heading h2{font-size:17px;margin:0 0 5px}
+.gap-overview-top p,.gap-section-heading p{font-size:11px;margin:0}
+.gap-percent{font:800 23px Manrope,sans-serif;color:var(--teal)}
+.gap-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:22px}
+.gap-summary-grid>div{padding:12px;background:#f6f8fb;border:1px solid #e8edf3;border-radius:8px}
+.gap-summary-grid strong,.gap-summary-grid span{display:block}
+.gap-summary-grid strong{font:800 21px Manrope,sans-serif;color:var(--navy)}
+.gap-summary-grid span{font-size:9px;color:#66758a;margin-top:4px}
+.gap-disclaimer{font-size:10px;line-height:1.6;color:#53647a;background:#f4f7fb;border-left:3px solid var(--blue);padding:11px 13px;margin:18px 0 0}
+.gap-section-heading{align-items:center;margin:27px 0 14px}
+.gap-section-heading>a{font-size:11px;font-weight:700;color:var(--blue);white-space:nowrap}
+.gap-card-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.gap-card{min-width:0}
+.gap-card-head{align-items:center}
+.gap-card-head h3{font-size:15px;margin:5px 0 0;overflow-wrap:anywhere}
+.gap-card-head .eyebrow{font-size:9px}
+.gap-metrics{display:flex;flex-wrap:wrap;gap:7px;margin:15px 0}
+.gap-metrics span{font-size:9px;color:#65748a;background:#f5f7fa;border-radius:5px;padding:6px 8px}
+.gap-metrics b{color:var(--navy)}
+.gap-evidence-list{border-top:1px solid #edf0f4;padding-top:11px}
+.gap-evidence-list>b{font-size:10px;color:#40536d}
+.gap-evidence-list>p{font-size:10px}
+.gap-evidence-row{display:flex;justify-content:space-between;align-items:center;gap:9px;padding:9px 0;border-top:1px solid #f0f2f6}
+.gap-evidence-row:first-of-type{margin-top:6px}
+.gap-evidence-row>div{min-width:0}
+.gap-evidence-row strong,.gap-evidence-row small{display:block;overflow-wrap:anywhere}
+.gap-evidence-row strong{font-size:10px}
+.gap-evidence-row small{font-size:9px;color:#778397;margin-top:3px}
+.gap-evidence-row .pill{flex-shrink:0}
+.gap-recommendation{margin-top:13px;padding:11px 12px;background:#f7f9fc;border-radius:7px}
+.gap-recommendation>b{font-size:10px;color:#40536d}
+.gap-recommendation p{font-size:10px;line-height:1.55;margin:5px 0 0;color:#65748a}
+.gap-caution{font-size:10px;line-height:1.5;color:#805d25;background:#fff8e9;border-radius:6px;padding:9px 10px;margin:10px 0 0}
+@media(max-width:900px){.gap-card-list{grid-template-columns:1fr}}
+@media(max-width:600px){.gap-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.gap-overview-top{align-items:center}.gap-section-heading{align-items:flex-start;flex-direction:column}}
