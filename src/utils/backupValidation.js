@@ -16,12 +16,16 @@ function assertUniqueRecordIds(name, records) {
   }
 }
 
-export function parsePriorProofBackup(text) {
+export function parsePriorProofBackup(input) {
   let parsed;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    throw new Error('The selected file is not valid JSON.');
+  if (typeof input === 'string') {
+    try {
+      parsed = JSON.parse(input);
+    } catch {
+      throw new Error('The selected file is not valid JSON.');
+    }
+  } else {
+    parsed = input;
   }
 
   if (!isRecord(parsed)) throw new Error('The file structure is not a valid PriorProof backup.');
@@ -50,8 +54,8 @@ export function parsePriorProofBackup(text) {
   return { candidate, assessments };
 }
 
-export function prepareRestoredWorkspace(parsed, currentUser) {
-  const { candidate, assessments } = parsePriorProofBackup(parsed);
+export function prepareRestoredWorkspace(input, currentUser) {
+  const { candidate, assessments } = parsePriorProofBackup(input);
   const experienceIds = new Set(candidate.experiences.map(item => item.id));
   const evidenceIds = new Set(candidate.evidence.map(item => item.id));
   const competencyIds = new Set(candidate.competencies.map(item => item.id));
