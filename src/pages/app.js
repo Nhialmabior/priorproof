@@ -404,6 +404,18 @@ function openEntryDialog(kind,editId=null){
  dialog.querySelector('#closeEntry').addEventListener('click',close);
  dialog.querySelector('#cancelEntry').addEventListener('click',close);
  dialog.addEventListener('click',e=>{if(e.target===dialog)close();});
+ if(isExperience){
+  const startDateField=dialog.querySelector('[name="startDate"]');
+  const endDateField=dialog.querySelector('[name="endDate"]');
+  const validateExperienceDates=()=>{
+   endDateField.min=startDateField.value||'';
+   const invalid=Boolean(startDateField.value&&endDateField.value&&endDateField.value<startDateField.value);
+   endDateField.setCustomValidity(invalid?'End date must be the same as or later than the start date.':'');
+  };
+  startDateField.addEventListener('change',validateExperienceDates);
+  endDateField.addEventListener('change',validateExperienceDates);
+  validateExperienceDates();
+ }
  dialog.querySelector('form').addEventListener('submit',async e=>{
   e.preventDefault();const f=new FormData(e.currentTarget),d=getData();
   let uploadedAttachment=null,previousAttachment=null;
