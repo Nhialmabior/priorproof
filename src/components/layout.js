@@ -1,6 +1,7 @@
 import { navigate } from '../utils/router.js';
 
 let syncStatusListenerBound = false;
+let syncStatusHideTimer = null;
 const avatarMarkup = user => user.profilePhoto ? `<img src="${escapeHtml(user.profilePhoto)}" alt="Profile photo">` : escapeHtml((user.fullName||'A').slice(0,1).toUpperCase());
 export function publicNav(active = '') {
   return `<header class="public-nav"><a class="brand" href="/" data-link><img src="/logo.svg" alt="PriorProof"></a>
@@ -14,7 +15,7 @@ export function appShell(content, active = '/app/dashboard', user = {}) {
   return `<div class="app-layout"><aside class="sidebar" id="sidebar"><a href="/" data-link class="side-brand" aria-label="PriorProof home"><img src="/logo.svg" alt="PriorProof"></a><div class="side-label">WORKSPACE</div>
   ${menu.map(([label,path,icon])=>`<a class="side-link ${active===path?'selected':''}" href="${path}" data-link><span class="side-icon">${icon}</span>${label}</a>`).join('')}
   <div class="side-bottom"><div class="side-label">PREFERENCES</div><a class="side-link ${active==='/app/settings'?'selected':''}" href="/app/settings" data-link><span class="side-icon">⚙</span>Settings</a><a class="side-link" href="/app/help" data-link><span class="side-icon">?</span>Help & support</a></div></aside>
-  <main class="app-main"><header class="app-topbar"><button class="icon-btn" id="sidebarToggle" aria-label="Open menu">☰</button><div class="crumb">Workspace <span>/</span> ${active.split('/').pop().replaceAll('-',' ')}</div><div class="top-actions"><span class="sync-status" id="workspaceSyncStatus" data-status="saved" role="status" aria-live="polite" title="Workspace changes sync to your account">✓ <span>Changes saved</span></span><button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">◐ <span>Theme</span></button><button class="btn btn-outline btn-small" type="button" id="signOutButton">Sign out</button><div class="account-menu-wrap"><button class="avatar small account-trigger" id="accountMenuToggle" type="button" aria-label="Open account menu" aria-expanded="false">${avatarMarkup(user)}</button><div class="account-menu" id="accountMenu" hidden><div class="account-menu-profile"><div class="avatar account-menu-avatar">${avatarMarkup(user)}</div><div><strong>${escapeHtml(user.fullName||'Your account')}</strong><small>${escapeHtml(user.email||'')}</small></div></div><div class="account-menu-details"><span>Phone</span><b>${escapeHtml(user.phoneNumber||'Not added')}</b><span>Location</span><b>${escapeHtml(user.location||'Not added')}</b></div><a href="/app/profile" data-link>View and edit profile <span>→</span></a><button type="button" class="account-menu-signout" id="accountMenuSignOut">Sign out</button></div></div></div></header><section class="app-content">${content}</section></main></div>`;
+  <main class="app-main"><header class="app-topbar"><button class="icon-btn" id="sidebarToggle" aria-label="Open menu">☰</button><div class="crumb">Workspace <span>/</span> ${active.split('/').pop().replaceAll('-',' ')}</div><div class="top-actions"><span class="sync-status" id="workspaceSyncStatus" data-status="saved" role="status" aria-live="polite" title="Workspace changes sync to your account" hidden>✓ <span>Changes saved</span></span><button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">◐ <span>Theme</span></button><button class="btn btn-outline btn-small" type="button" id="signOutButton">Sign out</button><div class="account-menu-wrap"><button class="avatar small account-trigger" id="accountMenuToggle" type="button" aria-label="Open account menu" aria-expanded="false">${avatarMarkup(user)}</button><div class="account-menu" id="accountMenu" hidden><div class="account-menu-profile"><div class="avatar account-menu-avatar">${avatarMarkup(user)}</div><div><strong>${escapeHtml(user.fullName||'Your account')}</strong><small>${escapeHtml(user.email||'')}</small></div></div><div class="account-menu-details"><span>Phone</span><b>${escapeHtml(user.phoneNumber||'Not added')}</b><span>Location</span><b>${escapeHtml(user.location||'Not added')}</b></div><a href="/app/profile" data-link>View and edit profile <span>→</span></a><button type="button" class="account-menu-signout" id="accountMenuSignOut">Sign out</button></div></div></div></header><section class="app-content">${content}</section></main></div>`;
 }
 export function bindLayout() {
   if (!syncStatusListenerBound) {
@@ -28,6 +29,11 @@ export function bindLayout() {
         error: ['!', 'Sync issue']
       };
       const [symbol, label] = labels[status] || labels.saved;
+      if (syncStatusHideTimer) {
+        window.clearTimeout(syncStatusHideTimer);
+        syncStatusHideTimer = null;
+      }
+      indicator.hidden = false;
       indicator.dataset.status = status;
       indicator.textContent = symbol + ' ';
       const text = document.createElement('span');
@@ -36,6 +42,14 @@ export function bindLayout() {
       indicator.title = status === 'error'
         ? (event.detail?.message || 'Your latest changes may not have reached the cloud. Check your connection and try again.')
         : 'Workspace changes sync to your account';
+      // A successful save is a brief confirmation, not a permanent dashboard label.
+      if (status === 'saved') {
+        syncStatusHideTimer = window.setTimeout(() => {
+          const current = document.getElementById('workspaceSyncStatus');
+          if (current === indicator && current.dataset.status === 'saved') current.hidden = true;
+          syncStatusHideTimer = null;
+        }, 2200);
+      }
     });
     syncStatusListenerBound = true;
   }
