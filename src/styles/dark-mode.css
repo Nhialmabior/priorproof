@@ -258,3 +258,62 @@
   :root[data-theme="dark"] .portfolio-sheet p,
   :root[data-theme="dark"] .portfolio-sheet small{color:#596579!important}
 }
+
+/* Consistent interactive hover and keyboard-focus states in dark mode */
+:root[data-theme="dark"] .journey-row[href]:hover{
+  background:#202f45;
+  color:#e6edf7;
+}
+:root[data-theme="dark"] .quick-action:hover{
+  background:#1d2a3e;
+  color:#f1f6fd;
+}
+:root[data-theme="dark"] .btn-outline:hover,
+:root[data-theme="dark"] .btn-quiet:hover,
+:root[data-theme="dark"] .google-button:hover,
+:root[data-theme="dark"] .demo-button:hover,
+:root[data-theme="dark"] .theme-toggle:hover,
+:root[data-theme="dark"] .mobile-menu:hover{
+  background:#2b3d56;
+  border-color:#506783;
+  color:#f1f6fd;
+}
+:root[data-theme="dark"] .btn-white:hover{
+  background:#d3e0ef;
+  color:#10233d;
+}
+:root[data-theme="dark"] .account-menu>a:hover,
+:root[data-theme="dark"] .account-menu-signout:hover{
+  background:#202f45;
+  color:#a9cef5;
+}
+:root[data-theme="dark"] .portfolio-check-list a:hover,
+:root[data-theme="dark"] .panel-head>a:hover,
+:root[data-theme="dark"] .text-link:hover,
+:root[data-theme="dark"] .auth-check a:hover{
+  color:#b5d7ff;
+}
+:root[data-theme="dark"] .icon-btn:hover,
+:root[data-theme="dark"] .password-toggle:hover{
+  color:#b5d7ff;
+}
+:root[data-theme="dark"] .quick-action,
+:root[data-theme="dark"] .journey-row[href],
+:root[data-theme="dark"] .account-menu>a,
+:root[data-theme="dark"] .account-menu-signout,
+:root[data-theme="dark"] .btn-outline,
+:root[data-theme="dark"] .btn-quiet,
+:root[data-theme="dark"] .google-button,
+:root[data-theme="dark"] .demo-button,
+:root[data-theme="dark"] .theme-toggle,
+:root[data-theme="dark"] .mobile-menu{
+  transition:background-color .18s ease,border-color .18s ease,color .18s ease;
+}
+:root[data-theme="dark"] a:focus-visible,
+:root[data-theme="dark"] button:focus-visible,
+:root[data-theme="dark"] input:focus-visible,
+:root[data-theme="dark"] select:focus-visible,
+:root[data-theme="dark"] textarea:focus-visible{
+  outline:2px solid #82b7f0;
+  outline-offset:3px;
+}
