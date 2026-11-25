@@ -68,7 +68,7 @@ async function render() {
   if (!protectedRoute && currentSession?.user) {
     const publicLinks = document.getElementById('publicLinks');
     if (publicLinks) {
-      publicLinks.innerHTML = '<a class="active" href="/" data-link>Home</a><a href="/how-it-works" data-link>How it works</a><a href="/about" data-link>About</a><a class="nav-workspace" href="/app/dashboard" data-link>My Workspace</a><a class="nav-account" href="/app/profile" data-link>My Account</a><button class="nav-signout" type="button" id="signOutButton">Sign out</button>';
+      publicLinks.innerHTML = `<a class="${route === '/' ? 'active' : ''}" href="/" data-link>Home</a><a class="${route === '/how-it-works' ? 'active' : ''}" href="/how-it-works" data-link>How it works</a><a class="${route === '/about' ? 'active' : ''}" href="/about" data-link>About</a><a class="nav-workspace" href="/app/dashboard" data-link>My Workspace</a><a class="nav-account" href="/app/profile" data-link>My Account</a><button class="nav-signout" type="button" id="signOutButton">Sign out</button>`;
     }
     document.querySelectorAll('.footer-links a[href="/login"], .footer-links a[href="/register"]').forEach(link => {
       if (link.getAttribute('href') === '/login') {
