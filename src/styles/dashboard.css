@@ -243,9 +243,18 @@
 .sync-status[hidden]{display:none}
 
 
-/* Consistent experience month/year controls */
-.experience-date-input{display:block;width:100%;min-width:0;box-sizing:border-box;margin-top:6px;min-height:44px;padding:10px 12px;border:1px solid #d7dee8;border-radius:8px;background:#fff;color:#24334a;font:inherit;font-size:13px;line-height:1.4;color-scheme:light;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
-.experience-date-input:hover{border-color:#9aacc1}
-.experience-date-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,145,.13)}
-.date-field-hint{display:block;margin-top:5px;color:#78869a;font-size:10px;font-weight:400}
-@media(max-width:600px){.experience-date-input{min-height:46px;font-size:16px}}
+/* Refined experience period and month/year controls */
+.experience-date-group{grid-column:1/-1;margin:2px 0 16px;padding:16px 17px 13px;border:1px solid #e1e8f0;border-radius:12px;background:linear-gradient(135deg,#f8fafc 0%,#f3f7fb 100%)}
+.experience-date-group-heading{margin-bottom:13px}
+.experience-date-group-heading>span{display:block;color:#52657c;font-size:10px;font-weight:800;letter-spacing:.11em}
+.experience-date-group-heading>p{margin:4px 0 0;color:#758398;font-size:11px;line-height:1.5;font-weight:400}
+.experience-date-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
+.experience-date-grid>label{min-width:0}
+.date-input-shell{position:relative;margin-top:7px}
+.experience-date-input{display:block;width:100%;min-width:0;box-sizing:border-box;min-height:48px;padding:11px 13px;border:1px solid #d5deea;border-radius:9px;background:#fff;color:#1e3048;font:inherit;font-size:14px;font-weight:600;line-height:1.4;color-scheme:light;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.experience-date-input:hover{border-color:#9aacc1;background:#fcfdff}
+.experience-date-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,145,.14)}
+.experience-date-input::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.72;padding:4px;border-radius:5px}
+.experience-date-input::-webkit-calendar-picker-indicator:hover{background:#edf3f9;opacity:1}
+.date-field-hint{display:block;margin-top:6px;color:#78869a;font-size:10px;font-weight:400;line-height:1.4}
+@media(max-width:600px){.experience-date-group{padding:14px 12px 10px}.experience-date-grid{grid-template-columns:1fr;gap:2px}.experience-date-input{min-height:48px;font-size:16px}}
