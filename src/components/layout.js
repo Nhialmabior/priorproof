@@ -69,7 +69,19 @@ export function bindLayout() {
   const publicMenuButton=document.getElementById('mobileMenu');
   const publicLinks=document.getElementById('publicLinks');
   publicMenuButton?.addEventListener('click',()=>{const open=publicLinks?.classList.toggle('open')||false;publicMenuButton.setAttribute('aria-expanded',String(open));publicMenuButton.setAttribute('aria-label',open?'Close navigation':'Open navigation');});
-  document.getElementById('sidebarToggle')?.addEventListener('click',()=>document.getElementById('sidebar')?.classList.toggle('open'));
+  const sidebar=document.getElementById('sidebar');
+  const sidebarToggle=document.getElementById('sidebarToggle');
+  const appLayout=document.querySelector('.app-layout');
+  const closeSidebar=()=>{sidebar?.classList.remove('open');appLayout?.classList.remove('sidebar-open');sidebarToggle?.setAttribute('aria-expanded','false');sidebarToggle?.setAttribute('aria-label','Open menu');};
+  sidebarToggle?.addEventListener('click',()=>{const open=sidebar?.classList.toggle('open')||false;appLayout?.classList.toggle('sidebar-open',open);sidebarToggle.setAttribute('aria-expanded',String(open));sidebarToggle.setAttribute('aria-label',open?'Close menu':'Open menu');});
+  // Close the drawer after choosing a destination or tapping the dimmed page area.
+  document.addEventListener('click',event=>{
+    if(!sidebar?.classList.contains('open'))return;
+    if(event.target.closest('#sidebarToggle'))return;
+    if(event.target.closest('#sidebar [data-link]')){closeSidebar();return;}
+    if(event.target===appLayout)closeSidebar();
+  },true);
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeSidebar();});
   const accountToggle=document.getElementById('accountMenuToggle'),accountMenu=document.getElementById('accountMenu');
   const closeAccountMenu=()=>{if(accountMenu){accountMenu.hidden=true;accountToggle?.setAttribute('aria-expanded','false');}document.removeEventListener('click',outsideAccountClick);};
   const outsideAccountClick=event=>{if(!accountMenu?.contains(event.target)&&!accountToggle?.contains(event.target))closeAccountMenu();};
