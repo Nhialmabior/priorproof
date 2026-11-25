@@ -1,0 +1,259 @@
+/* PriorProof — complete dark theme
+   Loaded after the page styles so every section uses the same theme tokens. */
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0d1523;
+  --surface:#151f30;
+  --text:#e6edf7;
+  --heading:#edf3fb;
+  --muted:#a3b1c5;
+  --line:#2b3a50;
+  --white:#151f30;
+  --navy:#dce8f8;
+  --blue:#82b7f0;
+  --teal:#55c8b4;
+  --gold:#e3bd68;
+  --shadow:0 18px 50px rgba(0,0,0,.32);
+  background:var(--bg);
+  color:var(--text);
+}
+:root[data-theme="dark"] body,
+:root[data-theme="dark"] #app{background:var(--bg);color:var(--text)}
+:root[data-theme="dark"] h1,
+:root[data-theme="dark"] h2,
+:root[data-theme="dark"] h3,
+:root[data-theme="dark"] h4,
+:root[data-theme="dark"] strong,
+:root[data-theme="dark"] b{color:var(--heading)}
+:root[data-theme="dark"] p,
+:root[data-theme="dark"] .lead,
+:root[data-theme="dark"] .muted,
+:root[data-theme="dark"] small,
+:root[data-theme="dark"] label,
+:root[data-theme="dark"] dt,
+:root[data-theme="dark"] dd{color:var(--muted)}
+:root[data-theme="dark"] a{color:inherit}
+:root[data-theme="dark"] a:hover{color:var(--blue)}
+:root[data-theme="dark"] .public-nav,
+:root[data-theme="dark"] .footer,
+:root[data-theme="dark"] .problem-section,
+:root[data-theme="dark"] .category-section,
+:root[data-theme="dark"] .info-card,
+:root[data-theme="dark"] .step-card,
+:root[data-theme="dark"] .preview-window,
+:root[data-theme="dark"] .app-main,
+:root[data-theme="dark"] .sidebar,
+:root[data-theme="dark"] .app-topbar,
+:root[data-theme="dark"] .stat-card,
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .auth-form-wrap,
+:root[data-theme="dark"] .auth-layout,
+:root[data-theme="dark"] .portfolio-sheet,
+:root[data-theme="dark"] .account-menu,
+:root[data-theme="dark"] .modal,
+:root[data-theme="dark"] .dialog,
+:root[data-theme="dark"] .review-pack-card,
+:root[data-theme="dark"] .evidence-card,
+:root[data-theme="dark"] .competency-card{
+  background:var(--surface);
+  color:var(--text);
+  border-color:var(--line);
+}
+:root[data-theme="dark"] .public-nav{border-bottom-color:var(--line)}
+:root[data-theme="dark"] .public-nav nav{color:var(--muted)}
+:root[data-theme="dark"] .public-nav nav a.active,
+:root[data-theme="dark"] .public-nav nav a:hover,
+:root[data-theme="dark"] .panel-head>a,
+:root[data-theme="dark"] .text-link,
+:root[data-theme="dark"] .auth-check a{color:var(--blue)}
+:root[data-theme="dark"] .mobile-menu,
+:root[data-theme="dark"] .theme-toggle,
+:root[data-theme="dark"] .btn-outline,
+:root[data-theme="dark"] .btn-quiet,
+:root[data-theme="dark"] .google-button,
+:root[data-theme="dark"] .demo-button,
+:root[data-theme="dark"] .password-wrap{
+  background:#202d41;
+  color:var(--text);
+  border-color:var(--line);
+}
+:root[data-theme="dark"] .btn-primary{background:#315d91;color:#fff;box-shadow:0 7px 18px rgba(0,0,0,.2)}
+:root[data-theme="dark"] .btn-primary:hover{background:#3b70aa}
+:root[data-theme="dark"] .btn-white{background:#e6edf7;color:#142b50}
+:root[data-theme="dark"] .sidebar{border-right-color:var(--line)}
+:root[data-theme="dark"] .side-link{color:#b3c0d2}
+:root[data-theme="dark"] .side-link:hover,
+:root[data-theme="dark"] .side-link.selected{background:#23344b;color:#e8f2ff}
+:root[data-theme="dark"] .side-icon{color:#8eabc9}
+:root[data-theme="dark"] .side-label{color:#8798ae}
+:root[data-theme="dark"] .app-topbar{border-bottom-color:var(--line)}
+:root[data-theme="dark"] .crumb,
+:root[data-theme="dark"] .crumb span{color:#91a0b5}
+:root[data-theme="dark"] .icon-btn{color:var(--text)}
+:root[data-theme="dark"] .stat-top{color:var(--muted)}
+:root[data-theme="dark"] .stat-top i,
+:root[data-theme="dark"] .quick-action>span,
+:root[data-theme="dark"] .record-icon,
+:root[data-theme="dark"] .avatar,
+:root[data-theme="dark"] .journey-number,
+:root[data-theme="dark"] .category-tile,
+:root[data-theme="dark"] .card-icon,
+:root[data-theme="dark"] .mini-icon,
+:root[data-theme="dark"] .portfolio-snapshot>div{
+  background:#23344b;
+  color:#a9cef5;
+}
+:root[data-theme="dark"] .journey-number.done{background:#173e3a;color:#72d8c5}
+:root[data-theme="dark"] .journey-row,
+:root[data-theme="dark"] .quick-action,
+:root[data-theme="dark"] .record-row,
+:root[data-theme="dark"] .experience-item,
+:root[data-theme="dark"] .portfolio-entry,
+:root[data-theme="dark"] .portfolio-profile,
+:root[data-theme="dark"] .account-menu-profile,
+:root[data-theme="dark"] .account-menu>a,
+:root[data-theme="dark"] .account-menu-signout{border-color:var(--line)}
+:root[data-theme="dark"] .journey-row>span:last-child{color:#72d8c5}
+:root[data-theme="dark"] .quick-action>i{color:#9aabc0}
+:root[data-theme="dark"] .empty-state,
+:root[data-theme="dark"] .notice,
+:root[data-theme="dark"] .preview-head,
+:root[data-theme="dark"] .preview-stats>div,
+:root[data-theme="dark"] .category-tile,
+:root[data-theme="dark"] .quote-panel,
+:root[data-theme="dark"] .portfolio-disclaimer,
+:root[data-theme="dark"] .portfolio-evidence,
+:root[data-theme="dark"] .portfolio-attachment-note,
+:root[data-theme="dark"] .portfolio-readiness-note,
+:root[data-theme="dark"] .gap-recommendation,
+:root[data-theme="dark"] .evidence-filters,
+:root[data-theme="dark"] .evidence-metadata,
+:root[data-theme="dark"] .review-intro,
+:root[data-theme="dark"] .review-pack-form fieldset{
+  background:#1d2a3e;
+  color:var(--text);
+  border-color:var(--line);
+}
+:root[data-theme="dark"] .notice b,
+:root[data-theme="dark"] .portfolio-disclaimer b,
+:root[data-theme="dark"] .portfolio-evidence>b,
+:root[data-theme="dark"] .gap-recommendation>b{color:#dce8f8}
+:root[data-theme="dark"] .category-tile b,
+:root[data-theme="dark"] .preview-welcome,
+:root[data-theme="dark"] .preview-stats strong,
+:root[data-theme="dark"] .preview-progress b,
+:root[data-theme="dark"] .portfolio-snapshot strong,
+:root[data-theme="dark"] .portfolio-profile h2,
+:root[data-theme="dark"] .portfolio-role,
+:root[data-theme="dark"] .portfolio-contact,
+:root[data-theme="dark"] .portfolio-skills,
+:root[data-theme="dark"] .portfolio-competency b{color:var(--text)}
+:root[data-theme="dark"] .preview-head b{color:#a5b4c8}
+:root[data-theme="dark"] .preview-line,
+:root[data-theme="dark"] .portfolio-evidence-item{border-color:var(--line)}
+:root[data-theme="dark"] .floating-note{background:#202d41;color:var(--text);border:1px solid var(--line)}
+:root[data-theme="dark"] .floating-note b{color:var(--text)}
+:root[data-theme="dark"] .trust-note{color:var(--muted)}
+:root[data-theme="dark"] .trust-check{background:#173e3a;color:#72d8c5}
+:root[data-theme="dark"] .visual-glow{background:#1b304a}
+:root[data-theme="dark"] .progress{background:#2b3a50}
+:root[data-theme="dark"] .status{background:#173e3a;color:#72d8c5}
+:root[data-theme="dark"] .status.pending{background:#49391f;color:#f1cf83}
+:root[data-theme="dark"] .pill{background:#263b56;color:#c9dcf4}
+:root[data-theme="dark"] .pill.pending{background:#49391f;color:#f1cf83}
+:root[data-theme="dark"] .portfolio-skill-list span,
+:root[data-theme="dark"] .portfolio-competency,
+:root[data-theme="dark"] .evidence-linked-skills span{background:#202f45;color:#c8dcf3;border-color:var(--line)}
+:root[data-theme="dark"] .portfolio-competency-list,
+:root[data-theme="dark"] .portfolio-section{color:var(--text)}
+:root[data-theme="dark"] .section-count,
+:root[data-theme="dark"] .portfolio-dates,
+:root[data-theme="dark"] .portfolio-evidence-item>small{color:var(--muted)}
+:root[data-theme="dark"] .timeline-dot{box-shadow:0 0 0 4px #1b3b3a}
+:root[data-theme="dark"] .coverage-number{color:#dce8f8}
+:root[data-theme="dark"] .coverage-number span{color:#9aaac0}
+:root[data-theme="dark"] .auth-brand{background:#101d30}
+:root[data-theme="dark"] .auth-brand p,
+:root[data-theme="dark"] .auth-brand small{color:#b8c8dc}
+:root[data-theme="dark"] .auth-form label,
+:root[data-theme="dark"] .form-grid label{color:#d6dfeb}
+:root[data-theme="dark"] .auth-form input,
+:root[data-theme="dark"] .form-grid input,
+:root[data-theme="dark"] .form-grid textarea,
+:root[data-theme="dark"] .form-grid select,
+:root[data-theme="dark"] .auth-form select,
+:root[data-theme="dark"] .review-pack-form select,
+:root[data-theme="dark"] .review-pack-form textarea,
+:root[data-theme="dark"] .evidence-filters input,
+:root[data-theme="dark"] .evidence-filters select,
+:root[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select{
+  background:#101a2a;
+  color:#e6edf7;
+  border-color:#35465e;
+}
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder{color:#8292a8}
+:root[data-theme="dark"] input:focus,
+:root[data-theme="dark"] textarea:focus,
+:root[data-theme="dark"] select:focus{border-color:#6ca9e8;box-shadow:0 0 0 3px rgba(108,169,232,.16);outline:none}
+:root[data-theme="dark"] input[type="checkbox"],
+:root[data-theme="dark"] input[type="radio"]{accent-color:#6ca9e8}
+:root[data-theme="dark"] input[type="file"]{color:var(--muted)}
+:root[data-theme="dark"] .password-wrap input{background:transparent}
+:root[data-theme="dark"] .helper-text{color:#9cabc0}
+:root[data-theme="dark"] .auth-feedback{color:#f0cb79}
+:root[data-theme="dark"] .auth-feedback.error{color:#ff9a9a}
+:root[data-theme="dark"] .auth-switch{color:var(--muted)}
+:root[data-theme="dark"] .eyebrow{color:#8bbcf0}
+:root[data-theme="dark"] .footer{border-top-color:var(--line)}
+:root[data-theme="dark"] .footer-links{color:var(--muted)}
+:root[data-theme="dark"] .policy-section,
+:root[data-theme="dark"] .policy-section p{color:var(--muted)}
+:root[data-theme="dark"] .policy-section h2{color:var(--heading)}
+:root[data-theme="dark"] .account-menu{background:#182437;box-shadow:0 16px 42px rgba(0,0,0,.45)}
+:root[data-theme="dark"] .account-menu-profile small,
+:root[data-theme="dark"] .account-menu-details span{color:#9cabc0}
+:root[data-theme="dark"] .account-menu-details b{color:#e6edf7}
+:root[data-theme="dark"] .account-menu>a{color:#8bbcf0}
+:root[data-theme="dark"] .account-menu-signout{color:#ff9999}
+:root[data-theme="dark"] .account-trigger{background:#263b56;color:#e6edf7;border-color:#405571}
+:root[data-theme="dark"] .profile-photo-preview{background:#263b56;color:#e6edf7}
+:root[data-theme="dark"] .profile-photo-field{border-color:var(--line)}
+:root[data-theme="dark"] .evidence-filters label,
+:root[data-theme="dark"] .evidence-metadata dt{color:#9cabc0}
+:root[data-theme="dark"] .evidence-metadata dd{color:#e0e8f3}
+:root[data-theme="dark"] .evidence-linked-skills>b{color:#dce8f8}
+:root[data-theme="dark"] .gap-evidence-row{border-color:var(--line)}
+:root[data-theme="dark"] .gap-evidence-row small,
+:root[data-theme="dark"] .gap-evidence-row strong{color:var(--text)}
+:root[data-theme="dark"] .gap-caution{background:#44351f;color:#f0cf8d}
+:root[data-theme="dark"] .review-pack-form fieldset{border-color:var(--line)}
+:root[data-theme="dark"] .review-pack-form legend{color:#dce8f8}
+:root[data-theme="dark"] .review-evidence-option{border-color:var(--line)}
+:root[data-theme="dark"] .review-evidence-option b{color:var(--text)}
+:root[data-theme="dark"] .review-evidence-option small{color:var(--muted)}
+:root[data-theme="dark"] .demo-tag{background:#173e3a;color:#8be0d0}
+:root[data-theme="dark"] .success-text{color:#72d8c5}
+:root[data-theme="dark"] .auth-form input:-webkit-autofill,
+:root[data-theme="dark"] .form-grid input:-webkit-autofill{
+  -webkit-text-fill-color:#e6edf7;
+  -webkit-box-shadow:0 0 0 1000px #101a2a inset;
+  transition:background-color 9999s ease-out;
+}
+@media(max-width:720px){
+  :root[data-theme="dark"] .public-nav nav{background:#151f30;border-bottom-color:var(--line)}
+  :root[data-theme="dark"] .sidebar{box-shadow:0 18px 50px rgba(0,0,0,.45)}
+}
+@media print{
+  :root[data-theme="dark"]{color-scheme:light}
+  :root[data-theme="dark"] body,
+  :root[data-theme="dark"] .portfolio-sheet{background:#fff!important;color:#172033!important}
+  :root[data-theme="dark"] .portfolio-sheet h1,
+  :root[data-theme="dark"] .portfolio-sheet h2,
+  :root[data-theme="dark"] .portfolio-sheet h3,
+  :root[data-theme="dark"] .portfolio-sheet b{color:#142b50!important}
+  :root[data-theme="dark"] .portfolio-sheet p,
+  :root[data-theme="dark"] .portfolio-sheet small{color:#596579!important}
+}
