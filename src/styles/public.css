@@ -27,3 +27,9 @@
 .policy-section p{line-height:1.75;color:var(--muted);margin:0 0 14px}
 .policy-section .muted{font-size:.88rem;border-top:1px solid var(--border);padding-top:18px;margin-top:28px}
 .auth-check a{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+
+/* Signed-in navigation actions on the public website */
+.public-nav .nav-workspace{color:var(--blue);font-weight:800}
+.public-nav .nav-account{color:#536176}
+.public-nav .nav-signout{border:1px solid #dce3ec;border-radius:8px;background:#fff;color:#536176;padding:9px 13px;font-size:12px;font-weight:700}
+.public-nav .nav-signout:hover{border-color:#b8cce3;color:#173b61;background:#f6f9fc}
