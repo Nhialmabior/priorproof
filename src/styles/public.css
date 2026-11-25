@@ -28,8 +28,16 @@
 .policy-section .muted{font-size:.88rem;border-top:1px solid var(--border);padding-top:18px;margin-top:28px}
 .auth-check a{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
 
-/* Signed-in navigation actions on the public website */
-.public-nav .nav-workspace{color:var(--blue);font-weight:800}
-.public-nav .nav-account{color:#536176}
-.public-nav .nav-signout{border:1px solid #dce3ec;border-radius:8px;background:#fff;color:#536176;padding:9px 13px;font-size:12px;font-weight:700}
-.public-nav .nav-signout:hover{border-color:#b8cce3;color:#173b61;background:#f6f9fc}
+
+/* Signed-in public homepage profile menu */
+.public-nav .public-account-wrap{display:flex;align-items:center;margin-left:4px}
+.public-nav .public-profile-trigger{width:38px;height:38px;flex:0 0 38px;border:2px solid #e3eaf1;font-size:13px}
+.public-nav .public-profile-trigger:hover{border-color:#a9bfd8;box-shadow:0 0 0 3px #2463a610}
+.public-nav .public-account-menu{top:calc(100% + 15px);right:0}
+.public-nav .public-account-menu a{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 2px;border-top:1px solid #edf0f4;color:#315b88;font-size:12px;font-weight:700}
+.public-nav .public-account-menu a:hover{color:#173b61;background:#f7f9fc}
+.public-nav .public-account-menu .account-menu-signout{font-size:12px}
+@media(max-width:760px){
+  .public-nav .public-account-wrap{margin:0 0 0 auto}
+  .public-nav .public-account-menu{right:0}
+}
