@@ -317,3 +317,50 @@
   outline:2px solid #82b7f0;
   outline-offset:3px;
 }
+
+
+/* My evidence — complete dark-mode contrast and surface treatment */
+:root[data-theme="dark"] .evidence-summary-grid>div{
+  background:var(--surface);
+  border-color:var(--line);
+}
+:root[data-theme="dark"] .evidence-summary-grid strong{
+  color:var(--heading);
+}
+:root[data-theme="dark"] .evidence-summary-grid span{
+  color:var(--muted);
+}
+:root[data-theme="dark"] .evidence-repository-panel{
+  border-color:var(--line);
+}
+:root[data-theme="dark"] .evidence-card-title h3{
+  color:var(--heading);
+}
+:root[data-theme="dark"] .evidence-card-title small,
+:root[data-theme="dark"] .evidence-description,
+:root[data-theme="dark"] .evidence-metadata dt,
+:root[data-theme="dark"] .evidence-linked-skills small{
+  color:var(--muted);
+}
+:root[data-theme="dark"] .evidence-metadata dd{
+  color:var(--text);
+}
+:root[data-theme="dark"] .evidence-linked-skills>b{
+  color:var(--heading);
+}
+:root[data-theme="dark"] .evidence-linked-skills span{
+  background:#202f45;
+  color:#c8dcf3;
+  border-color:var(--line);
+}
+:root[data-theme="dark"] .evidence-card-actions{
+  border-top-color:var(--line);
+}
+:root[data-theme="dark"] .evidence-filters label{
+  color:#d6dfeb;
+}
+:root[data-theme="dark"] #evidenceNoResults{
+  background:#1d2a3e;
+  border-color:var(--line);
+  color:var(--muted);
+}
