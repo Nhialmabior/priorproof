@@ -171,7 +171,7 @@ export function portfolioPage(){
    <p class="portfolio-role">${escapeHtml(d.user.targetOccupation||'Professional profile')}</p>
    ${d.user.summary?`<p class="portfolio-summary">${escapeHtml(d.user.summary)}</p>`:'' }
    ${d.user.interests?`<p class="portfolio-interests"><b>Areas of interest:</b> ${escapeHtml(d.user.interests)}</p>`:'' }
-   <div class="portfolio-contact">${d.user.email?`<span>${escapeHtml(d.user.email)}</span>`:''}${d.user.location?`<span>${escapeHtml(d.user.location)}</span>`:''}</div>
+   <div class="portfolio-contact">${d.user.email?`<span>${escapeHtml(d.user.email)}</span>`:''}${d.user.phoneNumber?`<span>${escapeHtml(d.user.phoneNumber)}</span>`:''}${d.user.location?`<span>${escapeHtml(d.user.location)}</span>`:''}</div>
   </header>
   <section class="portfolio-snapshot" aria-label="Portfolio summary">
    <div><strong>${d.experiences.length}</strong><span>Experience records</span></div>
@@ -216,7 +216,7 @@ export function assessmentsPage(){
  const d=getData(),packs=Array.isArray(d.assessments)?d.assessments:[];
  const options=d.competencies.map(c=>`<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join('');
  const evidence=d.evidence.map(e=>`<label class="review-evidence-option"><input type="checkbox" name="evidenceIds" value="${escapeHtml(e.id)}"><span><b>${escapeHtml(e.title)}</b><small>${escapeHtml(e.type)} · ${escapeHtml(e.status||'Self-reported')}</small></span></label>`).join('');
- const cards=packs.map(p=>{const c=d.competencies.find(x=>x.id===p.competencyId);const items=(p.evidenceIds||[]).map(id=>d.evidence.find(x=>x.id===id)).filter(Boolean);return `<article class="panel review-pack-card"><span class="pill">Prepared · Not submitted</span><h3>${escapeHtml(c?.name||p.competencyName||'Competency unavailable')}</h3><small>Created ${escapeHtml(p.createdAt?new Date(p.createdAt).toLocaleString():'Date not recorded')} · ${items.length} evidence item(s)</small><p>${escapeHtml(p.context||'No reviewer context added.')}</p><div class="review-pack-actions"><button class="btn btn-secondary" type="button" data-export-review-pack="${escapeHtml(p.id)}">Download review brief</button><button class="btn btn-danger" type="button" data-delete-review-pack="${escapeHtml(p.id)}">Delete</button></div><p class="helper-text">This pack has not been sent to or reviewed by an external assessor.</p></article>`;}).join('');
+ const cards=packs.map(p=>{const c=d.competencies.find(x=>x.id===p.competencyId);const items=(p.evidenceIds||[]).map(id=>d.evidence.find(x=>x.id===id)).filter(Boolean);return `<article class="panel review-pack-card"><span class="pill">Prepared · Not submitted</span><h3>${escapeHtml(c?.name||p.competencyName||'Competency unavailable')}</h3><small>Created ${escapeHtml(p.createdAt?new Date(p.createdAt).toLocaleString():'Date not recorded')} · ${items.length} evidence item(s)</small><p>${escapeHtml(p.context||'No reviewer context added.')}</p>${items.length?`<div class="review-pack-evidence"><b>Included evidence</b><ul>${items.map(item=>`<li><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.type||'Supporting material')} · ${escapeHtml(item.status||'Self-reported')}${item.fileName?' · File attached':''}</small></li>`).join('')}</ul></div>`:'<p class="helper-text">No evidence items selected. Consider adding supporting material before sharing this brief.</p>'}<div class="review-pack-actions"><button class="btn btn-secondary" type="button" data-export-review-pack="${escapeHtml(p.id)}">Download review brief</button><button class="btn btn-danger" type="button" data-delete-review-pack="${escapeHtml(p.id)}">Delete</button></div><p class="helper-text">This pack has not been sent to or reviewed by an external assessor.</p></article>`;}).join('');
  const content=`<section class="panel review-intro"><span class="eyebrow">REVIEW PREPARATION</span><h2>Prepare an evidence review pack</h2><p>Select a suggested competency and relevant evidence for an authorised reviewer to consider. The pack is saved to your account workspace. It is not submitted to an assessor and does not verify claims.</p></section>
  ${d.competencies.length?`<section class="panel"><h2>New review pack</h2><form id="reviewPackForm" class="review-pack-form"><label>Competency<select name="competencyId" required><option value="">Select a competency</option>${options}</select></label><fieldset><legend>Evidence to include</legend><p class="helper-text">Select only evidence that genuinely relates to this competency.</p>${evidence||'<p>No evidence records yet. You may still prepare a pack.</p>'}</fieldset><label>Context for reviewer (optional)<textarea name="context" rows="4" maxlength="1200" placeholder="Explain what you would like the reviewer to consider."></textarea></label><button class="btn btn-primary" type="submit">Save review pack</button></form></section>`:'<section class="panel"><p>Add experience records and review your competency suggestions before preparing a pack.</p><a href="/app/experience" data-link>Go to experience</a></section>'}
  <section class="review-packs-section"><div class="panel-head"><div><h2>Prepared review packs</h2><p>${packs.length} locally saved pack(s)</p></div></div>${cards||'<section class="panel empty-state"><h3>No review packs prepared</h3><p>Your saved preparation packs will appear here.</p></section>'}</section>`;
@@ -352,6 +352,49 @@ export function bindAppActions(){
  const reviewPackForm=document.getElementById('reviewPackForm');
  reviewPackForm?.addEventListener('submit',event=>{event.preventDefault();const d=getData(),f=new FormData(reviewPackForm),c=d.competencies.find(x=>x.id===f.get('competencyId'));if(!c)return;d.assessments=Array.isArray(d.assessments)?d.assessments:[];d.assessments.unshift({id:crypto.randomUUID(),competencyId:c.id,competencyName:c.name,evidenceIds:f.getAll('evidenceIds').filter(id=>d.evidence.some(x=>x.id===id)),context:String(f.get('context')||'').trim(),status:'Prepared - not submitted',createdAt:new Date().toISOString()});saveData(d);});
  document.querySelectorAll('[data-delete-review-pack]').forEach(b=>b.addEventListener('click',()=>{if(!confirm('Delete this review preparation record?'))return;const d=getData();d.assessments=(d.assessments||[]).filter(x=>x.id!==b.dataset.deleteReviewPack);saveData(d);}));
- document.querySelectorAll('[data-export-review-pack]').forEach(b=>b.addEventListener('click',()=>{const d=getData(),p=(d.assessments||[]).find(x=>x.id===b.dataset.exportReviewPack);if(!p)return;const c=d.competencies.find(x=>x.id===p.competencyId),items=(p.evidenceIds||[]).map(id=>d.evidence.find(x=>x.id===id)).filter(Boolean);const lines=['PRIORPROOF — EVIDENCE REVIEW BRIEF','Prepared by: '+(d.user.fullName||'Not provided'),'Competency: '+(c?.name||p.competencyName||'Not available'),'Created: '+p.createdAt,'','SELECTED EVIDENCE',...items.map(x=>'- '+x.title+' | '+x.type+' | '+(x.status||'Self-reported')),'','CONTEXT',p.context||'None provided','','LIMITATIONS','Prepared from user-entered information. Not authenticated, assessed, awarded or submitted by PriorProof.'];const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='priorproof-review-brief.txt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}));
+ document.querySelectorAll('[data-export-review-pack]').forEach(b=>b.addEventListener('click',()=>{
+  const d=getData(),p=(d.assessments||[]).find(x=>x.id===b.dataset.exportReviewPack);
+  if(!p)return;
+  const c=d.competencies.find(x=>x.id===p.competencyId);
+  const items=(p.evidenceIds||[]).map(id=>d.evidence.find(x=>x.id===id)).filter(Boolean);
+  const clean=value=>String(value??'').replace(/\\r\\n?/g,'\\n').trim();
+  const lines=[
+   'PRIORPROOF — EVIDENCE REVIEW BRIEF',
+   'Prepared by: '+(clean(d.user.fullName)||'Not provided'),
+   'Target field: '+(clean(d.user.targetOccupation)||'Not provided'),
+   'Contact email: '+(clean(d.user.email)||'Not provided'),
+   'Competency for consideration: '+(clean(c?.name||p.competencyName)||'Not available'),
+   'Competency category: '+(clean(c?.category)||'Not provided'),
+   'Created: '+(p.createdAt?new Date(p.createdAt).toLocaleString():'Not recorded'),
+   '',
+   'SELECTED EVIDENCE',
+   ...(items.length?items.flatMap((item,index)=>{
+    const experience=d.experiences.find(x=>x.id===item.experienceId);
+    return [
+     '',
+     (index+1)+'. '+clean(item.title),
+     'Type: '+(clean(item.type)||'Not provided'),
+     'Status recorded: '+(clean(item.status)||'Self-reported'),
+     'Evidence date: '+(clean(item.evidenceDate)||'Not provided'),
+     'Source: '+(clean(item.source)||'Not provided'),
+     'Related experience: '+(clean(experience?.title)||'Not linked'),
+     'Description: '+(clean(item.description)||'No description provided.'),
+     'Attachment: '+(clean(item.fileName)||'No file attached; check the original record.')
+    ];
+   }):['No evidence items were selected for this pack.']),
+   '',
+   'REVIEW CONTEXT',
+   clean(p.context)||'No additional context provided.',
+   '',
+   'IMPORTANT NOTES',
+   'This brief is a user-prepared summary of records in PriorProof. It does not include original attachment files.',
+   'Evidence descriptions and status labels are user-entered and have not been authenticated by PriorProof.',
+   'This brief has not been submitted to, assessed by, or approved by an external reviewer.'
+  ];
+  const blob=new Blob([lines.join('\\n')],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='priorproof-review-brief-'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+ }));
 
 }
