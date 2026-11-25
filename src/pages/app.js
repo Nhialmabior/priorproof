@@ -1,5 +1,5 @@
 import { appShell, escapeHtml } from '../components/layout.js';
-import { getData, saveData, resetData } from '../services/storage.js';
+import { getData, saveData, saveDataAndWait, resetData } from '../services/storage.js';
 import { updateAccountPassword } from '../services/supabase.js';
 import { navigate } from '../utils/router.js';
 import { saveEvidenceFile, getEvidenceFile, deleteEvidenceFile, clearEvidenceFiles } from '../services/evidenceFiles.js';
@@ -296,9 +296,72 @@ export function bindAppActions(){
  document.getElementById('profilePhotoFile')?.addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)){alert('Choose a JPG, PNG or WebP image.');event.target.value='';return;}if(file.size>1024*1024){alert('Please choose an image smaller than 1 MB.');event.target.value='';return;}const reader=new FileReader();reader.onload=()=>{const value=String(reader.result||'');document.getElementById('profilePhotoValue').value=value;document.getElementById('profilePhotoPreview').innerHTML='<img src="'+value+'" alt="Selected profile photo">';};reader.onerror=()=>alert('Could not read this image. Please try another file.');reader.readAsDataURL(file);});
  document.getElementById('removeProfilePhoto')?.addEventListener('click',()=>{document.getElementById('profilePhotoValue').value='';document.getElementById('profilePhotoFile').value='';const preview=document.getElementById('profilePhotoPreview');preview.textContent=(document.querySelector('#profileForm input[name="fullName"]')?.value||'A').trim().slice(0,1).toUpperCase();});
  document.getElementById('profileForm')?.addEventListener('submit',async e=>{e.preventDefault();const form=e.currentTarget;if(!form.reportValidity())return;const d=getData(),f=new FormData(form),fullName=String(f.get('fullName')||'').trim(),email=String(f.get('email')||'').trim(),oldEmail=d.user.email||'';const submit=form.querySelector('button[type="submit"]');if(submit){submit.disabled=true;submit.textContent='Saving…';}try{const {data,error}=await updateAccountProfile({fullName,email:email!==oldEmail?email:undefined});if(error)throw error;d.user={...d.user,fullName,email:email!==oldEmail?(data?.user?.email||oldEmail):oldEmail,phoneNumber:String(f.get('phoneNumber')||'').trim(),profilePhoto:String(f.get('profilePhoto')||''),targetOccupation:String(f.get('targetOccupation')||'').trim(),location:String(f.get('location')||'').trim(),summary:String(f.get('summary')||'').trim(),interests:String(f.get('interests')||'').trim()};saveData(d);if(email!==oldEmail&&!data?.user?.email?.toLowerCase().includes(email.toLowerCase()))alert('Profile details saved. Supabase has sent an email confirmation link to your new email address. Your sign-in email changes after confirmation.');else alert('Your profile has been updated.');navigate('/app/dashboard');}catch(error){alert(error.message||'Could not update your profile.');}finally{if(submit?.isConnected){submit.disabled=false;submit.textContent='Save profile';}}});
- document.getElementById('resetDemo')?.addEventListener('click',async()=>{if(confirm('Clear all experience, evidence, competency and review records from your account? Your profile will remain. Private evidence attachments will also be deleted.')){try{await clearEvidenceFiles();resetData();navigate('/app/dashboard');}catch(error){alert(error.message||'Could not clear workspace records or attachments.');}}});
+ document.getElementById('resetDemo')?.addEventListener('click',async()=>{
+  if(!confirm('Clear all experience, evidence, competency and review records from your account? Your profile will remain. Private evidence attachments will also be deleted.'))return;
+  const button=document.getElementById('resetDemo');
+  if(button){button.disabled=true;button.textContent='Saving changes…';}
+  try{
+   // Save the empty workspace first. Never delete attachments before the record change is confirmed.
+   await resetData();
+  }catch(error){
+   alert(error.message||'The workspace could not be cleared. Your evidence attachments were kept.');
+   if(button){button.disabled=false;button.textContent='Clear workspace records';}
+   return;
+  }
+  try{
+   await clearEvidenceFiles();
+   alert('Your workspace records were cleared and saved. Evidence attachments were also removed.');
+  }catch(error){
+   alert('Your workspace records were cleared and saved, but attachment cleanup did not finish. Your records are safe. Select Clear workspace records again to retry attachment cleanup.');
+  }
+  window.dispatchEvent(new PopStateEvent('popstate'));
+ });
  document.getElementById('exportData')?.addEventListener('click',()=>{const backup={app:'PriorProof',schemaVersion:1,exportedAt:new Date().toISOString(),data:getData()};const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='priorproof-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);});
- document.getElementById('importDataFile')?.addEventListener('change',async event=>{const file=event.target.files?.[0];if(!file)return;try{if(file.size>10*1024*1024)throw new Error('The backup file is larger than 10 MB.');const parsed=JSON.parse(await file.text()),candidate=parsed?.app==='PriorProof'?parsed.data:parsed;if(parsed?.app&&parsed.app!=='PriorProof')throw new Error('This file is not a PriorProof backup.');if(!candidate||typeof candidate!=='object'||Array.isArray(candidate)||!candidate.user||typeof candidate.user!=='object'||!Array.isArray(candidate.experiences)||!Array.isArray(candidate.evidence)||!Array.isArray(candidate.competencies))throw new Error('The file structure is not a valid PriorProof backup.');for(const [name,items] of [['experience',candidate.experiences],['evidence',candidate.evidence],['competency',candidate.competencies]]){const ids=new Set();for(const item of items){if(!item||typeof item!=='object'||typeof item.id!=='string'||!item.id.trim())throw new Error('A '+name+' record is missing a valid ID.');if(ids.has(item.id))throw new Error('The backup contains duplicate '+name+' IDs.');ids.add(item.id);}}const counts=candidate.experiences.length+' experience record(s), '+candidate.evidence.length+' evidence record(s) and '+candidate.competencies.length+' competency suggestion(s)';if(!confirm('Restore this backup? It contains '+counts+'. This will replace the current workspace data and clear locally stored attachment files. Attachments are not included in JSON backups. Continue?'))return;const currentUser=getData().user||{};const restored={...candidate,user:{...candidate.user,id:currentUser.id,email:currentUser.email},experiences:candidate.experiences.map(item=>({...item,skills:Array.isArray(item.skills)?item.skills:[]})),evidence:candidate.evidence.map(item=>({...item,fileId:null,fileName:'',fileSize:0,fileType:''})),competencies:candidate.competencies.map(item=>({...item,experienceIds:Array.isArray(item.experienceIds)?item.experienceIds:[],evidenceIds:Array.isArray(item.evidenceIds)?item.evidenceIds:[]}))};await clearEvidenceFiles();saveData(restored);alert('Backup restored. Your profile and records have been loaded. Evidence attachment files were not included and must be added again from your originals.');navigate('/app/dashboard');}catch(error){alert(error.message||'Could not restore this backup.');}finally{event.target.value='';}});
+ document.getElementById('importDataFile')?.addEventListener('change',async event=>{
+  const file=event.target.files?.[0];
+  if(!file)return;
+  try{
+   if(file.size>10*1024*1024)throw new Error('The backup file is larger than 10 MB.');
+   const parsed=JSON.parse(await file.text());
+   const candidate=parsed?.app==='PriorProof'?parsed.data:parsed;
+   if(parsed?.app&&parsed.app!=='PriorProof')throw new Error('This file is not a PriorProof backup.');
+   if(parsed?.app==='PriorProof'&&parsed.schemaVersion!==1)throw new Error('This backup version is not supported. Please export a fresh backup from the current version of PriorProof.');
+   if(!candidate||typeof candidate!=='object'||Array.isArray(candidate)||!candidate.user||typeof candidate.user!=='object'||!Array.isArray(candidate.experiences)||!Array.isArray(candidate.evidence)||!Array.isArray(candidate.competencies))throw new Error('The file structure is not a valid PriorProof backup.');
+   for(const [name,items] of [['experience',candidate.experiences],['evidence',candidate.evidence],['competency',candidate.competencies],['review pack',Array.isArray(candidate.assessments)?candidate.assessments:[]]]){
+    const ids=new Set();
+    for(const item of items){
+     if(!item||typeof item!=='object'||typeof item.id!=='string'||!item.id.trim())throw new Error('A '+name+' record is missing a valid ID.');
+     if(ids.has(item.id))throw new Error('The backup contains duplicate '+name+' IDs.');
+     ids.add(item.id);
+    }
+   }
+   const counts=candidate.experiences.length+' experience record(s), '+candidate.evidence.length+' evidence record(s) and '+candidate.competencies.length+' competency suggestion(s)';
+   if(!confirm('Restore this backup? It contains '+counts+'. The current workspace will be replaced. Attachments are not included in JSON backups. Continue?'))return;
+   const currentUser=getData().user||{};
+   const restored={
+    ...candidate,
+    user:{...candidate.user,id:currentUser.id,email:currentUser.email},
+    experiences:candidate.experiences.map(item=>({...item,skills:Array.isArray(item.skills)?item.skills:[]})),
+    evidence:candidate.evidence.map(item=>({...item,fileId:null,filePath:null,fileName:'',fileSize:0,fileType:''})),
+    competencies:candidate.competencies.map(item=>({...item,experienceIds:Array.isArray(item.experienceIds)?item.experienceIds:[],evidenceIds:Array.isArray(item.evidenceIds)?item.evidenceIds:[]})),
+    assessments:Array.isArray(candidate.assessments)?candidate.assessments:[]
+   };
+   // Persist the restored records before removing old attachment files.
+   await saveDataAndWait(restored);
+   let cleanupMessage='Backup restored and saved. Attachments are not included in JSON backups; add them again from your original files if needed.';
+   try{
+    await clearEvidenceFiles();
+   }catch(cleanupError){
+    cleanupMessage+=' Some old attachment files could not be removed. They are no longer linked to the restored records; use Clear workspace records to retry file cleanup.';
+   }
+   alert(cleanupMessage);
+   window.dispatchEvent(new PopStateEvent('popstate'));
+  }catch(error){
+   alert(error.message||'Could not restore this backup. Existing evidence attachments were not deliberately removed.');
+  }finally{
+   event.target.value='';
+  }
+ });
  document.querySelectorAll('[data-edit-experience]').forEach(button=>button.addEventListener('click',()=>openEntryDialog('experience',button.dataset.editExperience)));
  document.querySelectorAll('[data-delete-experience]').forEach(button=>button.addEventListener('click',async()=>{
   if(!confirm('Remove this experience and its linked evidence records?'))return;
