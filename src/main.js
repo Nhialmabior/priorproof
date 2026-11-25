@@ -8,7 +8,7 @@ import { currentRoute, navigate } from './utils/router.js';
 import { bindLayout } from './components/layout.js';
 import { homePage, aboutPage, howPage, privacyPage, termsPage } from './pages/public.js';
 import { dashboardPage, profilePage, experiencePage, evidencePage, competenciesPage, gapPage, portfolioPage, assessmentsPage, settingsPage, helpPage, authPage, bindAppActions } from './pages/app.js';
-import { getData, loadUserWorkspace, clearActiveWorkspace } from './services/storage.js';
+import { getData, loadUserWorkspace, clearActiveWorkspace, flushWorkspaceSave } from './services/storage.js';
 import { getSupabase, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, sendPasswordReset, signOut, onAuthStateChange } from './services/supabase.js';
 
 let currentSession = null;
@@ -160,6 +160,8 @@ async function render() {
   document.getElementById('signOutButton')?.addEventListener('click', async event => {
     event.currentTarget.disabled = true;
     try {
+      // Do not end the authenticated session while a recent workspace edit is unsynchronised.
+      await flushWorkspaceSave();
       const { error } = await signOut();
       if (error) throw error;
       currentSession = null;
