@@ -7,7 +7,7 @@ import './styles/dark-mode.css';
 import { currentRoute, navigate } from './utils/router.js';
 import { bindLayout } from './components/layout.js';
 import { homePage, aboutPage, howPage, privacyPage, termsPage } from './pages/public.js';
-import { dashboardPage, profilePage, experiencePage, evidencePage, competenciesPage, gapPage, portfolioPage, assessmentsPage, settingsPage, helpPage, authPage, bindAppActions } from './pages/app.js';
+import { dashboardPage, profilePage, experiencePage, evidencePage, competenciesPage, gapPage, portfolioPage, assessmentsPage, settingsPage, helpPage, authPage, passwordResetPage, bindAppActions } from './pages/app.js';
 import { getData, loadUserWorkspace, clearActiveWorkspace, flushWorkspaceSave } from './services/storage.js';
 import { getSupabase, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, sendPasswordReset, signOut, onAuthStateChange } from './services/supabase.js';
 
@@ -25,7 +25,7 @@ async function render() {
   const route = currentRoute();
   if (route === '/auth/popup-callback') return;
   const protectedRoute = route.startsWith('/app/');
-  if (protectedRoute && !currentSession) {
+  if ((protectedRoute || route === '/reset-password') && !currentSession) {
     navigate('/login');
     return;
   }
@@ -36,7 +36,7 @@ async function render() {
 
   const pages = {
     '/': homePage, '/about': aboutPage, '/how-it-works': howPage,
-    '/privacy': privacyPage, '/terms': termsPage,
+    '/privacy': privacyPage, '/terms': termsPage, '/reset-password': passwordResetPage,
     '/app/dashboard': dashboardPage, '/app/profile': profilePage,
     '/app/experience': experiencePage, '/app/evidence': evidencePage,
     '/app/competencies': competenciesPage, '/app/gap-analysis': gapPage,
