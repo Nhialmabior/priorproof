@@ -499,8 +499,8 @@ function openEntryDialog(kind,editId=null){
  dialog.showModal();
 }
 export function bindAppActions(){
-  const backupFeedback=document.getElementById('backupFeedback');
   const setBackupFeedback=(message,type='')=>{
+   const backupFeedback=document.getElementById('backupFeedback');
    if(!backupFeedback)return;
    backupFeedback.textContent=message;
    backupFeedback.className='helper-text'+(type?' '+type:'');
@@ -627,8 +627,8 @@ export function bindAppActions(){
     }catch(cleanupError){
      cleanupMessage+=' Some old attachment files could not be removed. They are no longer linked to the restored records and may remain in private storage until a dedicated cleanup control is available.';
     }
-    setBackupFeedback(cleanupMessage);
     window.dispatchEvent(new PopStateEvent('popstate'));
+    setBackupFeedback(cleanupMessage);
    }catch(error){
     setBackupFeedback(error.message||'Could not restore this backup. Existing evidence attachments were not deliberately removed.','error');
    }finally{
