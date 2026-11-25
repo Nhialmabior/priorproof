@@ -104,10 +104,80 @@ const skillCatalog={
  'community outreach':{name:'Community outreach',category:'Community engagement'},
  'psychosocial support':{name:'Psychosocial support',category:'Programme support'},
  'safeguarding awareness':{name:'Safeguarding awareness',category:'Programme support'},
- 'referral coordination':{name:'Referral coordination',category:'Programme support'}
+ 'referral coordination':{name:'Referral coordination',category:'Programme support'},
+ // Agriculture, environment and livelihoods
+ agriculture:{name:'Agricultural production',category:'Agriculture and environment'},
+ farming:{name:'Agricultural production',category:'Agriculture and environment'},
+ 'crop production':{name:'Crop production',category:'Agriculture and environment'},
+ 'crop management':{name:'Crop production',category:'Agriculture and environment'},
+ 'livestock management':{name:'Livestock management',category:'Agriculture and environment'},
+ 'animal husbandry':{name:'Livestock management',category:'Agriculture and environment'},
+ irrigation:{name:'Irrigation management',category:'Agriculture and environment'},
+ 'soil conservation':{name:'Soil conservation',category:'Agriculture and environment'},
+ 'natural resource management':{name:'Natural resource management',category:'Agriculture and environment'},
+ 'climate adaptation':{name:'Climate adaptation',category:'Agriculture and environment'},
+ 'environmental awareness':{name:'Environmental awareness',category:'Agriculture and environment'},
+ 'food security':{name:'Food security',category:'Livelihoods and development'},
+ livelihoods:{name:'Livelihoods support',category:'Livelihoods and development'},
+ 'livelihood support':{name:'Livelihoods support',category:'Livelihoods and development'},
+ entrepreneurship:{name:'Entrepreneurship',category:'Business and enterprise'},
+ 'business development':{name:'Business development',category:'Business and enterprise'},
+ 'business planning':{name:'Business planning',category:'Business and enterprise'},
+ 'customer service':{name:'Customer service',category:'Business and enterprise'},
+ sales:{name:'Sales',category:'Business and enterprise'},
+ marketing:{name:'Marketing',category:'Business and enterprise'},
+ // Humanitarian, protection and community services
+ 'humanitarian response':{name:'Humanitarian response',category:'Programme support'},
+ 'emergency response':{name:'Emergency response',category:'Programme support'},
+ 'protection monitoring':{name:'Protection monitoring',category:'Protection and inclusion'},
+ 'community based protection':{name:'Community-based protection',category:'Protection and inclusion'},
+ 'child protection':{name:'Child protection awareness',category:'Protection and inclusion'},
+ 'gender based violence awareness':{name:'Gender-based violence awareness',category:'Protection and inclusion'},
+ inclusion:{name:'Inclusive programming',category:'Protection and inclusion'},
+ 'disability inclusion':{name:'Disability inclusion',category:'Protection and inclusion'},
+ 'peacebuilding':{name:'Peacebuilding',category:'Peace and social cohesion'},
+ mediation:{name:'Mediation',category:'Peace and social cohesion'},
+ 'conflict sensitivity':{name:'Conflict sensitivity',category:'Peace and social cohesion'},
+ 'social cohesion':{name:'Social cohesion',category:'Peace and social cohesion'},
+ // Programme quality and project cycle
+ 'project design':{name:'Project design',category:'Programme management'},
+ 'project planning':{name:'Project planning',category:'Programme management'},
+ 'project monitoring':{name:'Project monitoring',category:'Programme management'},
+ 'programme management':{name:'Programme management',category:'Programme management'},
+ 'program management':{name:'Programme management',category:'Programme management'},
+ 'results based management':{name:'Results-based management',category:'Programme management'},
+ 'needs analysis':{name:'Needs assessment',category:'Programme support'},
+ 'baseline survey':{name:'Baseline data collection',category:'Research and data'},
+ 'endline survey':{name:'Endline data collection',category:'Research and data'},
+ 'data quality assurance':{name:'Data quality assurance',category:'Research and data'},
+ 'data cleaning':{name:'Data cleaning',category:'Research and data'},
+ 'microsoft excel':{name:'Spreadsheet skills',category:'Digital'},
+ 'google sheets':{name:'Spreadsheet skills',category:'Digital'},
+ 'presentation skills':{name:'Presentation',category:'Communication'},
+ 'public speaking':{name:'Public speaking',category:'Communication'},
+ 'content creation':{name:'Content creation',category:'Digital'},
+ 'website development':{name:'Web development',category:'Digital'},
+ 'database management':{name:'Database management',category:'Digital'},
+ 'computer programming':{name:'Programming',category:'Digital'},
+ programming:{name:'Programming',category:'Digital'},
+ 'technical support':{name:'Technical support',category:'Digital'},
+ // Practical operations and workplace skills
+ 'occupational health and safety':{name:'Workplace health and safety awareness',category:'Workplace practice'},
+ 'health and safety':{name:'Workplace health and safety awareness',category:'Workplace practice'},
+ 'quality assurance':{name:'Quality assurance',category:'Workplace practice'},
+ 'inventory management':{name:'Inventory management',category:'Operations'},
+ 'stock management':{name:'Inventory management',category:'Operations'},
+ 'supply chain management':{name:'Supply chain management',category:'Operations'},
+ 'warehouse management':{name:'Warehouse operations',category:'Operations'},
+ 'customer relations':{name:'Customer service',category:'Business and enterprise'},
+ 'first aid awareness':{name:'First aid awareness',category:'Workplace practice'}
 };
-const normalizeSkill=value=>String(value||'').normalize('NFKC').trim().toLowerCase().replace(/[^a-z0-9+#. ]/g,' ').replace(/\s+/g,' ').trim();
-const skillDefinition=value=>{const key=normalizeSkill(value);return {key,...(skillCatalog[key]||{name:String(value||'').trim(),category:'General'})};};
+const normalizeSkill=value=>String(value||'').normalize('NFKC').trim().toLowerCase().replace(/[^a-z0-9+#. ]/g,' ').replace(/\\s+/g,' ').trim();
+const skillDefinition=value=>{
+ const key=normalizeSkill(value),definition=skillCatalog[key];
+ if(!definition)return {key,name:String(value||'').trim(),category:'General',matchType:'Uncatalogued phrase'};
+ return {...definition,key,matchType:key===normalizeSkill(definition.name)?'Direct catalogue match':'Known alias'};
+};
 
 export function dashboardPage(){
  const d=getData();
@@ -160,17 +230,17 @@ export function evidencePage(){
 }
 export function competenciesPage(){
  const d=getData();
- const body=`<div class="notice"><b>How suggestions are generated:</b> PriorProof compares the skill phrases in your experience records with a built-in catalogue of common skill names and aliases. Matching phrases are grouped under a consistent competency name; unrecognised phrases remain in the General category using the wording you entered. Each suggestion shows the experience and original skill phrase that informed it. This is a rule-based documentation aid, not an AI assessment, formal competency standard or verification of competence. Review every suggestion for accuracy.</div>
+ const body=`<div class="notice"><b>How suggestions are generated:</b> PriorProof checks the skill phrases you enter against a curated catalogue of skill names and known aliases. Direct matches and recognised aliases are grouped under a consistent label. Phrases not in the catalogue are kept as you entered them in the General category. Matching uses the skill field only; it does not infer skills from descriptions, inspect evidence files or assess proficiency. Each suggestion shows its source experience and original phrase. This is a rule-based documentation aid, not an AI assessment, formal competency standard or verification of competence. Review every suggestion for accuracy.</div>
  <div class="competency-grid">${d.competencies.map(c=>{
   const linked=(c.evidenceIds||[]).map(id=>d.evidence.find(e=>e.id===id)).filter(Boolean);
   const experience=(c.experienceIds||[]).map(id=>d.experiences.find(e=>e.id===id)).filter(Boolean);
-  const reasons=experience.flatMap(e=>(e.skills||[]).filter(skill=>skillDefinition(skill).name.toLowerCase()===c.name.toLowerCase()).map(skill=>({skill,experience:e.title})));
+  const reasons=experience.flatMap(e=>(e.skills||[]).filter(skill=>skillDefinition(skill).name.toLowerCase()===c.name.toLowerCase()).map(skill=>({skill,experience:e.title,matchType:skillDefinition(skill).matchType})));
   const options=d.evidence.filter(e=>!linked.some(item=>item.id===e.id));
   return `<article class="panel competency-card competency-map-card">
    <span class="eyebrow">${escapeHtml(c.category||'General')}</span><h3>${escapeHtml(c.name)}</h3>
    <p>${experience.length} linked experience(s) · ${linked.length} supporting evidence item(s)</p>
    <span class="pill">${escapeHtml(c.status||'Suggested')}</span>
-   <div class="mapping-block"><b>Why this was suggested</b>${reasons.length?reasons.map(reason=>`<small>You listed “${escapeHtml(reason.skill)}” in “${escapeHtml(reason.experience)}”.</small>`).join(''):'<small>This is an existing competency record. Edit a linked experience and include the relevant skill to show its source here.</small>'}</div>
+   <div class="mapping-block"><b>Why this was suggested</b>${reasons.length?reasons.map(reason=>`<small>You listed “${escapeHtml(reason.skill)}” in “${escapeHtml(reason.experience)}” · ${escapeHtml(reason.matchType)}.</small>`).join(''):'<small>This is an existing competency record. Edit a linked experience and include the relevant skill to show its source here.</small>'}</div>
    <div class="mapping-block"><b>Linked experience</b>${experience.length?experience.map(e=>`<small>${escapeHtml(e.title)}${e.contribution?' — '+escapeHtml(e.contribution):''}</small>`).join(''):'<small>No experience linked.</small>'}</div>
    <div class="mapping-block"><b>Supporting evidence</b>${linked.length?linked.map(item=>`<div class="mapping-evidence"><span>${escapeHtml(item.title)} <small>· ${escapeHtml(evidenceStatusLabel(item))}</small></span><button type="button" class="btn btn-outline btn-small" data-unlink-evidence="${escapeHtml(c.id)}" data-evidence-id="${escapeHtml(item.id)}">Unlink</button></div>`).join(''):'<small>No evidence linked yet.</small>'}</div>
    ${options.length?`<form class="mapping-form" data-map-form="${escapeHtml(c.id)}"><label for="map-${escapeHtml(c.id)}">Add supporting evidence</label><select id="map-${escapeHtml(c.id)}" name="evidenceId" required><option value="">Choose an evidence item</option>${options.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.title)}</option>`).join('')}</select><button class="btn btn-primary btn-small" type="submit">Link evidence</button></form>`:'<p class="helper-text">No unlinked evidence items available.</p>'}
