@@ -604,7 +604,9 @@ export function bindAppActions(){
  });
  document.querySelectorAll('[data-edit-experience]').forEach(button=>button.addEventListener('click',()=>openEntryDialog('experience',button.dataset.editExperience)));
  document.querySelectorAll('[data-delete-experience]').forEach(button=>button.addEventListener('click',async()=>{
-  if(!confirm('Remove this experience and its linked evidence records?'))return;
+  if(button.disabled||!confirm('Remove this experience and its linked evidence records?'))return;
+  button.disabled=true;
+  button.textContent='Removing…';
   const d=getData(),id=button.dataset.deleteExperience;
   const removed=removeExperienceRelations(d,id,skillDefinition);
   try{
@@ -612,6 +614,8 @@ export function bindAppActions(){
    await saveDataAndWait(d);
   }catch(error){
    alert(error.message||'Could not save the removal. Evidence attachments were kept.');
+   button.disabled=false;
+   button.textContent='Delete';
    return;
   }
   let failed=0;
@@ -620,10 +624,13 @@ export function bindAppActions(){
    try{await deleteEvidenceFile(item.fileId,item.filePath);}catch(error){failed++;}
   }
   if(failed)alert('The experience and its evidence records were removed and saved, but '+failed+' attachment file(s) could not be deleted. They are no longer linked to your records and may remain in private storage.');
+  window.dispatchEvent(new PopStateEvent('popstate'));
  }));
  document.querySelectorAll('[data-edit-evidence]').forEach(button=>button.addEventListener('click',()=>openEntryDialog('evidence',button.dataset.editEvidence)));
  document.querySelectorAll('[data-delete-evidence]').forEach(button=>button.addEventListener('click',async()=>{
-  if(!confirm('Remove this evidence record?'))return;
+  if(button.disabled||!confirm('Remove this evidence record?'))return;
+  button.disabled=true;
+  button.textContent='Removing…';
   const d=getData(),id=button.dataset.deleteEvidence,item=d.evidence.find(e=>e.id===id);
   removeEvidenceRelations(d,id);
   try{
@@ -631,12 +638,15 @@ export function bindAppActions(){
    await saveDataAndWait(d);
   }catch(error){
    alert(error.message||'Could not save the removal. The evidence attachment was kept.');
+   button.disabled=false;
+   button.textContent='Delete';
    return;
   }
   if(item?.fileId||item?.filePath){
    try{await deleteEvidenceFile(item.fileId,item.filePath);}
    catch(error){alert('The evidence record was removed and saved, but its attachment could not be deleted. The file is no longer linked to your records and may remain in private storage.');}
   }
+  window.dispatchEvent(new PopStateEvent('popstate'));
  }));
  document.querySelectorAll('[data-map-form]').forEach(form=>form.addEventListener('submit',async e=>{
    e.preventDefault();
