@@ -436,7 +436,8 @@ function openEntryDialog(kind,editId=null){
   if(editRecord){const form=dialog.querySelector('#entryForm');['title','type','experienceId','source','evidenceDate','description'].forEach(name=>{const field=form.elements.namedItem(name);if(field)field.value=editRecord[name]||'';});}
  }
  document.body.appendChild(dialog);
- const close=()=>{dialog.close();dialog.remove();};
+ const close=()=>{if(dialog.open)dialog.close();else dialog.remove();};
+ dialog.addEventListener('close',()=>dialog.remove(),{once:true});
  dialog.querySelector('#closeEntry').addEventListener('click',close);
  dialog.querySelector('#cancelEntry').addEventListener('click',close);
  dialog.addEventListener('click',e=>{if(e.target===dialog)close();});
@@ -453,7 +454,12 @@ function openEntryDialog(kind,editId=null){
   validateExperienceDates();
  }
  dialog.querySelector('form').addEventListener('submit',async e=>{
-  e.preventDefault();const f=new FormData(e.currentTarget),d=getData();
+  e.preventDefault();
+  const submitButton=e.currentTarget.querySelector('button[type="submit"]');
+  if(submitButton?.disabled)return;
+  if(submitButton){submitButton.disabled=true;submitButton.textContent='Saving…';}
+  const restoreSubmit=()=>{if(submitButton?.isConnected){submitButton.disabled=false;submitButton.textContent=editRecord?'Save changes':'Save record';}};
+  const f=new FormData(e.currentTarget),d=getData();
   let uploadedAttachment=null,previousAttachment=null;
   if(isExperience){
    const skills=String(f.get('skills')||'').split(',').map(s=>s.trim()).filter(Boolean);
@@ -472,10 +478,10 @@ function openEntryDialog(kind,editId=null){
 
   }else{
    const file=f.get('file'),evId=editRecord?editRecord.id:crypto.randomUUID();
-   if(file&&file.name&&!file.size){alert('The selected file is empty. Please choose a different file.');return;}
+   if(file&&file.name&&!file.size){alert('The selected file is empty. Please choose a different file.');restoreSubmit();return;}
    const hasNewFile=Boolean(file&&file.name&&file.size);
    let attachment=null;
-   if(hasNewFile){try{attachment=await saveEvidenceFile(evId,file);uploadedAttachment=attachment;previousAttachment=editRecord?.filePath||null;}catch(error){alert(error.message||'The file could not be uploaded.');return;}}
+   if(hasNewFile){try{attachment=await saveEvidenceFile(evId,file);uploadedAttachment=attachment;previousAttachment=editRecord?.filePath||null;}catch(error){alert(error.message||'The file could not be uploaded.');restoreSubmit();return;}}
    const ev={id:evId,title:String(f.get('title')).trim(),type:f.get('type'),experienceId:f.get('experienceId')||null,source:String(f.get('source')||'').trim(),evidenceDate:f.get('evidenceDate')||'',description:String(f.get('description')||'').trim(),status:'Not independently verified',fileId:hasNewFile?evId:(editRecord?.fileId||null),filePath:hasNewFile?attachment.path:(editRecord?.filePath||null),fileName:hasNewFile?attachment.name:(editRecord?.fileName||''),fileSize:hasNewFile?attachment.size:(editRecord?.fileSize||0),fileType:hasNewFile?attachment.type:(editRecord?.fileType||'')};
    if(editRecord){const index=d.evidence.findIndex(item=>item.id===editRecord.id);if(index>=0)d.evidence[index]=ev;}else d.evidence.unshift(ev);
    // Preserve manually selected competency links when only evidence details change.
@@ -492,6 +498,7 @@ function openEntryDialog(kind,editId=null){
    await saveDataAndWait(d);
   }catch(error){
    alert(error.message||'Your changes could not be confirmed in the cloud. Keep this dialog open and retry; existing attachments have been preserved.');
+   restoreSubmit();
    return;
   }
   if(uploadedAttachment&&previousAttachment&&previousAttachment!==uploadedAttachment.path){
