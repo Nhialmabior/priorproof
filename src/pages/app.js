@@ -352,7 +352,7 @@ export function bindAppActions(){
    try{
     await clearEvidenceFiles();
    }catch(cleanupError){
-    cleanupMessage+=' Some old attachment files could not be removed. They are no longer linked to the restored records; use Clear workspace records to retry file cleanup.';
+    cleanupMessage+=' Some old attachment files could not be removed. They are no longer linked to the restored records and may remain in private storage until a dedicated cleanup control is available.';
    }
    alert(cleanupMessage);
    window.dispatchEvent(new PopStateEvent('popstate'));
