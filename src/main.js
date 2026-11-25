@@ -5,7 +5,7 @@ import './styles/dashboard.css';
 import './styles/responsive.css';
 import './styles/dark-mode.css';
 import { currentRoute, navigate } from './utils/router.js';
-import { bindLayout } from './components/layout.js';
+import { bindLayout, escapeHtml } from './components/layout.js';
 import { homePage, aboutPage, howPage, privacyPage, termsPage } from './pages/public.js';
 import { dashboardPage, profilePage, experiencePage, evidencePage, competenciesPage, gapPage, portfolioPage, assessmentsPage, settingsPage, helpPage, authPage, passwordResetPage, bindAppActions } from './pages/app.js';
 import { getData, loadUserWorkspace, clearActiveWorkspace, flushWorkspaceSave } from './services/storage.js';
@@ -64,11 +64,20 @@ async function render() {
 
   document.querySelector('#app').innerHTML = html;
 
-  // Keep the public homepage public-facing while exposing workspace actions to signed-in users.
+  // Signed-in visitors get one profile icon; account actions live inside its dropdown.
   if (!protectedRoute && currentSession?.user) {
     const publicLinks = document.getElementById('publicLinks');
+    const accountUser = getData().user || {};
+    const displayName = currentSession.user.user_metadata?.full_name
+      || currentSession.user.user_metadata?.name
+      || accountUser.fullName
+      || 'Your account';
+    const email = currentSession.user.email || accountUser.email || '';
+    const avatar = accountUser.profilePhoto
+      ? `<img src="${escapeHtml(accountUser.profilePhoto)}" alt="Profile photo">`
+      : escapeHtml(String(displayName).trim().charAt(0).toUpperCase() || 'U');
     if (publicLinks) {
-      publicLinks.innerHTML = `<a class="${route === '/' ? 'active' : ''}" href="/" data-link>Home</a><a class="${route === '/how-it-works' ? 'active' : ''}" href="/how-it-works" data-link>How it works</a><a class="${route === '/about' ? 'active' : ''}" href="/about" data-link>About</a><a class="nav-workspace" href="/app/dashboard" data-link>My Workspace</a><a class="nav-account" href="/app/profile" data-link>My Account</a><button class="nav-signout" type="button" id="signOutButton">Sign out</button>`;
+      publicLinks.innerHTML = `<a class="${route === '/' ? 'active' : ''}" href="/" data-link>Home</a><a class="${route === '/how-it-works' ? 'active' : ''}" href="/how-it-works" data-link>How it works</a><a class="${route === '/about' ? 'active' : ''}" href="/about" data-link>About</a><div class="account-menu-wrap public-account-wrap"><button class="avatar account-trigger public-profile-trigger" id="accountMenuToggle" type="button" aria-label="Open profile menu" aria-expanded="false">${avatar}</button><div class="account-menu public-account-menu" id="accountMenu" hidden><div class="account-menu-profile"><div class="avatar account-menu-avatar">${avatar}</div><div><strong>${escapeHtml(displayName)}</strong><small>${escapeHtml(email)}</small></div></div><a href="/app/profile" data-link>My Account <span>→</span></a><a href="/app/dashboard" data-link>My Workspace <span>→</span></a><button type="button" class="account-menu-signout" id="signOutButton">Sign out</button></div></div>`;
     }
     document.querySelectorAll('.footer-links a[href="/login"], .footer-links a[href="/register"]').forEach(link => {
       if (link.getAttribute('href') === '/login') {
