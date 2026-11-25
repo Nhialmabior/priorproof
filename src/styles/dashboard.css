@@ -206,3 +206,11 @@
 .review-pack-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .review-pack-card .helper-text{margin-bottom:0}
 @media(max-width:600px){.review-pack-actions .btn{flex:1}}
+
+
+/* Cloud workspace save indicator */
+.sync-status{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#168777;white-space:nowrap}
+.sync-status[data-status="saving"]{color:#8a6a20}
+.sync-status[data-status="error"]{color:#b54747}
+.sync-status>span{font-weight:600}
+@media(max-width:700px){.sync-status>span{display:none}.sync-status{font-size:14px}}
