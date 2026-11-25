@@ -11,6 +11,8 @@ import { dashboardPage, profilePage, experiencePage, evidencePage, competenciesP
 import { getData, loadUserWorkspace, clearActiveWorkspace, flushWorkspaceSave } from './services/storage.js';
 import { getSupabase, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, sendPasswordReset, signOut, onAuthStateChange } from './services/supabase.js';
 import { validateProfileName } from './utils/profileValidation.js';
+import { validateStrongPassword } from './utils/passwordValidation.js';
+import { isEmailConfirmationCallback, getEmailConfirmationError } from './utils/authCallback.js';
 
 let currentSession = null;
 let authListenerReady = false;
@@ -109,6 +111,8 @@ async function render() {
         const fullName = String(values.get('fullName') || '').trim();
         const nameError = validateProfileName(fullName);
         if (nameError) throw new Error(nameError);
+        const passwordError = validateStrongPassword(password);
+        if (passwordError) throw new Error(passwordError);
         if (password !== values.get('confirmPassword')) throw new Error('Your passwords do not match.');
         if (!values.get('terms')) throw new Error('Please accept the Terms of Use and Privacy Notice.');
         const { data, error } = await signUpWithPassword({
@@ -246,8 +250,28 @@ async function render() {
 }
 
 async function start() {
+  const emailConfirmationReturn = isEmailConfirmationCallback({
+    pathname: window.location.pathname,
+    search: window.location.search,
+    hash: window.location.hash
+  });
+  let confirmationWorkspaceLoaded = false;
   try {
     currentSession = await getCurrentSession();
+
+    // Email confirmation returns to the existing protected dashboard URL.
+    // Supabase's URL detection exchanges the confirmation code before getSession resolves.
+    if (emailConfirmationReturn) {
+      if (!currentSession?.user) {
+        const detail = getEmailConfirmationError(window.location.search, window.location.hash);
+        const root = document.querySelector('#app');
+        root.innerHTML = `<main style="max-width:680px;margin:10vh auto;padding:28px;font-family:system-ui"><h1>Email confirmation could not be completed</h1><p>${escapeHtml(detail || 'The confirmation link may have expired, already been used, or the redirect address may not be allowed in Supabase.')}</p><p>Return to PriorProof and sign in if your email has already been confirmed. Otherwise, request a fresh confirmation email.</p><p><a href="/login">Go to sign in</a> · <a href="/">Return to homepage</a></p></main>`;
+        return;
+      }
+      await loadUserWorkspace(currentSession.user);
+      history.replaceState({}, '', '/app/dashboard');
+      confirmationWorkspaceLoaded = true;
+    }
 
     // Supabase completes the OAuth code exchange on this same-origin popup page.
     // Close the popup when possible; if the browser has isolated the opener,
@@ -266,9 +290,9 @@ async function start() {
       return;
     }
 
-    if (currentSession?.user) {
+    if (currentSession?.user && !confirmationWorkspaceLoaded) {
       await loadUserWorkspace(currentSession.user);
-    } else {
+    } else if (!currentSession?.user) {
       clearActiveWorkspace();
     }
 
@@ -300,6 +324,10 @@ async function start() {
   } catch (error) {
     console.error('Supabase setup:', error);
     const root = document.querySelector('#app');
+    if (emailConfirmationReturn) {
+      root.innerHTML = `<main style="max-width:680px;margin:10vh auto;padding:28px;font-family:system-ui"><h1>Email confirmation could not be completed</h1><p>${escapeHtml(error.message || 'The confirmation link could not be verified. It may have expired or already been used.')}</p><p>Request a fresh confirmation email or return to sign in if your account is already confirmed.</p><p><a href="/login">Go to sign in</a> · <a href="/">Return to homepage</a></p></main>`;
+      return;
+    }
     root.innerHTML = '<main style="max-width:720px;margin:10vh auto;padding:24px;font-family:system-ui"><h1>PriorProof could not start</h1><p>Check your internet connection and refresh the page. If the problem continues, verify that your local Supabase settings are configured correctly.</p><a href="/">Return to PriorProof</a></main>';
     return;
   }
