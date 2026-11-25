@@ -46,11 +46,11 @@ export function bindLayout() {
   document.getElementById('mobileMenu')?.addEventListener('click',()=>document.getElementById('publicLinks')?.classList.toggle('open'));
   document.getElementById('sidebarToggle')?.addEventListener('click',()=>document.getElementById('sidebar')?.classList.toggle('open'));
   const accountToggle=document.getElementById('accountMenuToggle'),accountMenu=document.getElementById('accountMenu');
-  const closeAccountMenu=()=>{if(accountMenu){accountMenu.hidden=true;accountToggle?.setAttribute('aria-expanded','false');}};
-  accountToggle?.addEventListener('click',event=>{event.stopPropagation();if(!accountMenu)return;accountMenu.hidden=!accountMenu.hidden;accountToggle.setAttribute('aria-expanded',String(!accountMenu.hidden));});
+  const closeAccountMenu=()=>{if(accountMenu){accountMenu.hidden=true;accountToggle?.setAttribute('aria-expanded','false');}document.removeEventListener('click',outsideAccountClick);};
+  const outsideAccountClick=event=>{if(!accountMenu?.contains(event.target)&&!accountToggle?.contains(event.target))closeAccountMenu();};
+  accountToggle?.addEventListener('click',event=>{event.stopPropagation();if(!accountMenu)return;accountMenu.hidden=!accountMenu.hidden;accountToggle.setAttribute('aria-expanded',String(!accountMenu.hidden));if(!accountMenu.hidden)document.addEventListener('click',outsideAccountClick);else document.removeEventListener('click',outsideAccountClick);});
   accountMenu?.addEventListener('click',event=>event.stopPropagation());
-  document.addEventListener('click',closeAccountMenu,{once:true});
-  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeAccountMenu();},{once:true});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeAccountMenu();});
   document.getElementById('accountMenuSignOut')?.addEventListener('click',()=>document.getElementById('signOutButton')?.click());
 }
 export function escapeHtml(value='') { return String(value).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
