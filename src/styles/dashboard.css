@@ -241,3 +241,11 @@
 @media(max-width:600px){.account-menu{right:-6px}.profile-photo-field{align-items:flex-start}}
 
 .sync-status[hidden]{display:none}
+
+
+/* Consistent experience month/year controls */
+.experience-date-input{display:block;width:100%;min-width:0;box-sizing:border-box;margin-top:6px;min-height:44px;padding:10px 12px;border:1px solid #d7dee8;border-radius:8px;background:#fff;color:#24334a;font:inherit;font-size:13px;line-height:1.4;color-scheme:light;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.experience-date-input:hover{border-color:#9aacc1}
+.experience-date-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,145,.13)}
+.date-field-hint{display:block;margin-top:5px;color:#78869a;font-size:10px;font-weight:400}
+@media(max-width:600px){.experience-date-input{min-height:46px;font-size:16px}}
