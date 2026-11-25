@@ -459,7 +459,8 @@ function openEntryDialog(kind,editId=null){
 
   }else{
    const file=f.get('file'),evId=editRecord?editRecord.id:crypto.randomUUID();
-   const hasNewFile=Boolean(file&&file.size);
+   if(file&&file.name&&!file.size){alert('The selected file is empty. Please choose a different file.');return;}
+   const hasNewFile=Boolean(file&&file.name&&file.size);
    let attachment=null;
    if(hasNewFile){try{attachment=await saveEvidenceFile(evId,file);uploadedAttachment=attachment;previousAttachment=editRecord?.filePath||null;}catch(error){alert(error.message||'The file could not be uploaded.');return;}}
    const ev={id:evId,title:String(f.get('title')).trim(),type:f.get('type'),experienceId:f.get('experienceId')||null,source:String(f.get('source')||'').trim(),evidenceDate:f.get('evidenceDate')||'',description:String(f.get('description')||'').trim(),status:'Not independently verified',fileId:hasNewFile?evId:(editRecord?.fileId||null),filePath:hasNewFile?attachment.path:(editRecord?.filePath||null),fileName:hasNewFile?attachment.name:(editRecord?.fileName||''),fileSize:hasNewFile?attachment.size:(editRecord?.fileSize||0),fileType:hasNewFile?attachment.type:(editRecord?.fileType||'')};
