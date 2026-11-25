@@ -69,6 +69,7 @@ const skillCatalog={
  // Research, monitoring and data
  research:{name:'Research',category:'Analytical'},
  'data collection':{name:'Data collection',category:'Research and data'},
+ interviewing:{name:'Interviewing',category:'Research and data'},
  'field data collection':{name:'Data collection',category:'Research and data'},
  'quantitative research':{name:'Quantitative research',category:'Research and data'},
  'qualitative research':{name:'Qualitative research',category:'Research and data'},
@@ -174,10 +175,51 @@ const skillCatalog={
 };
 const normalizeSkill=value=>String(value||'').normalize('NFKC').trim().toLowerCase().replace(/[^a-z0-9+#. ]/g,' ').replace(/\s+/g,' ').trim();
 const skillDefinition=value=>{
- const key=normalizeSkill(value),definition=skillCatalog[key];
+ const key=normalizeSkill(value),definition=skillCatalog[key]||Object.values(skillCatalog).find(item=>normalizeSkill(item.name)===key);
  if(!definition)return {key,name:String(value||'').trim(),category:'General',matchType:'Uncatalogued phrase'};
  return {...definition,key,matchType:key===normalizeSkill(definition.name)?'Direct catalogue match':'Known alias'};
 };
+const experienceRoleRules=[
+ {pattern:/\\b(teacher|educator|school instructor|classroom teacher)\\b/,skills:['Teaching and learning support','Lesson planning','Classroom management','Learning support','Communication','Record keeping']},
+ {pattern:/\\b(data collection|enumerator|field researcher|research assistant|data collector)\\b/,skills:['Data collection','Interviewing','Data entry','Data quality assurance','Research','Communication']},
+ {pattern:/\\b(project officer|project coordinator|programme officer|program officer)\\b/,skills:['Project planning','Project coordination','Project monitoring','Stakeholder engagement','Reporting','Needs assessment']},
+ {pattern:/\\b(community health|health volunteer|health promoter)\\b/,skills:['Community outreach','Community mobilisation','Health awareness','Communication','Referral coordination','Data collection']},
+ {pattern:/\\b(community volunteer|community mobilizer|community mobilisation)\\b/,skills:['Community mobilisation','Community engagement','Community outreach','Teamwork','Communication','Leadership']},
+ {pattern:/\\b(agricultural extension|extension worker|agriculture officer|farm officer)\\b/,skills:['Agricultural production','Crop production','Training delivery','Community engagement','Climate adaptation','Communication']},
+ {pattern:/\\b(social worker|protection officer|case worker|protection assistant)\\b/,skills:['Case management','Community outreach','Referral coordination','Active listening','Safeguarding awareness','Documentation']},
+ {pattern:/\\b(logistics|warehouse|storekeeper|inventory officer)\\b/,skills:['Logistics','Inventory management','Warehouse operations','Supply chain management','Records management','Teamwork']},
+ {pattern:/\\b(accountant|finance officer|finance assistant|bookkeeper)\\b/,skills:['Budgeting','Financial management','Records management','Data entry','Reporting','Attention to detail']},
+ {pattern:/\\b(web developer|software developer|it support|technical support)\\b/,skills:['Web development','Programming','Technical support','Problem solving','Teamwork','Communication']},
+ {pattern:/\\b(administrator|administrative assistant|office assistant)\\b/,skills:['Administration','Records management','Documentation','Communication','Time management','Data entry']}
+];
+const experienceTaskRules=[
+ {pattern:/\\b(interview|interviewing|questionnaire|survey)\\b/,skill:'Interviewing'},
+ {pattern:/\\b(lesson plan|lesson preparation|classroom)\\b/,skill:'Lesson planning'},
+ {pattern:/\\b(teach|teaching|train|training|facilitat)\\b/,skill:'Training delivery'},
+ {pattern:/\\b(attendance|student records|registers|filing|record.keep)\\b/,skill:'Records management'},
+ {pattern:/\\b(report|reports|reporting|write.up)\\b/,skill:'Report writing'},
+ {pattern:/\\b(budget|expenditure|financial records)\\b/,skill:'Budgeting'},
+ {pattern:/\\b(monitor|monitoring|evaluation|indicators)\\b/,skill:'Monitoring and evaluation'},
+ {pattern:/\\b(community meeting|mobilis|mobiliz|outreach)\\b/,skill:'Community mobilisation'},
+ {pattern:/\\b(referral|refer clients|service provider)\\b/,skill:'Referral coordination'},
+ {pattern:/\\b(stock|inventory|warehouse|store management)\\b/,skill:'Inventory management'},
+ {pattern:/\\b(crop|planting|harvest|farming|farmers)\\b/,skill:'Crop production'},
+ {pattern:/\\b(livestock|animal husbandry|herding)\\b/,skill:'Livestock management'},
+ {pattern:/\\b(excel|spreadsheet|google sheets)\\b/,skill:'Spreadsheet skills'},
+ {pattern:/\\b(website|web page|html|css|javascript)\\b/,skill:'Web development'},
+ {pattern:/\\b(coordinat|organis|organiz|schedule|plan activities)\\b/,skill:'Activity coordination'},
+ {pattern:/\\b(stakeholder|partner|government department)\\b/,skill:'Stakeholder engagement'},
+ {pattern:/\\b(data entry|enter data|digital forms)\\b/,skill:'Data entry'},
+ {pattern:/\\b(communicat|present|public speaking|community dialogue)\\b/,skill:'Communication'}
+];
+function suggestExperienceSkills(title,description){
+ const titleText=normalizeSkill(title),detailText=normalizeSkill(description);
+ const suggestions=[];
+ const add=skill=>{const definition=skillDefinition(skill);if(definition.name&&!suggestions.some(item=>normalizeSkill(item)===normalizeSkill(definition.name)))suggestions.push(definition.name);};
+ experienceRoleRules.forEach(rule=>{if(rule.pattern.test(titleText))rule.skills.forEach(add);});
+ experienceTaskRules.forEach(rule=>{if(rule.pattern.test(detailText))add(rule.skill);});
+ return suggestions;
+}
 
 export function dashboardPage(){
  const d=getData();
@@ -386,9 +428,29 @@ function openEntryDialog(kind,editId=null){
  const input=(name,placeholder,required=false,type='text')=>'<input style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px" name="'+name+'" type="'+type+'" placeholder="'+placeholder+'" '+(required?'required':'')+'>';
  const select=(name,values)=>'<select name="'+name+'" style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px">'+values.map(v=>'<option>'+v+'</option>').join('')+'</select>';
  if(isExperience){
-  fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">'+label('Experience title *',input('title','e.g. Community project coordination',true),true)+label('Organisation / activity',input('organisation','Organisation or self-directed'))+label('Experience type',select('category',['Employment','Volunteering','Apprenticeship','Self-employment','Community activity','Formal learning','Informal learning','Entrepreneurship']))+label('Start date',input('startDate','','','month'))+label('End date',input('endDate','','','month'))+label('What did you do? *','<textarea name="description" required maxlength="1200" placeholder="Describe your responsibilities and regular activities." style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;min-height:90px"></textarea>',true)+label('Your contribution (optional)','<textarea name="contribution" maxlength="1000" placeholder="What did you personally contribute? Mention tasks, methods or responsibilities." style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;min-height:75px"></textarea>',true)+label('Outcome or impact (optional)','<textarea name="outcome" maxlength="1000" placeholder="What changed or was produced? Use specific examples where possible." style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;min-height:75px"></textarea>',true)+label('What did you learn? (optional)','<textarea name="learning" maxlength="800" placeholder="What knowledge or lessons did you gain?" style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;min-height:70px"></textarea>',true)+label('Skills developed *',input('skills','Communication, teamwork, record keeping',true),true)+'</div>';
-  dialog.querySelector('#entryNote').textContent='Describe your actual experience. Skill suggestions are preliminary and are not formal assessment outcomes.';
+  fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">'+label('Experience title *',input('title','e.g. Community project coordination',true),true)+label('Organisation / activity',input('organisation','Organisation or self-directed'))+label('Experience type',select('category',['Employment','Volunteering','Apprenticeship','Self-employment','Community activity','Formal learning','Informal learning','Entrepreneurship']))+label('Start date',input('startDate','','','month'))+label('End date',input('endDate','','','month'))+label('What did you do? *','<textarea name="description" required maxlength="1200" placeholder="Describe your responsibilities and regular activities." style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;min-height:90px"></textarea>',true)+label('Your contribution (optional)','<textarea name="contribution" maxlength="1000" placeholder="What did you personally contribute? Mention tasks, methods or responsibilities." style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;min-height:75px"></textarea>',true)+label('Outcome or impact (optional)','<textarea name="outcome" maxlength="1000" placeholder="What changed or was produced? Use specific examples where possible." style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;min-height:75px"></textarea>',true)+label('What did you learn? (optional)','<textarea name="learning" maxlength="800" placeholder="What knowledge or lessons did you gain?" style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;min-height:70px"></textarea>',true)+'<div style="grid-column:1/-1;border:1px solid #dce5ef;border-radius:10px;padding:13px;margin:0 0 14px;background:#f7f9fc"><div style="font-weight:700;margin-bottom:5px">Suggested skills from your role and responsibilities</div><p class="helper-text" id="skillSuggestionHint" style="margin:0 0 9px">Enter an experience title and describe what you did to see relevant suggestions.</p><div id="skillSuggestionList" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px"></div><button type="button" class="btn btn-outline btn-small" id="applySkillSuggestions">Add suggestions to my skills</button></div>'+label('Skills developed (review and edit) *',input('skills','Review suggestions or enter skills separated by commas',true),true)+'</div>';
+  dialog.querySelector('#entryNote').textContent='Describe your actual experience. PriorProof suggests possible skills from the role title and responsibilities using a transparent rule-based catalogue. Review and edit suggestions; they are not formal assessment outcomes.';
   if(editRecord){const form=dialog.querySelector('#entryForm');['title','organisation','category','startDate','endDate','description','contribution','outcome','learning'].forEach(name=>{const field=form.elements.namedItem(name);if(field)field.value=editRecord[name]||'';});const skillsField=form.elements.namedItem('skills');if(skillsField)skillsField.value=(editRecord.skills||[]).join(', ');}
+  const form=dialog.querySelector('#entryForm');
+  const titleField=form.elements.namedItem('title'),descriptionField=form.elements.namedItem('description'),skillsField=form.elements.namedItem('skills');
+  const suggestionList=dialog.querySelector('#skillSuggestionList'),suggestionHint=dialog.querySelector('#skillSuggestionHint');
+  let currentSuggestions=[];
+  const renderSkillSuggestions=()=>{
+   currentSuggestions=suggestExperienceSkills(titleField.value,descriptionField.value);
+   suggestionList.innerHTML=currentSuggestions.length?currentSuggestions.map(skill=>'<span style="font-size:12px;padding:5px 9px;border-radius:20px;background:#e8f0f8;color:#173b5c">'+escapeHtml(skill)+'</span>').join(''):'<span class="helper-text">No close matches yet. Add skills manually if needed.</span>';
+   suggestionHint.textContent=currentSuggestions.length?'Suggestions are based on the role title and responsibilities you entered. Review them before adding.':'Try adding more detail about your tasks, or enter your skills manually.';
+   dialog.querySelector('#applySkillSuggestions').disabled=!currentSuggestions.length;
+  };
+  titleField.addEventListener('input',renderSkillSuggestions);
+  descriptionField.addEventListener('input',renderSkillSuggestions);
+  dialog.querySelector('#applySkillSuggestions').addEventListener('click',()=>{
+   const existing=String(skillsField.value||'').split(',').map(item=>item.trim()).filter(Boolean);
+   const merged=[...existing];
+   currentSuggestions.forEach(skill=>{if(!merged.some(item=>normalizeSkill(item)===normalizeSkill(skill)))merged.push(skill);});
+   skillsField.value=merged.join(', ');
+   suggestionHint.textContent='Suggestions added. You can edit the skills list before saving.';
+  });
+  renderSkillSuggestions();
  }else{
   const opts='<option value="">Not linked yet</option>'+data.experiences.map(e=>'<option value="'+escapeHtml(e.id)+'">'+escapeHtml(e.title)+'</option>').join('');
   fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">'+label('Evidence title *',input('title','e.g. Project report or work sample',true),true)+label('Evidence type',select('type',['Project report','Work sample','Certificate','Reference','Photograph','Training record','Other supporting material']))+label('Related experience','<select name="experienceId" style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px">'+opts+'</select>')+label('Source / issuer',input('source','e.g. Training provider, employer or project'))+label('Date created or received',input('evidenceDate','','','date'))+label('Description / context','<textarea name="description" maxlength="800" placeholder="What does this item contain? What does it help demonstrate?" style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;min-height:90px"></textarea>',true)+label('Attach a file (optional)','<input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt" style="display:block;width:100%;margin-top:6px">',true)+'</div>';
