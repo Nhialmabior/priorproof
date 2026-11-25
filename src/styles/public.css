@@ -41,3 +41,99 @@
   .public-nav .public-account-wrap{margin:0 0 0 auto}
   .public-nav .public-account-menu{right:0}
 }
+
+
+/* Public site responsive refinements */
+.public-nav{gap:18px}
+.public-nav .nav-tools{flex:0 0 auto;gap:10px}
+.public-nav .public-theme-toggle{white-space:nowrap}
+.public-nav nav{min-width:0}
+.hero-copy,.hero-visual{min-width:0}
+.hero h1{overflow-wrap:break-word}
+.preview-window{max-width:100%}
+.floating-note{max-width:min(290px,85%)}
+.info-card,.step-card,.category-tile{min-width:0}
+.cta-section>div{min-width:0}
+.inner-page{overflow-wrap:anywhere}
+.policy-section{overflow-wrap:anywhere}
+.footer-links a{white-space:nowrap}
+@media(max-width:1000px){
+  .public-nav{padding-left:24px;padding-right:24px}
+  .public-nav nav{gap:18px}
+  .hero{grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:26px}
+  .hero-visual{min-height:370px}
+  .visual-glow{width:min(34vw,340px);height:min(34vw,340px)}
+  .preview-body{padding:20px}
+  .floating-note{right:0}
+  .cta-section{padding:40px}
+}
+@media(max-width:760px){
+  .public-nav{height:70px;padding:0 16px;gap:10px}
+  .public-nav .nav-tools{margin-left:auto}
+  .public-nav .public-theme-toggle{padding:8px 9px;font-size:11px}
+  .public-nav .mobile-menu{padding:9px 11px;min-width:40px}
+  .public-nav nav{top:69px;left:0;right:0;max-height:calc(100vh - 70px);overflow-y:auto;padding:18px 20px 22px;gap:16px;box-shadow:0 16px 24px rgba(20,43,80,.10)}
+  .public-nav nav.open{display:flex}
+  .public-nav nav a{padding:5px 0}
+  .public-nav nav .btn{align-self:flex-start}
+  .hero{grid-template-columns:minmax(0,1fr);gap:20px;padding-top:42px;padding-bottom:46px}
+  .hero-copy .lead{font-size:16px}
+  .hero-visual{min-height:330px;margin:0 auto;width:min(100%,540px)}
+  .visual-glow{width:310px;height:310px;max-width:85vw;max-height:85vw}
+  .preview-window{transform:none}
+  .floating-note{right:5px;bottom:0}
+  .problem-section,.category-section,.steps-section{padding-top:58px;padding-bottom:58px}
+  .section-heading{margin-bottom:30px}
+  .three-cards{gap:14px}
+  .info-card{padding:22px}
+  .steps-grid{gap:12px}
+  .step-card{padding:18px}
+  .category-grid{gap:10px}
+  .category-tile{padding:18px 8px}
+  .cta-section{margin-top:34px;margin-bottom:42px;padding:28px 24px}
+  .inner-page{padding-top:48px;padding-bottom:58px}
+  .inner-feature{gap:24px;margin-top:34px}
+  .how-list{margin:34px 0}
+  .footer{padding:32px 0 22px}
+  .footer-inner{gap:18px}
+  .footer-links{gap:12px 18px}
+}
+@media(max-width:520px){
+  .wrap{width:calc(100% - 32px)}
+  .brand img{width:145px}
+  .public-nav .public-theme-toggle{width:38px;height:38px;justify-content:center;padding:0;font-size:0}
+  .public-nav .public-theme-toggle span{display:none}
+  .public-nav .mobile-menu{width:38px;height:38px;padding:0}
+  .hero{padding-top:34px;padding-bottom:38px}
+  .hero h1{font-size:clamp(32px,9vw,42px);letter-spacing:-1px}
+  .hero-actions{gap:10px}
+  .hero-visual{min-height:290px}
+  .preview-body{padding:15px}
+  .preview-welcome{font-size:16px}
+  .preview-stats>div{padding:9px 5px}
+  .preview-stats strong{font-size:17px}
+  .preview-stats small{font-size:8px}
+  .preview-line{gap:7px}
+  .preview-line b{font-size:9px}
+  .floating-note{max-width:245px;padding:10px 12px;right:0}
+  .section-heading h2{font-size:27px}
+  .steps-grid{grid-template-columns:1fr}
+  .category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cta-section{padding:25px 20px;border-radius:13px}
+  .cta-section h2{font-size:27px}
+  .inner-page h1{font-size:clamp(31px,8vw,42px)}
+  .inner-feature{grid-template-columns:minmax(0,1fr)}
+  .how-list article{grid-template-columns:42px minmax(0,1fr);gap:13px;padding:18px 0}
+  .how-list article>span{width:36px;height:36px}
+  .policy-section{margin-top:28px}
+  .footer-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch;gap:13px}
+  .footer-inner>small{line-height:1.6}
+}
+@media(max-width:360px){
+  .public-nav{padding:0 12px}
+  .brand img{width:128px}
+  .public-nav .nav-tools{gap:6px}
+  .hero h1{font-size:31px}
+  .preview-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .preview-stats small{font-size:7px}
+}
