@@ -4,6 +4,7 @@ import { updateAccountPassword } from '../services/supabase.js';
 import { navigate } from '../utils/router.js';
 import { saveEvidenceFile, getEvidenceFile, deleteEvidenceFile, clearEvidenceFiles } from '../services/evidenceFiles.js';
 import { updateAccountProfile } from '../services/supabase.js';
+import { MAX_BACKUP_FILE_SIZE, prepareRestoredWorkspace } from '../utils/backupValidation.js';
 
 const stat=(label,value,sub,icon)=>`<article class="stat-card"><div class="stat-top"><span>${label}</span><i>${icon}</i></div><strong>${value}</strong><small>${sub}</small></article>`;
 const heading=(eyebrow,title,desc,action='')=>`<div class="page-heading"><div><span class="eyebrow">${eyebrow}</span><h1>${title}</h1><p>${desc}</p></div>${action}</div>`;
@@ -541,34 +542,12 @@ export function bindAppActions(){
   const file=event.target.files?.[0];
   if(!file)return;
   try{
-   if(file.size>10*1024*1024)throw new Error('The backup file is larger than 10 MB.');
+   if(file.size>MAX_BACKUP_FILE_SIZE)throw new Error('The backup file is larger than 10 MB.');
    const parsed=JSON.parse(await file.text());
-   const candidate=parsed?.app==='PriorProof'?parsed.data:parsed;
-   if(parsed?.app&&parsed.app!=='PriorProof')throw new Error('This file is not a PriorProof backup.');
-   if(parsed?.app==='PriorProof'&&parsed.schemaVersion!==1)throw new Error('This backup version is not supported. Please export a fresh backup from the current version of PriorProof.');
-   if(!candidate||typeof candidate!=='object'||Array.isArray(candidate)||!candidate.user||typeof candidate.user!=='object'||!Array.isArray(candidate.experiences)||!Array.isArray(candidate.evidence)||!Array.isArray(candidate.competencies)||(candidate.assessments!==undefined&&!Array.isArray(candidate.assessments)))throw new Error('The file structure is not a valid PriorProof backup.');
-   const assessmentRecords=Array.isArray(candidate.assessments)?candidate.assessments:[];
-   for(const [name,items] of [['experience',candidate.experiences],['evidence',candidate.evidence],['competency',candidate.competencies],['review pack',assessmentRecords]]){
-    const ids=new Set();
-    for(const item of items){
-     if(!item||typeof item!=='object'||Array.isArray(item)||typeof item.id!=='string'||!item.id.trim())throw new Error('A '+name+' record is missing a valid ID.');
-     if(ids.has(item.id))throw new Error('The backup contains duplicate '+name+' IDs.');
-     ids.add(item.id);
-    }
-   }
-   const counts=candidate.experiences.length+' experience record(s), '+candidate.evidence.length+' evidence record(s) and '+candidate.competencies.length+' competency suggestion(s)';
-   if(!confirm('Restore this backup? It contains '+counts+'. The current workspace will be replaced. Attachments are not included in JSON backups. Continue?'))return;
    const currentUser=getData().user||{};
-   const experienceIds=new Set(candidate.experiences.map(item=>item.id));
-   const evidenceIds=new Set(candidate.evidence.map(item=>item.id));
-   const restored={
-    ...candidate,
-    user:{...candidate.user,id:currentUser.id,email:currentUser.email},
-    experiences:candidate.experiences.map(item=>({...item,skills:Array.isArray(item.skills)?item.skills.filter(skill=>typeof skill==='string'):[]})),
-    evidence:candidate.evidence.map(item=>({...item,experienceId:experienceIds.has(item.experienceId)?item.experienceId:null,fileId:null,filePath:null,fileName:'',fileSize:0,fileType:''})),
-    competencies:candidate.competencies.map(item=>({...item,experienceIds:Array.isArray(item.experienceIds)?item.experienceIds.filter(id=>experienceIds.has(id)):[],evidenceIds:Array.isArray(item.evidenceIds)?item.evidenceIds.filter(id=>evidenceIds.has(id)):[]})),
-    assessments:assessmentRecords.map(item=>({...item,competencyId:candidate.competencies.some(c=>c.id===item.competencyId)?item.competencyId:null,evidenceIds:Array.isArray(item.evidenceIds)?item.evidenceIds.filter(id=>evidenceIds.has(id)):[]}))
-   };
+   const {workspace:restored,counts:backupCounts}=prepareRestoredWorkspace(parsed,currentUser);
+   const counts=backupCounts.experiences+' experience record(s), '+backupCounts.evidence+' evidence record(s) and '+backupCounts.competencies+' competency suggestion(s)';
+   if(!confirm('Restore this backup? It contains '+counts+'. The current workspace will be replaced. Attachments are not included in JSON backups. Continue?'))return;
    // Persist the restored records before removing old attachment files.
    await saveDataAndWait(restored);
    let cleanupMessage='Backup restored and saved. Attachments are not included in JSON backups; add them again from your original files if needed.';
