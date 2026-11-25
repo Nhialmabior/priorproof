@@ -103,25 +103,22 @@ export function gapPage(){
  const d=getData();
  const rows=d.competencies.map(c=>{
   const items=(c.evidenceIds||[]).map(id=>d.evidence.find(e=>e.id===id)).filter(Boolean);
-  const reviewed=items.filter(e=>['assessor-reviewed','assessor reviewed'].includes(String(e.status||'').toLowerCase())).length;
-  const independentlyVerified=items.filter(e=>['independently verified','independently-verified'].includes(String(e.status||'').toLowerCase())).length;
   const experienceIds=new Set(c.experienceIds||[]);
   const unrelated=items.filter(e=>e.experienceId&&!experienceIds.has(e.experienceId));
-  return {competency:c,items,reviewed,independentlyVerified,unrelated};
+  const withFiles=items.filter(e=>Boolean(e.fileName)).length;
+  return {competency:c,items,unrelated,withFiles};return {competency:c,items,reviewed,independentlyVerified,unrelated};
  });
  const total=rows.length,withEvidence=rows.filter(r=>r.items.length).length,missing=total-withEvidence;
- const selfReported=rows.filter(r=>r.items.length&&!r.reviewed&&!r.independentlyVerified).length;
- const reviewedCount=rows.filter(r=>r.reviewed).length,verifiedCount=rows.filter(r=>r.independentlyVerified).length;
- const pct=total?Math.round(withEvidence/total*100):0;
- const cards=rows.map(({competency:c,items,reviewed,independentlyVerified,unrelated})=>{
-  let recommendation='';
-  if(!items.length) recommendation='Add a relevant work sample, activity record, training output or reference. You can add evidence from the Evidence page.';
-  else if(!reviewed&&!independentlyVerified) recommendation='Your linked items are currently user-submitted. Consider adding a reference or seeking feedback from an authorised reviewer where available.';
-  else if(!independentlyVerified) recommendation='Review the feedback available and check whether an appropriate independent recognition or verification route exists.';
-  else recommendation='Keep the original supporting records and check that the verification scope matches the skill being claimed.';
-  return `<article class="panel gap-card">
+  const relevanceChecks=rows.filter(r=>r.unrelated.length).length;
+  const pct=total?Math.round(withEvidence/total*100):0;
+  const cards=rows.map(({competency:c,items,unrelated,withFiles})=>{
+   let recommendation='';
+   if(!items.length) recommendation='Consider adding a relevant work sample, activity record, training output or reference. This is a documentation prompt, not an indication that you lack the skill.';
+   else if(unrelated.length) recommendation='Review whether the linked evidence genuinely relates to this competency. Evidence connected to another experience may still be relevant, but the relationship should be clear.';
+   else recommendation='Check that each item is relevant, current and appropriate to support the experience you have recorded. Keep original documents and seek an authorised review where required.';
+   return `<article class="panel gap-card">
    <div class="gap-card-head"><div><span class="eyebrow">${escapeHtml(c.category||'General')}</span><h3>${escapeHtml(c.name)}</h3></div><span class="pill ${items.length?'':'pending'}">${items.length?'Evidence linked':'No evidence linked'}</span></div>
-   <div class="gap-metrics"><span><b>${items.length}</b> linked item(s)</span><span><b>${reviewed}</b> assessor-reviewed</span><span><b>${independentlyVerified}</b> independently verified</span></div>
+   <div class="gap-metrics"><span><b>${items.length}</b> linked item(s)</span><span><b>${withFiles}</b> with file attached</span><span><b>${unrelated.length}</b> relevance check(s)</span></div>
    <div class="gap-evidence-list"><b>Evidence register</b>
     ${items.length?items.map(e=>`<div class="gap-evidence-row"><div><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml(e.type||'Supporting material')}${e.fileName?' · File attached':''}</small></div><span class="pill">${escapeHtml(e.status||'Self-reported')}</span></div>`).join(''):'<p class="muted">No evidence is currently linked to this competency.</p>'}
    </div>
@@ -135,15 +132,14 @@ export function gapPage(){
   <div class="progress"><i style="width:${pct}%"></i></div>
   <div class="gap-summary-grid">
    <div><strong>${missing}</strong><span>No linked evidence</span></div>
-   <div><strong>${selfReported}</strong><span>Only user-submitted evidence</span></div>
-   <div><strong>${reviewedCount}</strong><span>Have assessor-reviewed items</span></div>
-   <div><strong>${verifiedCount}</strong><span>Have independently verified items</span></div>
+   <div><strong>${withEvidence}</strong><span>With linked evidence</span></div>
+   <div><strong>${relevanceChecks}</strong><span>Need a relevance check</span></div>
   </div>
-  <p class="gap-disclaimer"><b>How to read this:</b> An uploaded file or a user-selected evidence link does not establish authenticity or competence. “Assessor-reviewed” and “independently verified” are shown only when the record has that status; PriorProof does not perform those reviews in this prototype.</p>
+  <p class="gap-disclaimer"><b>How to read this:</b> These figures describe the records and links in your workspace only. They do not measure your ability or indicate that you lack a competency. A file attachment or user-selected link does not establish authenticity, competence or independent verification. Any status label shown on an evidence record is not authenticated by PriorProof.</p>
  </section>
  <div class="gap-section-heading"><div><h2>Competency-by-competency review</h2><p>Use these suggestions to decide what to strengthen next.</p></div><a href="/app/competencies" data-link>Manage evidence links →</a></div>
  <div class="gap-card-list">${cards||'<section class="panel empty-state"><h3>No competency suggestions yet</h3><p>Add experience records and list the skills you developed. PriorProof will create preliminary suggestions for you to review.</p><a class="btn btn-primary" href="/app/experience" data-link>Go to experience</a></section>'}</div>`;
- return simplePage('Gap analysis','See which competency suggestions have supporting material and where more documentation may help.',content,'/app/gap-analysis');
+ return simplePage('Gap analysis','Review documentation coverage, check evidence relevance and identify where supporting material may be useful.',content,'/app/gap-analysis');
 }
 export function portfolioPage(){
  const d=getData();
@@ -326,9 +322,24 @@ export function bindAppActions(){
   d.competencies=d.competencies.filter(c=>(c.experienceIds||[]).length||(c.evidenceIds||[]).length);
   saveData(d);
  }));
- document.querySelectorAll('[data-map-form]').forEach(form=>form.addEventListener('submit',e=>{e.preventDefault();const d=getData(),competency=d.competencies.find(c=>c.id===form.dataset.mapForm),evidenceId=new FormData(form).get('evidenceId');if(!competency||!evidenceId)return;const item=d.evidence.find(x=>x.id===evidenceId);if(!item)return;competency.evidenceIds=[...new Set([...(competency.evidenceIds||[]),evidenceId])];saveData(d);}));
- document.querySelectorAll('[data-unlink-evidence]').forEach(button=>button.addEventListener('click',()=>{const d=getData(),competency=d.competencies.find(c=>c.id===button.dataset.unlinkEvidence);if(!competency)return;competency.evidenceIds=(competency.evidenceIds||[]).filter(id=>id!==button.dataset.evidenceId);saveData(d);}));
- const evidenceSearch=document.getElementById('evidenceSearch'),evidenceType=document.getElementById('evidenceTypeFilter'),evidenceStatus=document.getElementById('evidenceStatusFilter');
+ document.querySelectorAll('[data-map-form]').forEach(form=>form.addEventListener('submit',e=>{
+   e.preventDefault();
+   const d=getData(),competency=d.competencies.find(c=>c.id===form.dataset.mapForm),evidenceId=String(new FormData(form).get('evidenceId')||'');
+   if(!competency||!evidenceId)return;
+   const item=d.evidence.find(x=>x.id===evidenceId);
+   if(!item)return;
+   competency.evidenceIds=[...new Set([...(competency.evidenceIds||[]),evidenceId])];
+   saveData(d);
+   window.dispatchEvent(new PopStateEvent('popstate'));
+  }));
+  document.querySelectorAll('[data-unlink-evidence]').forEach(button=>button.addEventListener('click',()=>{
+   const d=getData(),competency=d.competencies.find(c=>c.id===button.dataset.unlinkEvidence);
+   if(!competency)return;
+   competency.evidenceIds=(competency.evidenceIds||[]).filter(id=>id!==button.dataset.evidenceId);
+   saveData(d);
+   window.dispatchEvent(new PopStateEvent('popstate'));
+  }));
+  const evidenceSearch=const evidenceSearch=document.getElementById('evidenceSearch'),evidenceType=document.getElementById('evidenceTypeFilter'),evidenceStatus=document.getElementById('evidenceStatusFilter');
  if(evidenceSearch&&evidenceType&&evidenceStatus){
   const cards=[...document.querySelectorAll('[data-evidence-card]')],count=document.getElementById('evidenceResultCount'),empty=document.getElementById('evidenceNoResults');
   const applyEvidenceFilters=()=>{const q=evidenceSearch.value.trim().toLowerCase(),type=evidenceType.value,status=evidenceStatus.value;let visible=0;cards.forEach(card=>{const match=card.textContent.toLowerCase().includes(q)&&(!type||card.dataset.evidenceType===type)&&(!status||card.dataset.evidenceStatus===status);card.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+cards.length+' record(s)';if(empty)empty.hidden=visible!==0;};
