@@ -68,7 +68,7 @@ export function evidencePage(){
  const content=`<section class="evidence-summary-grid">
   <div><strong>${d.evidence.length}</strong><span>Total evidence records</span></div>
   <div><strong>${d.evidence.filter(e=>e.fileName).length}</strong><span>With file attachments</span></div>
-  <div><strong>${d.evidence.filter(e=>(evidenceStatusLabel(e)).toLowerCase()==='self-reported').length}</strong><span>Not independently verified</span></div>
+  <div><strong>${d.evidence.length}</strong><span>Not independently verified</span></div>
  </section>
  <section class="panel evidence-repository-panel">
   <div class="panel-head"><div><h2>Evidence repository</h2><p id="evidenceResultCount" aria-live="polite">${d.evidence.length} record(s)</p></div>${btn('Add evidence','addEvidence')}</div>
