@@ -36,22 +36,19 @@ function safeFileName(name) {
   return cleaned || 'evidence-file';
 }
 
-export async function saveEvidenceFile(id, file, previousPath = null) {
+export async function saveEvidenceFile(id, file) {
   if (!file || !file.size) return null;
   if (file.size > 5 * 1024 * 1024) throw new Error('Please choose a file smaller than 5 MB.');
 
   const user = await currentUser();
-  const path = user.id + '/' + id + '/' + safeFileName(file.name);
+  const path = user.id + '/' + id + '/' + crypto.randomUUID() + '-' + safeFileName(file.name);
   const { error } = await getSupabase().storage
     .from(BUCKET)
     .upload(path, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
 
   if (error) throw new Error('Could not upload your evidence file: ' + error.message);
 
-  if (previousPath && previousPath !== path) {
-    const { error: removeError } = await getSupabase().storage.from(BUCKET).remove([previousPath]);
-    if (removeError) console.warn('PriorProof could not remove the replaced attachment:', removeError.message);
-  }
+  // Keep any previous attachment until the new workspace metadata is safely saved.
 
   return { id, name: file.name, type: file.type, size: file.size, path };
 }
