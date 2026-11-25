@@ -1,4 +1,6 @@
 import { navigate } from '../utils/router.js';
+
+let syncStatusListenerBound = false;
 export function publicNav(active = '') {
   return `<header class="public-nav"><a class="brand" href="/" data-link><img src="/logo.svg" alt="PriorProof"></a>
   <div class="nav-tools"><button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">◐ <span>Theme</span></button><button class="mobile-menu" aria-label="Toggle navigation" id="mobileMenu">☰</button></div>
@@ -11,9 +13,31 @@ export function appShell(content, active = '/app/dashboard', user = {}) {
   return `<div class="app-layout"><aside class="sidebar" id="sidebar"><a href="/app/dashboard" data-link class="side-brand"><img src="/logo.svg" alt="PriorProof"></a><div class="side-label">WORKSPACE</div>
   ${menu.map(([label,path,icon])=>`<a class="side-link ${active===path?'selected':''}" href="${path}" data-link><span class="side-icon">${icon}</span>${label}</a>`).join('')}
   <div class="side-bottom"><div class="side-label">PREFERENCES</div><a class="side-link ${active==='/app/settings'?'selected':''}" href="/app/settings" data-link><span class="side-icon">⚙</span>Settings</a><a class="side-link" href="/app/help" data-link><span class="side-icon">?</span>Help & support</a><div class="side-user"><div class="avatar">${(user.fullName||'A').slice(0,1).toUpperCase()}</div><div><strong>${escapeHtml(user.fullName||'Demo user')}</strong><small>Personal workspace</small></div></div></div></aside>
-  <main class="app-main"><header class="app-topbar"><button class="icon-btn" id="sidebarToggle" aria-label="Open menu">☰</button><div class="crumb">Workspace <span>/</span> ${active.split('/').pop().replaceAll('-',' ')}</div><div class="top-actions"><button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">◐ <span>Theme</span></button><button class="btn btn-outline btn-small" type="button" id="signOutButton">Sign out</button><div class="avatar small">${(user.fullName||'A').slice(0,1).toUpperCase()}</div></div></header><section class="app-content">${content}</section></main></div>`;
+  <main class="app-main"><header class="app-topbar"><button class="icon-btn" id="sidebarToggle" aria-label="Open menu">☰</button><div class="crumb">Workspace <span>/</span> ${active.split('/').pop().replaceAll('-',' ')}</div><div class="top-actions"><span class="sync-status" id="workspaceSyncStatus" data-status="saved" role="status" aria-live="polite" title="Workspace changes sync to your account">✓ <span>Changes saved</span></span><button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">◐ <span>Theme</span></button><button class="btn btn-outline btn-small" type="button" id="signOutButton">Sign out</button><div class="avatar small">${(user.fullName||'A').slice(0,1).toUpperCase()}</div></div></header><section class="app-content">${content}</section></main></div>`;
 }
 export function bindLayout() {
+  if (!syncStatusListenerBound) {
+    window.addEventListener('priorproof:sync-status', event => {
+      const indicator = document.getElementById('workspaceSyncStatus');
+      if (!indicator) return;
+      const status = event.detail?.status || 'saved';
+      const labels = {
+        saving: ['◌', 'Saving changes…'],
+        saved: ['✓', 'Changes saved'],
+        error: ['!', 'Sync issue']
+      };
+      const [symbol, label] = labels[status] || labels.saved;
+      indicator.dataset.status = status;
+      indicator.textContent = symbol + ' ';
+      const text = document.createElement('span');
+      text.textContent = label;
+      indicator.appendChild(text);
+      indicator.title = status === 'error'
+        ? (event.detail?.message || 'Your latest changes may not have reached the cloud. Check your connection and try again.')
+        : 'Workspace changes sync to your account';
+    });
+    syncStatusListenerBound = true;
+  }
   document.querySelectorAll('[data-link]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();navigate(a.getAttribute('href'));}));
   const applyTheme=theme=>{document.documentElement.dataset.theme=theme;document.querySelectorAll('[data-theme-toggle]').forEach(button=>{button.innerHTML=theme==='dark'?'☀ <span>Light mode</span>':'◐ <span>Dark mode</span>';button.setAttribute('aria-label',theme==='dark'?'Switch to light mode':'Switch to dark mode');});};
   applyTheme(localStorage.getItem('priorproof-theme')==='dark'?'dark':'light');
