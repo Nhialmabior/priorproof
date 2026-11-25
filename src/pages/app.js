@@ -8,6 +8,7 @@ import { updateAccountProfile } from '../services/supabase.js';
 const stat=(label,value,sub,icon)=>`<article class="stat-card"><div class="stat-top"><span>${label}</span><i>${icon}</i></div><strong>${value}</strong><small>${sub}</small></article>`;
 const heading=(eyebrow,title,desc,action='')=>`<div class="page-heading"><div><span class="eyebrow">${eyebrow}</span><h1>${title}</h1><p>${desc}</p></div>${action}</div>`;
 const btn=(label,id)=>`<button class="btn btn-primary" id="${id}">${label} <span>+</span></button>`;
+const evidenceStatusLabel = () => 'Not independently verified';
 const skillCatalog={
  communication:{name:'Communication',category:'Interpersonal'},
  teamwork:{name:'Teamwork',category:'Interpersonal'},
@@ -50,7 +51,7 @@ export function evidencePage(){
  const records=d.evidence.map(e=>{
   const exp=d.experiences.find(x=>x.id===e.experienceId);
   const linked=d.competencies.filter(c=>(c.evidenceIds||[]).includes(e.id));
-  const status=e.status||'Self-reported';
+  const status=evidenceStatusLabel(e);
   return `<article class="panel evidence-card" data-evidence-card data-evidence-type="${escapeHtml(String(e.type||'').toLowerCase())}" data-evidence-status="${escapeHtml(String(status).toLowerCase())}">
    <div class="evidence-card-head"><div class="evidence-card-title"><span class="record-icon">▧</span><div><h3>${escapeHtml(e.title)}</h3><small>${escapeHtml(e.type||'Supporting material')}</small></div></div><span class="pill">${escapeHtml(status)}</span></div>
    ${e.description?`<p class="evidence-description">${escapeHtml(e.description)}</p>`:''}
@@ -67,14 +68,14 @@ export function evidencePage(){
  const content=`<section class="evidence-summary-grid">
   <div><strong>${d.evidence.length}</strong><span>Total evidence records</span></div>
   <div><strong>${d.evidence.filter(e=>e.fileName).length}</strong><span>With file attachments</span></div>
-  <div><strong>${d.evidence.filter(e=>(e.status||'Self-reported').toLowerCase()==='self-reported').length}</strong><span>Self-reported records</span></div>
+  <div><strong>${d.evidence.filter(e=>(evidenceStatusLabel(e)).toLowerCase()==='self-reported').length}</strong><span>Not independently verified</span></div>
  </section>
  <section class="panel evidence-repository-panel">
   <div class="panel-head"><div><h2>Evidence repository</h2><p id="evidenceResultCount" aria-live="polite">${d.evidence.length} record(s)</p></div>${btn('Add evidence','addEvidence')}</div>
   ${d.evidence.length?`<div class="evidence-filters">
    <label>Search records<input type="search" id="evidenceSearch" placeholder="Search title, source, description..."></label>
    <label>Evidence type<select id="evidenceTypeFilter"><option value="">All types</option>${types.map(t=>`<option value="${escapeHtml(t.toLowerCase())}">${escapeHtml(t)}</option>`).join('')}</select></label>
-   <label>Status<select id="evidenceStatusFilter"><option value="">All statuses</option><option value="self-reported">Self-reported</option><option value="reference-confirmed">Reference-confirmed</option><option value="ai-analysed">AI-analysed</option><option value="assessor-reviewed">Assessor-reviewed</option><option value="independently verified">Independently verified</option></select></label>
+   <label>Record status<select id="evidenceStatusFilter"><option value="">All records</option><option value="not independently verified">Not independently verified</option></select></label>
   </div><div class="evidence-card-list">${records}</div><p id="evidenceNoResults" class="empty-state" hidden>No records match these filters. Try changing your search or filters.</p>`:'<div class="empty-state">No evidence records yet. Add your first supporting item to begin.</div>'}
   <p class="helper-text">Attachments are stored in private account storage (up to 5 MB each). They are not independently verified. Keep your original documents in a safe location.</p>
  </section>`;
@@ -94,7 +95,7 @@ export function competenciesPage(){
    <span class="pill">${escapeHtml(c.status||'Suggested')}</span>
    <div class="mapping-block"><b>Why this was suggested</b>${reasons.length?reasons.map(reason=>`<small>You listed “${escapeHtml(reason.skill)}” in “${escapeHtml(reason.experience)}”.</small>`).join(''):'<small>This is an existing competency record. Edit a linked experience and include the relevant skill to show its source here.</small>'}</div>
    <div class="mapping-block"><b>Linked experience</b>${experience.length?experience.map(e=>`<small>${escapeHtml(e.title)}${e.contribution?' — '+escapeHtml(e.contribution):''}</small>`).join(''):'<small>No experience linked.</small>'}</div>
-   <div class="mapping-block"><b>Supporting evidence</b>${linked.length?linked.map(item=>`<div class="mapping-evidence"><span>${escapeHtml(item.title)} <small>· ${escapeHtml(item.status||'Self-reported')}</small></span><button type="button" class="btn btn-outline btn-small" data-unlink-evidence="${escapeHtml(c.id)}" data-evidence-id="${escapeHtml(item.id)}">Unlink</button></div>`).join(''):'<small>No evidence linked yet.</small>'}</div>
+   <div class="mapping-block"><b>Supporting evidence</b>${linked.length?linked.map(item=>`<div class="mapping-evidence"><span>${escapeHtml(item.title)} <small>· ${escapeHtml(evidenceStatusLabel(item))}</small></span><button type="button" class="btn btn-outline btn-small" data-unlink-evidence="${escapeHtml(c.id)}" data-evidence-id="${escapeHtml(item.id)}">Unlink</button></div>`).join(''):'<small>No evidence linked yet.</small>'}</div>
    ${options.length?`<form class="mapping-form" data-map-form="${escapeHtml(c.id)}"><label for="map-${escapeHtml(c.id)}">Add supporting evidence</label><select id="map-${escapeHtml(c.id)}" name="evidenceId" required><option value="">Choose an evidence item</option>${options.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.title)}</option>`).join('')}</select><button class="btn btn-primary btn-small" type="submit">Link evidence</button></form>`:'<p class="helper-text">No unlinked evidence items available.</p>'}
   </article>`;
  }).join('')||'<div class="empty-state">No competency suggestions yet. Add experience with skills to begin.</div>'}</div>`;
@@ -121,7 +122,7 @@ export function gapPage(){
    <div class="gap-card-head"><div><span class="eyebrow">${escapeHtml(c.category||'General')}</span><h3>${escapeHtml(c.name)}</h3></div><span class="pill ${items.length?'':'pending'}">${items.length?'Evidence linked':'No evidence linked'}</span></div>
    <div class="gap-metrics"><span><b>${items.length}</b> linked item(s)</span><span><b>${withFiles}</b> with file attached</span><span><b>${unrelated.length}</b> relevance check(s)</span></div>
    <div class="gap-evidence-list"><b>Evidence register</b>
-    ${items.length?items.map(e=>`<div class="gap-evidence-row"><div><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml(e.type||'Supporting material')}${e.fileName?' · File attached':''}</small></div><span class="pill">${escapeHtml(e.status||'Self-reported')}</span></div>`).join(''):'<p class="muted">No evidence is currently linked to this competency.</p>'}
+    ${items.length?items.map(e=>`<div class="gap-evidence-row"><div><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml(e.type||'Supporting material')}${e.fileName?' · File attached':''}</small></div><span class="pill">${escapeHtml(evidenceStatusLabel(e))}</span></div>`).join(''):'<p class="muted">No evidence is currently linked to this competency.</p>'}
    </div>
    ${unrelated.length?'<p class="gap-caution">Check relevance: '+unrelated.length+' linked item(s) are associated with a different experience record. They may still be relevant, but review the connection.</p>':''}
    <div class="gap-recommendation"><b>Suggested action</b><p>${recommendation}</p></div>
@@ -192,7 +193,7 @@ export function portfolioPage(){
     ${e.learning?'<p><b>Learning reflection:</b> '+escapeHtml(e.learning)+'</p>':''}
     <div class="portfolio-skills"><b>Skills reported:</b> ${escapeHtml((e.skills||[]).join(', ')||'Not listed')}</div>
     <div class="portfolio-evidence"><b>Linked evidence (${evidenceFor(e.id).length})</b>
-    ${evidenceFor(e.id).length?evidenceFor(e.id).map(item=>`<div class="portfolio-evidence-item"><span>${escapeHtml(item.title)}</span><small>${escapeHtml(item.type)} · ${escapeHtml(item.status||'Self-reported')}${item.fileName?' · File attached: '+escapeHtml(item.fileName):' · Description only'}</small></div>`).join(''):'<p>No evidence linked to this experience.</p>'}
+    ${evidenceFor(e.id).length?evidenceFor(e.id).map(item=>`<div class="portfolio-evidence-item"><span>${escapeHtml(item.title)}</span><small>${escapeHtml(item.type)} · ${escapeHtml(evidenceStatusLabel(item))}${item.fileName?' · File attached: '+escapeHtml(item.fileName):' · Description only'}</small></div>`).join(''):'<p>No evidence linked to this experience.</p>'}
     </div>
    </article>`).join(''):'<p>No experience records have been added.</p>'}
   </section>
@@ -205,7 +206,7 @@ export function portfolioPage(){
    ${d.competencies.length?`<div class="portfolio-competency-list">${d.competencies.map(item=>`<div class="portfolio-competency"><b>${escapeHtml(item.name)}</b><small>${escapeHtml(item.category||'General')} · ${(item.experienceIds||[]).length} linked experience(s) · ${(item.evidenceIds||[]).length} linked evidence item(s)</small></div>`).join('')}</div>`:'<p>No competency suggestions have been generated yet.</p>'}
   </section>
   <section class="portfolio-section"><h3>05 · Evidence register <span class="section-count">${d.evidence.length} item(s)</span></h3>
-   ${d.evidence.length?`<div class="portfolio-evidence-register">${d.evidence.map(item=>`<div class="portfolio-evidence-item"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.type)} · ${escapeHtml(item.status||'Self-reported')} · ${escapeHtml(d.experiences.find(e=>e.id===item.experienceId)?.title||'Not linked to an experience')}${item.fileName?' · '+escapeHtml(item.fileName):' · No file attached'}</small>${item.description?`<p>${escapeHtml(item.description)}</p>`:''}</div>`).join('')}</div>`:'<p>No evidence records have been added.</p>'}
+   ${d.evidence.length?`<div class="portfolio-evidence-register">${d.evidence.map(item=>`<div class="portfolio-evidence-item"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.type)} · ${escapeHtml(evidenceStatusLabel(item))} · ${escapeHtml(d.experiences.find(e=>e.id===item.experienceId)?.title||'Not linked to an experience')}${item.fileName?' · '+escapeHtml(item.fileName):' · No file attached'}</small>${item.description?`<p>${escapeHtml(item.description)}</p>`:''}</div>`).join('')}</div>`:'<p>No evidence records have been added.</p>'}
   </section>
   <p class="portfolio-attachment-note">Attachment note: this PDF lists attached filenames where available. Original files remain separately stored in private account storage and are not embedded in the exported PDF.</p>
   <footer class="portfolio-footer"><p>Prepared using PriorProof · Your skills deserve recognition.</p><p>Generated on ${new Date().toLocaleDateString()} · Information is user-submitted unless otherwise stated.</p></footer>
@@ -216,8 +217,8 @@ export function portfolioPage(){
 export function assessmentsPage(){
  const d=getData(),packs=Array.isArray(d.assessments)?d.assessments:[];
  const options=d.competencies.map(c=>`<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join('');
- const evidence=d.evidence.map(e=>`<label class="review-evidence-option"><input type="checkbox" name="evidenceIds" value="${escapeHtml(e.id)}"><span><b>${escapeHtml(e.title)}</b><small>${escapeHtml(e.type)} · ${escapeHtml(e.status||'Self-reported')}</small></span></label>`).join('');
- const cards=packs.map(p=>{const c=d.competencies.find(x=>x.id===p.competencyId);const items=(p.evidenceIds||[]).map(id=>d.evidence.find(x=>x.id===id)).filter(Boolean);return `<article class="panel review-pack-card"><span class="pill">Prepared · Not submitted</span><h3>${escapeHtml(c?.name||p.competencyName||'Competency unavailable')}</h3><small>Created ${escapeHtml(p.createdAt?new Date(p.createdAt).toLocaleString():'Date not recorded')} · ${items.length} evidence item(s)</small><p>${escapeHtml(p.context||'No reviewer context added.')}</p>${items.length?`<div class="review-pack-evidence"><b>Included evidence</b><ul>${items.map(item=>`<li><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.type||'Supporting material')} · ${escapeHtml(item.status||'Self-reported')}${item.fileName?' · File attached':''}</small></li>`).join('')}</ul></div>`:'<p class="helper-text">No evidence items selected. Consider adding supporting material before sharing this brief.</p>'}<div class="review-pack-actions"><button class="btn btn-secondary" type="button" data-export-review-pack="${escapeHtml(p.id)}">Download review brief</button><button class="btn btn-danger" type="button" data-delete-review-pack="${escapeHtml(p.id)}">Delete</button></div><p class="helper-text">This pack has not been sent to or reviewed by an external assessor.</p></article>`;}).join('');
+ const evidence=d.evidence.map(e=>`<label class="review-evidence-option"><input type="checkbox" name="evidenceIds" value="${escapeHtml(e.id)}"><span><b>${escapeHtml(e.title)}</b><small>${escapeHtml(e.type)} · ${escapeHtml(evidenceStatusLabel(e))}</small></span></label>`).join('');
+ const cards=packs.map(p=>{const c=d.competencies.find(x=>x.id===p.competencyId);const items=(p.evidenceIds||[]).map(id=>d.evidence.find(x=>x.id===id)).filter(Boolean);return `<article class="panel review-pack-card"><span class="pill">Prepared · Not submitted</span><h3>${escapeHtml(c?.name||p.competencyName||'Competency unavailable')}</h3><small>Created ${escapeHtml(p.createdAt?new Date(p.createdAt).toLocaleString():'Date not recorded')} · ${items.length} evidence item(s)</small><p>${escapeHtml(p.context||'No reviewer context added.')}</p>${items.length?`<div class="review-pack-evidence"><b>Included evidence</b><ul>${items.map(item=>`<li><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.type||'Supporting material')} · ${escapeHtml(evidenceStatusLabel(item))}${item.fileName?' · File attached':''}</small></li>`).join('')}</ul></div>`:'<p class="helper-text">No evidence items selected. Consider adding supporting material before sharing this brief.</p>'}<div class="review-pack-actions"><button class="btn btn-secondary" type="button" data-export-review-pack="${escapeHtml(p.id)}">Download review brief</button><button class="btn btn-danger" type="button" data-delete-review-pack="${escapeHtml(p.id)}">Delete</button></div><p class="helper-text">This pack has not been sent to or reviewed by an external assessor.</p></article>`;}).join('');
  const content=`<section class="panel review-intro"><span class="eyebrow">REVIEW PREPARATION</span><h2>Prepare an evidence review pack</h2><p>Select a suggested competency and relevant evidence for an authorised reviewer to consider. The pack is saved to your account workspace. It is not submitted to an assessor and does not verify claims.</p></section>
  ${d.competencies.length?`<section class="panel"><h2>New review pack</h2><form id="reviewPackForm" class="review-pack-form"><label>Competency<select name="competencyId" required><option value="">Select a competency</option>${options}</select></label><fieldset><legend>Evidence to include</legend><p class="helper-text">Select only evidence that genuinely relates to this competency.</p>${evidence||'<p>No evidence records yet. You may still prepare a pack.</p>'}</fieldset><label>Context for reviewer (optional)<textarea name="context" rows="4" maxlength="1200" placeholder="Explain what you would like the reviewer to consider."></textarea></label><button class="btn btn-primary" type="submit">Save review pack</button></form></section>`:'<section class="panel"><p>Add experience records and review your competency suggestions before preparing a pack.</p><a href="/app/experience" data-link>Go to experience</a></section>'}
  <section class="review-packs-section"><div class="panel-head"><div><h2>Prepared review packs</h2><p>${packs.length} locally saved pack(s)</p></div></div>${cards||'<section class="panel empty-state"><h3>No review packs prepared</h3><p>Your saved preparation packs will appear here.</p></section>'}</section>`;
@@ -244,7 +245,7 @@ function openEntryDialog(kind,editId=null){
  }else{
   const opts='<option value="">Not linked yet</option>'+data.experiences.map(e=>'<option value="'+escapeHtml(e.id)+'">'+escapeHtml(e.title)+'</option>').join('');
   fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">'+label('Evidence title *',input('title','e.g. Project report or work sample',true),true)+label('Evidence type',select('type',['Project report','Work sample','Certificate','Reference','Photograph','Training record','Other supporting material']))+label('Related experience','<select name="experienceId" style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px">'+opts+'</select>')+label('Source / issuer',input('source','e.g. Training provider, employer or project'))+label('Date created or received',input('evidenceDate','','','date'))+label('Description / context','<textarea name="description" maxlength="800" placeholder="What does this item contain? What does it help demonstrate?" style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:11px;border:1px solid #d7dee8;border-radius:8px;min-height:90px"></textarea>',true)+label('Attach a file (optional)','<input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt" style="display:block;width:100%;margin-top:6px">',true)+'</div>';
-  dialog.querySelector('#entryNote').textContent=(editRecord?'Update the record details.':'Optional PDF, image, Word or text files up to 5 MB are uploaded to your private account storage. Files are not independently verified. Evidence is initially marked self-reported.')+(editRecord&&editRecord.fileName?' Existing attachment: '+editRecord.fileName+'. Choose a new file only if you want to replace it.':'');
+  dialog.querySelector('#entryNote').textContent=(editRecord?'Update the record details.':'Optional PDF, image, Word or text files up to 5 MB are uploaded to your private account storage. Files and record details are not independently verified. Evidence records are marked as not independently verified.')+(editRecord&&editRecord.fileName?' Existing attachment: '+editRecord.fileName+'. Choose a new file only if you want to replace it.':'');
   if(editRecord){const form=dialog.querySelector('#entryForm');['title','type','experienceId','source','evidenceDate','description'].forEach(name=>{const field=form.elements.namedItem(name);if(field)field.value=editRecord[name]||'';});}
  }
  document.body.appendChild(dialog);
@@ -275,7 +276,7 @@ function openEntryDialog(kind,editId=null){
    const hasNewFile=Boolean(file&&file.size);
    let attachment=null;
    if(hasNewFile){try{attachment=await saveEvidenceFile(evId,file);uploadedAttachment=attachment;previousAttachment=editRecord?.filePath||null;}catch(error){alert(error.message||'The file could not be uploaded.');return;}}
-   const ev={id:evId,title:String(f.get('title')).trim(),type:f.get('type'),experienceId:f.get('experienceId')||null,source:String(f.get('source')||'').trim(),evidenceDate:f.get('evidenceDate')||'',description:String(f.get('description')||'').trim(),status:editRecord?.status||'Self-reported',fileId:hasNewFile?evId:(editRecord?.fileId||null),filePath:hasNewFile?attachment.path:(editRecord?.filePath||null),fileName:hasNewFile?attachment.name:(editRecord?.fileName||''),fileSize:hasNewFile?attachment.size:(editRecord?.fileSize||0),fileType:hasNewFile?attachment.type:(editRecord?.fileType||'')};
+   const ev={id:evId,title:String(f.get('title')).trim(),type:f.get('type'),experienceId:f.get('experienceId')||null,source:String(f.get('source')||'').trim(),evidenceDate:f.get('evidenceDate')||'',description:String(f.get('description')||'').trim(),status:'Not independently verified',fileId:hasNewFile?evId:(editRecord?.fileId||null),filePath:hasNewFile?attachment.path:(editRecord?.filePath||null),fileName:hasNewFile?attachment.name:(editRecord?.fileName||''),fileSize:hasNewFile?attachment.size:(editRecord?.fileSize||0),fileType:hasNewFile?attachment.type:(editRecord?.fileType||'')};
    if(editRecord){const index=d.evidence.findIndex(item=>item.id===editRecord.id);if(index>=0)d.evidence[index]=ev;}else d.evidence.unshift(ev);
    // Preserve manually selected competency links when only evidence details change.
    // Rebuild links only for a new record or when its related experience changes.
@@ -474,7 +475,7 @@ export function bindAppActions(){
      '',
      (index+1)+'. '+clean(item.title),
      'Type: '+(clean(item.type)||'Not provided'),
-     'Status recorded: '+(clean(item.status)||'Self-reported'),
+     'Status: Not independently verified',
      'Evidence date: '+(clean(item.evidenceDate)||'Not provided'),
      'Source: '+(clean(item.source)||'Not provided'),
      'Related experience: '+(clean(experience?.title)||'Not linked'),
