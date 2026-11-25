@@ -10,27 +10,104 @@ const heading=(eyebrow,title,desc,action='')=>`<div class="page-heading"><div><s
 const btn=(label,id)=>`<button class="btn btn-primary" id="${id}">${label} <span>+</span></button>`;
 const evidenceStatusLabel = () => 'Not independently verified';
 const skillCatalog={
+ // Interpersonal and communication
  communication:{name:'Communication',category:'Interpersonal'},
+ 'verbal communication':{name:'Communication',category:'Interpersonal'},
+ 'written communication':{name:'Communication',category:'Interpersonal'},
+ 'active listening':{name:'Active listening',category:'Interpersonal'},
+ listening:{name:'Active listening',category:'Interpersonal'},
  teamwork:{name:'Teamwork',category:'Interpersonal'},
  collaboration:{name:'Teamwork',category:'Interpersonal'},
+ 'working with others':{name:'Teamwork',category:'Interpersonal'},
+ 'conflict resolution':{name:'Conflict resolution',category:'Interpersonal'},
+ negotiation:{name:'Negotiation',category:'Interpersonal'},
+ networking:{name:'Networking',category:'Interpersonal'},
+ empathy:{name:'Empathy',category:'Interpersonal'},
+ 'cross cultural communication':{name:'Cross-cultural communication',category:'Interpersonal'},
+ // Leadership and community engagement
  leadership:{name:'Leadership',category:'Leadership'},
+ 'team leadership':{name:'Team leadership',category:'Leadership'},
+ mentoring:{name:'Mentoring',category:'Leadership'},
+ coaching:{name:'Coaching',category:'Leadership'},
+ advocacy:{name:'Advocacy',category:'Community engagement'},
+ 'community engagement':{name:'Community engagement',category:'Community engagement'},
+ 'community mobilisation':{name:'Community mobilisation',category:'Community engagement'},
+ 'community mobilization':{name:'Community mobilisation',category:'Community engagement'},
+ 'stakeholder engagement':{name:'Stakeholder engagement',category:'Community engagement'},
+ 'stakeholder coordination':{name:'Stakeholder engagement',category:'Community engagement'},
+ // Planning and project delivery
  coordination:{name:'Activity coordination',category:'Organisational'},
  'activity coordination':{name:'Activity coordination',category:'Organisational'},
- 'project coordination':{name:'Activity coordination',category:'Organisational'},
+ 'project coordination':{name:'Project coordination',category:'Organisational'},
+ planning:{name:'Planning',category:'Organisational'},
+ 'work planning':{name:'Planning',category:'Organisational'},
+ 'strategic planning':{name:'Strategic planning',category:'Organisational'},
+ organisation:{name:'Organisation',category:'Organisational'},
+ organization:{name:'Organisation',category:'Organisational'},
+ 'time management':{name:'Time management',category:'Organisational'},
+ 'project management':{name:'Project management',category:'Organisational'},
+ 'event management':{name:'Event coordination',category:'Organisational'},
+ 'event coordination':{name:'Event coordination',category:'Organisational'},
+ logistics:{name:'Logistics',category:'Organisational'},
+ 'problem solving':{name:'Problem solving',category:'Analytical'},
+ 'decision making':{name:'Decision-making',category:'Analytical'},
+ adaptability:{name:'Adaptability',category:'Personal effectiveness'},
+ 'critical thinking':{name:'Critical thinking',category:'Analytical'},
+ // Administration, finance and reporting
  'record keeping':{name:'Records management',category:'Administrative'},
  'records management':{name:'Records management',category:'Administrative'},
- planning:{name:'Planning',category:'Organisational'},
- 'problem solving':{name:'Problem solving',category:'Analytical'},
- research:{name:'Research',category:'Analytical'},
- 'data analysis':{name:'Data analysis',category:'Digital and analytical'},
- 'digital literacy':{name:'Digital literacy',category:'Digital'},
- teaching:{name:'Teaching and learning support',category:'Learning and development'},
- facilitation:{name:'Facilitation',category:'Learning and development'},
- 'project management':{name:'Project management',category:'Organisational'},
+ documentation:{name:'Documentation',category:'Administrative'},
+ administration:{name:'Administration',category:'Administrative'},
+ 'data entry':{name:'Data entry',category:'Digital and analytical'},
+ filing:{name:'Records management',category:'Administrative'},
  budgeting:{name:'Budgeting',category:'Financial'},
- reporting:{name:'Reporting',category:'Communication'}
+ 'financial management':{name:'Financial management',category:'Financial'},
+ procurement:{name:'Procurement',category:'Administrative'},
+ reporting:{name:'Reporting',category:'Communication'},
+ 'report writing':{name:'Report writing',category:'Communication'},
+ 'proposal writing':{name:'Proposal writing',category:'Communication'},
+ // Research, monitoring and data
+ research:{name:'Research',category:'Analytical'},
+ 'data collection':{name:'Data collection',category:'Research and data'},
+ 'field data collection':{name:'Data collection',category:'Research and data'},
+ 'quantitative research':{name:'Quantitative research',category:'Research and data'},
+ 'qualitative research':{name:'Qualitative research',category:'Research and data'},
+ 'data analysis':{name:'Data analysis',category:'Digital and analytical'},
+ 'data management':{name:'Data management',category:'Research and data'},
+ 'monitoring and evaluation':{name:'Monitoring and evaluation',category:'Programme support'},
+ 'monitoring evaluation':{name:'Monitoring and evaluation',category:'Programme support'},
+ 'needs assessment':{name:'Needs assessment',category:'Programme support'},
+ 'survey design':{name:'Survey design',category:'Research and data'},
+ 'questionnaire design':{name:'Survey design',category:'Research and data'},
+ // Learning, training and facilitation
+ teaching:{name:'Teaching and learning support',category:'Learning and development'},
+ 'classroom management':{name:'Classroom management',category:'Learning and development'},
+ facilitation:{name:'Facilitation',category:'Learning and development'},
+ training:{name:'Training delivery',category:'Learning and development'},
+ 'training delivery':{name:'Training delivery',category:'Learning and development'},
+ 'curriculum development':{name:'Curriculum development',category:'Learning and development'},
+ 'lesson planning':{name:'Lesson planning',category:'Learning and development'},
+ 'learning support':{name:'Learning support',category:'Learning and development'},
+ // Digital skills
+ 'digital literacy':{name:'Digital literacy',category:'Digital'},
+ 'computer literacy':{name:'Digital literacy',category:'Digital'},
+ 'computer skills':{name:'Digital literacy',category:'Digital'},
+ 'microsoft office':{name:'Productivity software',category:'Digital'},
+ 'spreadsheet skills':{name:'Spreadsheet skills',category:'Digital'},
+ excel:{name:'Spreadsheet skills',category:'Digital'},
+ 'web development':{name:'Web development',category:'Digital'},
+ 'graphic design':{name:'Graphic design',category:'Digital'},
+ 'social media management':{name:'Social media management',category:'Digital'},
+ // Programme and humanitarian support
+ 'case management':{name:'Case management',category:'Programme support'},
+ 'project implementation':{name:'Project implementation',category:'Programme support'},
+ 'community outreach':{name:'Community outreach',category:'Community engagement'},
+ 'psychosocial support':{name:'Psychosocial support',category:'Programme support'},
+ 'safeguarding awareness':{name:'Safeguarding awareness',category:'Programme support'},
+ 'referral coordination':{name:'Referral coordination',category:'Programme support'}
 };
-const skillDefinition=value=>{const key=String(value||'').trim().toLowerCase().replace(/\\s+/g,' ');return {key,...(skillCatalog[key]||{name:String(value||'').trim(),category:'General'})};};
+const normalizeSkill=value=>String(value||'').normalize('NFKC').trim().toLowerCase().replace(/[^a-z0-9+#. ]/g,' ').replace(/\\s+/g,' ').trim();
+const skillDefinition=value=>{const key=normalizeSkill(value);return {key,...(skillCatalog[key]||{name:String(value||'').trim(),category:'General'})};};
 
 export function dashboardPage(){
  const d=getData();
@@ -83,7 +160,7 @@ export function evidencePage(){
 }
 export function competenciesPage(){
  const d=getData();
- const body=`<div class="notice"><b>How suggestions are generated:</b> PriorProof uses the skill names you enter in experience records and a small, transparent set of category/alias rules. It does not use AI to assess you. Review every suggestion and edit your experience if a skill is inaccurate. Evidence links are user-selected and do not verify competence.</div>
+ const body=`<div class="notice"><b>How suggestions are generated:</b> PriorProof compares the skill phrases in your experience records with a built-in catalogue of common skill names and aliases. Matching phrases are grouped under a consistent competency name; unrecognised phrases remain in the General category using the wording you entered. Each suggestion shows the experience and original skill phrase that informed it. This is a rule-based documentation aid, not an AI assessment, formal competency standard or verification of competence. Review every suggestion for accuracy.</div>
  <div class="competency-grid">${d.competencies.map(c=>{
   const linked=(c.evidenceIds||[]).map(id=>d.evidence.find(e=>e.id===id)).filter(Boolean);
   const experience=(c.experienceIds||[]).map(id=>d.experiences.find(e=>e.id===id)).filter(Boolean);
@@ -423,22 +500,25 @@ export function bindAppActions(){
    catch(error){alert('The evidence record was removed and saved, but its attachment could not be deleted. The file is no longer linked to your records and may remain in private storage.');}
   }
  }));
- document.querySelectorAll('[data-map-form]').forEach(form=>form.addEventListener('submit',e=>{
+ document.querySelectorAll('[data-map-form]').forEach(form=>form.addEventListener('submit',async e=>{
    e.preventDefault();
-   const d=getData(),competency=d.competencies.find(c=>c.id===form.dataset.mapForm),evidenceId=String(new FormData(form).get('evidenceId')||'');
+   const submit=form.querySelector('button[type="submit"]'),d=getData(),competency=d.competencies.find(c=>c.id===form.dataset.mapForm),evidenceId=String(new FormData(form).get('evidenceId')||'');
    if(!competency||!evidenceId)return;
    const item=d.evidence.find(x=>x.id===evidenceId);
    if(!item)return;
    competency.evidenceIds=[...new Set([...(competency.evidenceIds||[]),evidenceId])];
-   saveData(d);
-   window.dispatchEvent(new PopStateEvent('popstate'));
+   if(submit){submit.disabled=true;submit.textContent='Saving…';}
+   try{await saveDataAndWait(d);window.dispatchEvent(new PopStateEvent('popstate'));}
+   catch(error){alert(error.message||'Could not save this evidence link. Please try again.');if(submit){submit.disabled=false;submit.textContent='Link evidence';}}
   }));
-  document.querySelectorAll('[data-unlink-evidence]').forEach(button=>button.addEventListener('click',()=>{
+  document.querySelectorAll('[data-unlink-evidence]').forEach(button=>button.addEventListener('click',async()=>{
    const d=getData(),competency=d.competencies.find(c=>c.id===button.dataset.unlinkEvidence);
    if(!competency)return;
+   if(!confirm('Remove this evidence link? The evidence record itself will remain in your repository.'))return;
    competency.evidenceIds=(competency.evidenceIds||[]).filter(id=>id!==button.dataset.evidenceId);
-   saveData(d);
-   window.dispatchEvent(new PopStateEvent('popstate'));
+   button.disabled=true;
+   try{await saveDataAndWait(d);window.dispatchEvent(new PopStateEvent('popstate'));}
+   catch(error){alert(error.message||'Could not save this change. Please try again.');button.disabled=false;}
   }));
   const evidenceSearch=document.getElementById('evidenceSearch'),evidenceType=document.getElementById('evidenceTypeFilter'),evidenceStatus=document.getElementById('evidenceStatusFilter');
  if(evidenceSearch&&evidenceType&&evidenceStatus){
