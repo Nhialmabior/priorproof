@@ -10,6 +10,7 @@ import { homePage, aboutPage, howPage, privacyPage, termsPage } from './pages/pu
 import { dashboardPage, profilePage, experiencePage, evidencePage, competenciesPage, gapPage, portfolioPage, assessmentsPage, settingsPage, helpPage, authPage, passwordResetPage, bindAppActions } from './pages/app.js';
 import { getData, loadUserWorkspace, clearActiveWorkspace, flushWorkspaceSave } from './services/storage.js';
 import { getSupabase, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, sendPasswordReset, signOut, onAuthStateChange } from './services/supabase.js';
+import { validateProfileName } from './utils/profileValidation.js';
 
 let currentSession = null;
 let authListenerReady = false;
@@ -96,10 +97,13 @@ async function render() {
     submit.textContent = 'Please wait…';
     try {
       if (route === '/register') {
+        const fullName = String(values.get('fullName') || '').trim();
+        const nameError = validateProfileName(fullName);
+        if (nameError) throw new Error(nameError);
         if (password !== values.get('confirmPassword')) throw new Error('Your passwords do not match.');
         if (!values.get('terms')) throw new Error('Please accept the Terms of Use and Privacy Notice.');
         const { data, error } = await signUpWithPassword({
-          email, password, fullName: String(values.get('fullName') || '').trim()
+          email, password, fullName
         });
         if (error) throw error;
         if (data.session) {
