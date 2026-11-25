@@ -326,11 +326,12 @@ export function bindAppActions(){
    const candidate=parsed?.app==='PriorProof'?parsed.data:parsed;
    if(parsed?.app&&parsed.app!=='PriorProof')throw new Error('This file is not a PriorProof backup.');
    if(parsed?.app==='PriorProof'&&parsed.schemaVersion!==1)throw new Error('This backup version is not supported. Please export a fresh backup from the current version of PriorProof.');
-   if(!candidate||typeof candidate!=='object'||Array.isArray(candidate)||!candidate.user||typeof candidate.user!=='object'||!Array.isArray(candidate.experiences)||!Array.isArray(candidate.evidence)||!Array.isArray(candidate.competencies))throw new Error('The file structure is not a valid PriorProof backup.');
-   for(const [name,items] of [['experience',candidate.experiences],['evidence',candidate.evidence],['competency',candidate.competencies],['review pack',Array.isArray(candidate.assessments)?candidate.assessments:[]]]){
+   if(!candidate||typeof candidate!=='object'||Array.isArray(candidate)||!candidate.user||typeof candidate.user!=='object'||!Array.isArray(candidate.experiences)||!Array.isArray(candidate.evidence)||!Array.isArray(candidate.competencies)||(candidate.assessments!==undefined&&!Array.isArray(candidate.assessments)))throw new Error('The file structure is not a valid PriorProof backup.');
+   const assessmentRecords=Array.isArray(candidate.assessments)?candidate.assessments:[];
+   for(const [name,items] of [['experience',candidate.experiences],['evidence',candidate.evidence],['competency',candidate.competencies],['review pack',assessmentRecords]]){
     const ids=new Set();
     for(const item of items){
-     if(!item||typeof item!=='object'||typeof item.id!=='string'||!item.id.trim())throw new Error('A '+name+' record is missing a valid ID.');
+     if(!item||typeof item!=='object'||Array.isArray(item)||typeof item.id!=='string'||!item.id.trim())throw new Error('A '+name+' record is missing a valid ID.');
      if(ids.has(item.id))throw new Error('The backup contains duplicate '+name+' IDs.');
      ids.add(item.id);
     }
@@ -338,13 +339,15 @@ export function bindAppActions(){
    const counts=candidate.experiences.length+' experience record(s), '+candidate.evidence.length+' evidence record(s) and '+candidate.competencies.length+' competency suggestion(s)';
    if(!confirm('Restore this backup? It contains '+counts+'. The current workspace will be replaced. Attachments are not included in JSON backups. Continue?'))return;
    const currentUser=getData().user||{};
+   const experienceIds=new Set(candidate.experiences.map(item=>item.id));
+   const evidenceIds=new Set(candidate.evidence.map(item=>item.id));
    const restored={
     ...candidate,
     user:{...candidate.user,id:currentUser.id,email:currentUser.email},
-    experiences:candidate.experiences.map(item=>({...item,skills:Array.isArray(item.skills)?item.skills:[]})),
-    evidence:candidate.evidence.map(item=>({...item,fileId:null,filePath:null,fileName:'',fileSize:0,fileType:''})),
-    competencies:candidate.competencies.map(item=>({...item,experienceIds:Array.isArray(item.experienceIds)?item.experienceIds:[],evidenceIds:Array.isArray(item.evidenceIds)?item.evidenceIds:[]})),
-    assessments:Array.isArray(candidate.assessments)?candidate.assessments:[]
+    experiences:candidate.experiences.map(item=>({...item,skills:Array.isArray(item.skills)?item.skills.filter(skill=>typeof skill==='string'):[]})),
+    evidence:candidate.evidence.map(item=>({...item,experienceId:experienceIds.has(item.experienceId)?item.experienceId:null,fileId:null,filePath:null,fileName:'',fileSize:0,fileType:''})),
+    competencies:candidate.competencies.map(item=>({...item,experienceIds:Array.isArray(item.experienceIds)?item.experienceIds.filter(id=>experienceIds.has(id)):[],evidenceIds:Array.isArray(item.evidenceIds)?item.evidenceIds.filter(id=>evidenceIds.has(id)):[]})),
+    assessments:assessmentRecords.map(item=>({...item,competencyId:candidate.competencies.some(c=>c.id===item.competencyId)?item.competencyId:null,evidenceIds:Array.isArray(item.evidenceIds)?item.evidenceIds.filter(id=>evidenceIds.has(id)):[]}))
    };
    // Persist the restored records before removing old attachment files.
    await saveDataAndWait(restored);
