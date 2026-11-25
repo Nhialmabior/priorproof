@@ -257,13 +257,13 @@ export function evidencePage(){
 }
 export function competenciesPage(){
  const d=getData();
- const body=`<div class="notice"><b>How suggestions are generated:</b> PriorProof checks the skill phrases you enter against a curated catalogue of skill names and known aliases. Direct matches and recognised aliases are grouped under a consistent label. Phrases not in the catalogue are kept as you entered them in the General category. Matching uses the skill field only; it does not infer skills from descriptions, inspect evidence files or assess proficiency. Each suggestion shows its source experience and original phrase. This is a rule-based documentation aid, not an AI assessment, formal competency standard or verification of competence. Review every suggestion for accuracy. If you entered experience before this catalogue update, edit and save that experience to refresh its skill matches.</div>
- <div class="competency-grid">${d.competencies.map(c=>{
+ const categories=[...new Set(d.competencies.map(c=>c.category||'General'))].sort((a,b)=>a.localeCompare(b));
+ const cards=d.competencies.map(c=>{
   const linked=(c.evidenceIds||[]).map(id=>d.evidence.find(e=>e.id===id)).filter(Boolean);
   const experience=(c.experienceIds||[]).map(id=>d.experiences.find(e=>e.id===id)).filter(Boolean);
   const reasons=experience.flatMap(e=>(e.skills||[]).filter(skill=>skillDefinition(skill).name.toLowerCase()===c.name.toLowerCase()).map(skill=>({skill,experience:e.title,matchType:skillDefinition(skill).matchType})));
   const options=d.evidence.filter(e=>!linked.some(item=>item.id===e.id));
-  return `<article class="panel competency-card competency-map-card">
+  return `<article class="panel competency-card competency-map-card" data-competency-card data-category="${escapeHtml(String(c.category||'General').toLowerCase())}">
    <span class="eyebrow">${escapeHtml(c.category||'General')}</span><h3>${escapeHtml(c.name)}</h3>
    <p>${experience.length} linked experience(s) · ${linked.length} supporting evidence item(s)</p>
    <span class="pill">${escapeHtml(c.status||'Suggested')}</span>
@@ -272,8 +272,15 @@ export function competenciesPage(){
    <div class="mapping-block"><b>Supporting evidence</b>${linked.length?linked.map(item=>`<div class="mapping-evidence"><span>${escapeHtml(item.title)} <small>· ${escapeHtml(evidenceStatusLabel(item))}</small></span><button type="button" class="btn btn-outline btn-small" data-unlink-evidence="${escapeHtml(c.id)}" data-evidence-id="${escapeHtml(item.id)}">Unlink</button></div>`).join(''):'<small>No evidence linked yet.</small>'}</div>
    ${options.length?`<form class="mapping-form" data-map-form="${escapeHtml(c.id)}"><label for="map-${escapeHtml(c.id)}">Add supporting evidence</label><select id="map-${escapeHtml(c.id)}" name="evidenceId" required><option value="">Choose an evidence item</option>${options.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.title)}</option>`).join('')}</select><button class="btn btn-primary btn-small" type="submit">Link evidence</button></form>`:'<p class="helper-text">No unlinked evidence items available.</p>'}
   </article>`;
- }).join('')||'<div class="empty-state">No competency suggestions yet. Add experience with skills to begin.</div>'}</div>`;
- return simplePage('Competencies','Explore skills suggested from your own experience records, understand their source and manage supporting evidence.',body,'/app/competencies');
+ }).join('');
+ const body=`<div class="notice"><b>How suggestions are generated:</b> PriorProof matches skill phrases you enter against a curated catalogue and known aliases. It does not infer skills from descriptions, inspect evidence files or assess proficiency. Suggestions are a documentation aid, not an AI assessment or verification of competence. Review each suggestion for accuracy.</div>
+  <section class="panel competency-tools">
+   <div class="competency-tools-heading"><div><h2>Your skill suggestions</h2><p id="competencyResultCount" aria-live="polite">${d.competencies.length} suggestion(s)</p></div></div>
+   ${d.competencies.length?`<div class="competency-filters"><label>Search skills<input type="search" id="competencySearch" placeholder="Search skill or category"></label><label>Category<select id="competencyCategory"><option value="">All categories</option>${categories.map(category=>`<option value="${escapeHtml(category.toLowerCase())}">${escapeHtml(category)}</option>`).join('')}</select></label></div>`:''}
+  </section>
+  <div class="competency-grid" id="competencyGrid">${cards||'<div class="empty-state">No skill suggestions yet. Add experience and enter the skills you developed to begin.</div>'}</div>
+  ${d.competencies.length?'<p id="competencyNoResults" class="empty-state" hidden>No skills match your search. Try another keyword or category.</p>':''}`;
+ return simplePage('Skills & competencies','Explore skills suggested from your own experience records, understand their source and manage supporting evidence.',body,'/app/competencies');
 }
 export function gapPage(){
  const d=getData();
