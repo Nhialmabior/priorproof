@@ -192,25 +192,27 @@ export function dashboardPage(){
  const nextStep=experienceCount===0
   ?{title:'Add your first experience',description:'Start with work, volunteering, learning or a community activity.',href:'/app/experience',action:'Add experience',step:'STEP 1'}
   :evidenceCount===0
-   ?{title:'Add sup <div class="dashboard-grid">
- <section class="panel dashboard-next-step">
-  <div class="panel-head"><div><span class="eyebrow">YOUR NEXT STEP</span><h2>\${nextStep.title}</h2><p>\${nextStep.description}</p></div></div>
-  <div class="dashboard-step-meta"><span class="pill">\${nextStep.step}</span><span>\${milestonesRecorded} of 3 record milestones added</span></div>
-  <div class="dashboard-progress" role="progressbar" aria-label="Record milestones added" aria-valuemin="0" aria-valuemax="3" aria-valuenow="\${milestonesRecorded}"><span style="width:\${Math.round(milestonesRecorded/3*100)}%"></span></div>
-  <a class="btn btn-primary dashboard-next-button" href="\${nextStep.href}" data-link>\${nextStep.action} <span>→</span></a>
-  <p class="dashboard-progress-note">These milestones help organise your record. They do not assess or verify your skills.</p>
- </section>
- <section class="panel dashboard-shortcuts">
-  <div class="panel-head"><div><h2>Go to a section</h2><p>Find your records and tools.</p></div></div>
-  <a class="quick-action" href="/app/experience" data-link><span>▤</span><div><b>Experience</b><small>View and edit your records</small></div><i>→</i></a>
-  <a class="quick-action" href="/app/evidence" data-link><span>▧</span><div><b>Evidence</b><small>Manage supporting materials</small></div><i>→</i></a>
-  <a class="quick-action" href="/app/competencies" data-link><span>◇</span><div><b>Skills</b><small>Review catalogue matches</small></div><i>→</i></a>
-  <a class="quick-action" href="/app/portfolio" data-link><span>▣</span><div><b>Portfolio</b><small>Preview and print your record</small></div><i>→</i></a>
- </section>
- </div>
-pp/portfolio" data-link><span class="journey-number ${d.experiences.length||d.evidence.length?'done':''}">4</span><div><b>Preview your portfolio</b><small>Review and print your current profile</small></div><span class="complete">Preview →</span></a></section>
- <section class="panel"><div class="panel-head"><div><h2>Quick actions</h2><p>Continue building your profile.</p></div></div><button class="quick-action" id="addExperience"><span>＋</span><div><b>Add experience</b><small>Record work, learning or volunteering</small></div><i>→</i></button><button class="quick-action" id="addEvidence"><span>↥</span><div><b>Add evidence record</b><small>Connect a document or work sample</small></div><i>→</i></button><a class="quick-action" href="/app/competencies" data-link><span>◇</span><div><b>Explore competencies</b><small>Review potential skills</small></div><i>→</i></a><a class="quick-action" href="/app/portfolio" data-link><span>▣</span><div><b>View my portfolio</b><small>Preview your information</small></div><i>→</i></a></section></div>
- <section class="panel recent-panel"><div class="panel-head"><div><h2>Recent experience</h2><p>Your latest records.</p></div><a href="/app/experience" data-link>View all →</a></div>${d.experiences.length?d.experiences.slice(0,3).map(e=>`<div class="record-row"><div class="record-icon">▤</div><div><b>${escapeHtml(e.title)}</b><small>${escapeHtml(e.organisation||e.category)} · ${escapeHtml(formatExperienceDate(e.startDate)||'Date not provided')}</small></div><span class="pill">${escapeHtml(e.category)}</span></div>`).join(''):'<div class="empty-state">No experience records yet. Add your first experience to begin.</div>'}</section>`;
+   ?{title:'Add supporting evidence',description:'Add a document, work sample or reference to support your experience.',href:'/app/evidence',action:'Add evidence',step:'STEP 2'}
+   :competencyCount===0
+    ?{title:'Review the skills you entered',description:'Check the skills field in your experience records and save any updates.',href:'/app/experience',action:'Review experience',step:'STEP 3'}
+    :{title:'Preview your portfolio',description:'See how your experience, skills and evidence appear together.',href:'/app/portfolio',action:'Preview portfolio',step:'NEXT'};
+ const content='<div class="dashboard-page">'
+  +heading('YOUR WORKSPACE','Welcome back, '+escapeHtml((d.user.fullName||'there').split(' ')[0])+'.','Build your skills record one step at a time.')
+  +'<div class="stats-grid">'+stat('Experience records',experienceCount,'Work, learning and volunteering','▤')+stat('Evidence records',evidenceCount,'Supporting materials you have added','▧')+stat('Skill suggestions',competencyCount,'Matched from skill phrases you entered','◇')+'</div>'
+  +'<div class="dashboard-grid">'
+  +'<section class="panel dashboard-next-step"><div class="panel-head"><div><span class="eyebrow">YOUR NEXT STEP</span><h2>'+escapeHtml(nextStep.title)+'</h2><p>'+escapeHtml(nextStep.description)+'</p></div></div>'
+  +'<div class="dashboard-step-meta"><span class="pill">'+nextStep.step+'</span><span>'+milestonesRecorded+' of 3 record milestones added</span></div>'
+  +'<div class="dashboard-progress" role="progressbar" aria-label="Record milestones added" aria-valuemin="0" aria-valuemax="3" aria-valuenow="'+milestonesRecorded+'"><span style="width:'+Math.round(milestonesRecorded/3*100)+'%"></span></div>'
+  +'<a class="btn btn-primary dashboard-next-button" href="'+nextStep.href+'" data-link>'+nextStep.action+' <span>→</span></a>'
+  +'<p class="dashboard-progress-note">These milestones help organise your record. They do not assess or verify your skills.</p></section>'
+  +'<section class="panel dashboard-shortcuts"><div class="panel-head"><div><h2>Go to a section</h2><p>Find your records and tools.</p></div></div>'
+  +'<a class="quick-action" href="/app/experience" data-link><span>▤</span><div><b>Experience</b><small>View and edit your records</small></div><i>→</i></a>'
+  +'<a class="quick-action" href="/app/evidence" data-link><span>▧</span><div><b>Evidence</b><small>Manage supporting materials</small></div><i>→</i></a>'
+  +'<a class="quick-action" href="/app/competencies" data-link><span>◇</span><div><b>Skills</b><small>Review catalogue matches</small></div><i>→</i></a>'
+  +'<a class="quick-action" href="/app/portfolio" data-link><span>▣</span><div><b>Portfolio</b><small>Preview and print your record</small></div><i>→</i></a></section></div>'
+  +'<section class="panel recent-panel"><div class="panel-head"><div><h2>Recent experience</h2><p>Your latest records.</p></div><a href="/app/experience" data-link>View all →</a></div>'
+  +(experienceCount?d.experiences.slice(0,3).map(e=>'<div class="record-row"><div class="record-icon">▤</div><div><b>'+escapeHtml(e.title)+'</b><small>'+escapeHtml(e.organisation||e.category)+' · '+escapeHtml(formatExperienceDate(e.startDate)||'Date not provided')+'</small></div><span class="pill">'+escapeHtml(e.category)+'</span></div>').join(''):'<div class="empty-state">No experience records yet. Add your first experience to begin.</div>')
+  +'</section></div>';
  return appShell(content,'/app/dashboard',d.user);
 }
 function simplePage(title,desc,body,active,action=''){const d=getData();return appShell(`${heading('YOUR WORKSPACE',title,desc,action)}${body}`,active,d.user);}
