@@ -70,6 +70,7 @@ const skillCatalog={
  research:{name:'Research',category:'Analytical'},
  'data collection':{name:'Data collection',category:'Research and data'},
  interviewing:{name:'Interviewing',category:'Research and data'},
+ interviewing:{name:'Interviewing',category:'Research and data'},
  'field data collection':{name:'Data collection',category:'Research and data'},
  'quantitative research':{name:'Quantitative research',category:'Research and data'},
  'qualitative research':{name:'Qualitative research',category:'Research and data'},
@@ -171,7 +172,9 @@ const skillCatalog={
  'supply chain management':{name:'Supply chain management',category:'Operations'},
  'warehouse management':{name:'Warehouse operations',category:'Operations'},
  'customer relations':{name:'Customer service',category:'Business and enterprise'},
- 'first aid awareness':{name:'First aid awareness',category:'Workplace practice'}
+ 'first aid awareness':{name:'First aid awareness',category:'Workplace practice'},
+ 'health awareness':{name:'Health awareness',category:'Programme support'},
+ 'attention to detail':{name:'Attention to detail',category:'Workplace practice'}
 };
 const normalizeSkill=value=>String(value||'').normalize('NFKC').trim().toLowerCase().replace(/[^a-z0-9+#. ]/g,' ').replace(/\s+/g,' ').trim();
 const skillDefinition=value=>{
@@ -180,37 +183,44 @@ const skillDefinition=value=>{
  return {...definition,key,matchType:key===normalizeSkill(definition.name)?'Direct catalogue match':'Known alias'};
 };
 const experienceRoleRules=[
- {pattern:/\\b(teacher|educator|school instructor|classroom teacher)\\b/,skills:['Teaching and learning support','Lesson planning','Classroom management','Learning support','Communication','Record keeping']},
- {pattern:/\\b(data collection|enumerator|field researcher|research assistant|data collector)\\b/,skills:['Data collection','Interviewing','Data entry','Data quality assurance','Research','Communication']},
- {pattern:/\\b(project officer|project coordinator|programme officer|program officer)\\b/,skills:['Project planning','Project coordination','Project monitoring','Stakeholder engagement','Reporting','Needs assessment']},
- {pattern:/\\b(community health|health volunteer|health promoter)\\b/,skills:['Community outreach','Community mobilisation','Health awareness','Communication','Referral coordination','Data collection']},
- {pattern:/\\b(community volunteer|community mobilizer|community mobilisation)\\b/,skills:['Community mobilisation','Community engagement','Community outreach','Teamwork','Communication','Leadership']},
- {pattern:/\\b(agricultural extension|extension worker|agriculture officer|farm officer)\\b/,skills:['Agricultural production','Crop production','Training delivery','Community engagement','Climate adaptation','Communication']},
- {pattern:/\\b(social worker|protection officer|case worker|protection assistant)\\b/,skills:['Case management','Community outreach','Referral coordination','Active listening','Safeguarding awareness','Documentation']},
- {pattern:/\\b(logistics|warehouse|storekeeper|inventory officer)\\b/,skills:['Logistics','Inventory management','Warehouse operations','Supply chain management','Records management','Teamwork']},
- {pattern:/\\b(accountant|finance officer|finance assistant|bookkeeper)\\b/,skills:['Budgeting','Financial management','Records management','Data entry','Reporting','Attention to detail']},
- {pattern:/\\b(web developer|software developer|it support|technical support)\\b/,skills:['Web development','Programming','Technical support','Problem solving','Teamwork','Communication']},
- {pattern:/\\b(administrator|administrative assistant|office assistant)\\b/,skills:['Administration','Records management','Documentation','Communication','Time management','Data entry']}
+ {pattern:/\b(teacher|educator|school instructor|classroom teacher)\b/,skills:['Teaching and learning support','Lesson planning','Classroom management','Learning support','Communication','Record keeping']},
+ {pattern:/\b(data collection|enumerator|field researcher|research assistant|data collector)\b/,skills:['Data collection','Interviewing','Data entry','Data quality assurance','Research','Communication']},
+ {pattern:/\b(project officer|project coordinator|programme officer|program officer)\b/,skills:['Project planning','Project coordination','Project monitoring','Stakeholder engagement','Reporting','Needs assessment']},
+ {pattern:/\b(community health|health volunteer|health promoter)\b/,skills:['Community outreach','Community mobilisation','Health awareness','Communication','Referral coordination','Data collection']},
+ {pattern:/\b(community volunteer|community mobilizer|community mobilisation)\b/,skills:['Community mobilisation','Community engagement','Community outreach','Teamwork','Communication','Leadership']},
+ {pattern:/\b(agricultural extension|extension worker|agriculture officer|farm officer)\b/,skills:['Agricultural production','Crop production','Training delivery','Community engagement','Climate adaptation','Communication']},
+ {pattern:/\b(social worker|protection officer|case worker|protection assistant)\b/,skills:['Case management','Community outreach','Referral coordination','Active listening','Safeguarding awareness','Documentation']},
+ {pattern:/\b(logistics|warehouse|storekeeper|inventory officer)\b/,skills:['Logistics','Inventory management','Warehouse operations','Supply chain management','Records management','Teamwork']},
+ {pattern:/\b(accountant|finance officer|finance assistant|bookkeeper)\b/,skills:['Budgeting','Financial management','Records management','Data entry','Reporting','Attention to detail']},
+ {pattern:/\b(web developer|software developer|it support|technical support)\b/,skills:['Web development','Programming','Technical support','Problem solving','Teamwork','Communication']},
+ {pattern:/\b(livelihood|food security|enterprise development)\b/,skills:['Livelihoods support','Food security','Entrepreneurship','Business development','Community engagement','Reporting']},
+ {pattern:/\b(peacebuilding|peace builder|social cohesion|conflict resolution)\b/,skills:['Peacebuilding','Mediation','Conflict sensitivity','Social cohesion','Community engagement','Communication']},
+ {pattern:/\b(monitoring and evaluation|m&e|me officer|monitoring officer)\b/,skills:['Monitoring and evaluation','Data collection','Data analysis','Data quality assurance','Reporting','Needs assessment']},
+ {pattern:/\b(research officer|researcher|enumerator|survey assistant)\b/,skills:['Research','Data collection','Interviewing','Survey design','Data entry','Report writing']},
+ {pattern:/\b(community development|community engagement|social mobil)\b/,skills:['Community engagement','Community mobilisation','Stakeholder engagement','Community outreach','Communication','Reporting']},
+ {pattern:/\b(communications officer|communications assistant|content creator|social media)\b/,skills:['Communication','Content creation','Social media management','Report writing','Presentation','Stakeholder engagement']},
+ {pattern:/\b(customer service|sales representative|sales assistant|business owner|entrepreneur)\b/,skills:['Customer service','Sales','Marketing','Communication','Problem solving','Business development']},
+ {pattern:/\b(administrator|administrative assistant|office assistant)\b/,skills:['Administration','Records management','Documentation','Communication','Time management','Data entry']}
 ];
 const experienceTaskRules=[
- {pattern:/\\b(interview|interviewing|questionnaire|survey)\\b/,skill:'Interviewing'},
- {pattern:/\\b(lesson plan|lesson preparation|classroom)\\b/,skill:'Lesson planning'},
- {pattern:/\\b(teach|teaching|train|training|facilitat)\\b/,skill:'Training delivery'},
- {pattern:/\\b(attendance|student records|registers|filing|record.keep)\\b/,skill:'Records management'},
- {pattern:/\\b(report|reports|reporting|write.up)\\b/,skill:'Report writing'},
- {pattern:/\\b(budget|expenditure|financial records)\\b/,skill:'Budgeting'},
- {pattern:/\\b(monitor|monitoring|evaluation|indicators)\\b/,skill:'Monitoring and evaluation'},
- {pattern:/\\b(community meeting|mobilis|mobiliz|outreach)\\b/,skill:'Community mobilisation'},
- {pattern:/\\b(referral|refer clients|service provider)\\b/,skill:'Referral coordination'},
- {pattern:/\\b(stock|inventory|warehouse|store management)\\b/,skill:'Inventory management'},
- {pattern:/\\b(crop|planting|harvest|farming|farmers)\\b/,skill:'Crop production'},
- {pattern:/\\b(livestock|animal husbandry|herding)\\b/,skill:'Livestock management'},
- {pattern:/\\b(excel|spreadsheet|google sheets)\\b/,skill:'Spreadsheet skills'},
- {pattern:/\\b(website|web page|html|css|javascript)\\b/,skill:'Web development'},
- {pattern:/\\b(coordinat|organis|organiz|schedule|plan activities)\\b/,skill:'Activity coordination'},
- {pattern:/\\b(stakeholder|partner|government department)\\b/,skill:'Stakeholder engagement'},
- {pattern:/\\b(data entry|enter data|digital forms)\\b/,skill:'Data entry'},
- {pattern:/\\b(communicat|present|public speaking|community dialogue)\\b/,skill:'Communication'}
+ {pattern:/\b(interview|interviewing|questionnaire|survey)\b/,skill:'Interviewing'},
+ {pattern:/\b(lesson plan|lesson preparation|classroom)\b/,skill:'Lesson planning'},
+ {pattern:/\b(teach|teaching|train|training|facilitat)\b/,skill:'Training delivery'},
+ {pattern:/\b(attendance|student records|registers|filing|record.keep)\b/,skill:'Records management'},
+ {pattern:/\b(report|reports|reporting|write.up)\b/,skill:'Report writing'},
+ {pattern:/\b(budget|expenditure|financial records)\b/,skill:'Budgeting'},
+ {pattern:/\b(monitor|monitoring|evaluation|indicators)\b/,skill:'Monitoring and evaluation'},
+ {pattern:/\b(community meeting|mobilis|mobiliz|outreach)\b/,skill:'Community mobilisation'},
+ {pattern:/\b(referral|refer clients|service provider)\b/,skill:'Referral coordination'},
+ {pattern:/\b(stock|inventory|warehouse|store management)\b/,skill:'Inventory management'},
+ {pattern:/\b(crop|planting|harvest|farming|farmers)\b/,skill:'Crop production'},
+ {pattern:/\b(livestock|animal husbandry|herding)\b/,skill:'Livestock management'},
+ {pattern:/\b(excel|spreadsheet|google sheets)\b/,skill:'Spreadsheet skills'},
+ {pattern:/\b(website|web page|html|css|javascript)\b/,skill:'Web development'},
+ {pattern:/\b(coordinat|organis|organiz|schedule|plan activities)\b/,skill:'Activity coordination'},
+ {pattern:/\b(stakeholder|partner|government department)\b/,skill:'Stakeholder engagement'},
+ {pattern:/\b(data entry|enter data|digital forms)\b/,skill:'Data entry'},
+ {pattern:/\b(communicat|present|public speaking|community dialogue)\b/,skill:'Communication'}
 ];
 function suggestExperienceSkills(title,description){
  const titleText=normalizeSkill(title),detailText=normalizeSkill(description);
