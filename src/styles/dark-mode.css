@@ -364,3 +364,57 @@
   border-color:var(--line);
   color:var(--muted);
 }
+
+
+/* Gap analysis — dark surfaces, legible filters and clear action hierarchy */
+:root[data-theme="dark"] .gap-summary-grid>div,
+:root[data-theme="dark"] .gap-metrics span,
+:root[data-theme="dark"] .gap-recommendation{
+ background:#1d2a3e;
+ border-color:var(--line);
+ color:var(--text);
+}
+:root[data-theme="dark"] .gap-summary-grid strong,
+:root[data-theme="dark"] .gap-metrics b,
+:root[data-theme="dark"] .gap-evidence-list>b,
+:root[data-theme="dark"] .gap-recommendation>b{
+ color:var(--heading);
+}
+:root[data-theme="dark"] .gap-summary-grid span,
+:root[data-theme="dark"] .gap-metrics span,
+:root[data-theme="dark"] .gap-recommendation p,
+:root[data-theme="dark"] .gap-tools-heading p{
+ color:var(--muted);
+}
+:root[data-theme="dark"] .gap-disclaimer{
+ background:#202f45;
+ color:#c4d2e4;
+ border-left-color:var(--blue);
+}
+:root[data-theme="dark"] .gap-filters label{
+ color:#d6dfeb;
+}
+:root[data-theme="dark"] .gap-filters input,
+:root[data-theme="dark"] .gap-filters select{
+ background:#101a2a;
+ color:#e6edf7;
+ border-color:#35465e;
+}
+:root[data-theme="dark"] .gap-evidence-row{
+ border-top-color:var(--line);
+}
+:root[data-theme="dark"] .gap-evidence-row strong{
+ color:var(--text);
+}
+:root[data-theme="dark"] .gap-evidence-row small{
+ color:var(--muted);
+}
+:root[data-theme="dark"] .gap-card-actions .btn-outline{
+ background:#202d41;
+ color:var(--text);
+ border-color:var(--line);
+}
+:root[data-theme="dark"] .gap-card-actions .btn-outline:hover{
+ background:#2b3d56;
+ color:#f1f6fd;
+}
