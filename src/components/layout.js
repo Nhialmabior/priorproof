@@ -5,7 +5,7 @@ let syncStatusHideTimer = null;
 const avatarMarkup = user => user.profilePhoto ? `<img src="${escapeHtml(user.profilePhoto)}" alt="Profile photo">` : escapeHtml((user.fullName||'A').slice(0,1).toUpperCase());
 export function publicNav(active = '') {
   return `<header class="public-nav"><a class="brand" href="/" data-link><img src="/logo.svg" alt="PriorProof"></a>
-  <div class="nav-tools"><button class="mobile-menu" aria-label="Toggle navigation" id="mobileMenu">☰</button></div>
+  <div class="nav-tools"><button class="theme-toggle public-theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">◐ <span>Dark mode</span></button><button class="mobile-menu" type="button" aria-label="Open navigation" aria-controls="publicLinks" aria-expanded="false" id="mobileMenu">☰</button></div>
   <nav id="publicLinks"><a class="${active==='home'?'active':''}" href="/" data-link>Home</a><a class="${active==='how'?'active':''}" href="/how-it-works" data-link>How it works</a><a class="${active==='about'?'active':''}" href="/about" data-link>About</a><a class="nav-login" href="/login" data-link>Sign in</a><a class="btn btn-primary btn-small" href="/register" data-link>Get started</a></nav></header>`;
 }
 const menu = [
@@ -64,10 +64,11 @@ export function bindLayout() {
   }
   document.querySelectorAll('[data-link]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();navigate(a.getAttribute('href'));}));
   const applyTheme=theme=>{document.documentElement.dataset.theme=theme;document.querySelectorAll('[data-theme-toggle]').forEach(button=>{button.innerHTML=theme==='dark'?'☀ <span>Light mode</span>':'◐ <span>Dark mode</span>';button.setAttribute('aria-label',theme==='dark'?'Switch to light mode':'Switch to dark mode');});};
-  const isWorkspace=document.querySelector('.app-layout')!==null;
-  applyTheme(isWorkspace&&localStorage.getItem('priorproof-theme')==='dark'?'dark':'light');
+  applyTheme(localStorage.getItem('priorproof-theme')==='dark'?'dark':'light');
   document.querySelectorAll('[data-theme-toggle]').forEach(button=>button.addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark';localStorage.setItem('priorproof-theme',next);applyTheme(next);}));
-  document.getElementById('mobileMenu')?.addEventListener('click',()=>document.getElementById('publicLinks')?.classList.toggle('open'));
+  const publicMenuButton=document.getElementById('mobileMenu');
+  const publicLinks=document.getElementById('publicLinks');
+  publicMenuButton?.addEventListener('click',()=>{const open=publicLinks?.classList.toggle('open')||false;publicMenuButton.setAttribute('aria-expanded',String(open));publicMenuButton.setAttribute('aria-label',open?'Close navigation':'Open navigation');});
   document.getElementById('sidebarToggle')?.addEventListener('click',()=>document.getElementById('sidebar')?.classList.toggle('open'));
   const accountToggle=document.getElementById('accountMenuToggle'),accountMenu=document.getElementById('accountMenu');
   const closeAccountMenu=()=>{if(accountMenu){accountMenu.hidden=true;accountToggle?.setAttribute('aria-expanded','false');}document.removeEventListener('click',outsideAccountClick);};
