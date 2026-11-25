@@ -414,7 +414,7 @@ export function assessmentsPage(){
  <section class="review-packs-section"><div class="panel-head"><div><h2>Prepared review packs</h2><p>${packs.length} saved preparation pack(s)</p></div></div>${cards||'<section class="panel empty-state"><h3>No review packs prepared</h3><p>Your saved preparation packs will appear here.</p></section>'}</section>`;
  return simplePage('Assessments','Prepare evidence for review and track what is ready to share.',content,'/app/assessments');
 }
-export function settingsPage(){return simplePage('Settings','Manage your PriorProof account workspace.',`<section class="panel"><h2>Account and privacy controls</h2><p class="muted">Your workspace is linked to the account you are signed in with. You can edit your profile, export a backup, clear workspace records while retaining profile details, or sign out. Restoring a backup does not change the email address or identity of your signed-in account.</p><p class="helper-text">Permanent account deletion is not yet available as a self-service feature. Clearing workspace records does not delete your sign-in account. Avoid adding highly sensitive information while PriorProof is under development.</p></section><section class="panel" style="margin-top:18px"><h2>Backup and restore</h2><p class="muted">Create a portable JSON backup of your profile, experience, evidence records and competency links.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="exportData">Export backup (JSON)</button><label class="btn btn-outline" for="importDataFile" style="cursor:pointer">Choose backup to restore</label><input id="importDataFile" type="file" accept=".json,application/json" hidden></div><p class="helper-text">Restore replaces the records in your signed-in account workspace. Export your current data first if you may need it. Attachments are stored separately in private cloud storage and are not included in JSON backups; keep original files elsewhere.</p><p class="helper-text">Your profile, experience records, evidence metadata and attached files are linked to your signed-in account. Keep original documents and periodic JSON backups.</p></section><section class="panel" style="margin-top:18px"><h2>Clear workspace records</h2><p class="muted">Remove your experience, evidence, competency and review-preparation records from this account.</p><button class="btn btn-outline" id="resetDemo">Clear workspace records</button><p class="helper-text">This action also removes your private evidence attachments. Your profile details remain. Export a JSON backup first if you want to keep a copy; attachments are not included in backups.</p></section>`,'/app/settings');}
+export function settingsPage(){return simplePage('Settings','Manage your PriorProof account workspace.',`<section class="panel"><h2>Account and privacy controls</h2><p class="muted">Your workspace is linked to the account you are signed in with. You can edit your profile, export a backup, clear workspace records while retaining profile details, or sign out. Restoring a backup does not change the email address or identity of your signed-in account.</p><p class="helper-text">Permanent account deletion is not yet available as a self-service feature. Clearing workspace records does not delete your sign-in account. Avoid adding highly sensitive information while PriorProof is under development.</p></section><section class="panel" style="margin-top:18px"><h2>Backup and restore</h2><p class="muted">Create a portable JSON backup of your profile, experience, evidence records and competency links.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" id="exportData" type="button">Export backup (JSON)</button><label class="btn btn-outline" for="importDataFile" style="cursor:pointer">Choose backup to restore</label><input id="importDataFile" type="file" accept=".json,application/json" hidden></div><p id="backupFeedback" class="helper-text" role="status" aria-live="polite"></p><p class="helper-text">Restore replaces the records in your signed-in account workspace. Export your current data first if you may need it. Attachments are stored separately in private cloud storage and are not included in JSON backups; keep original files elsewhere. Store backup files somewhere private because they contain your profile and workspace information.</p><p class="helper-text">Your profile, experience records, evidence metadata and attached files are linked to your signed-in account. Keep original documents and periodic JSON backups.</p></section><section class="panel" style="margin-top:18px"><h2>Clear workspace records</h2><p class="muted">Remove your experience, evidence, competency and review-preparation records from this account.</p><button class="btn btn-outline" id="resetDemo">Clear workspace records</button><p class="helper-text">This action also removes your private evidence attachments. Your profile details remain. Export a JSON backup first if you want to keep a copy; attachments are not included in backups.</p></section>`,'/app/settings');}
 export function helpPage(){return simplePage('Help & support','Practical guidance for documenting your experience and managing your PriorProof workspace.',`<section class="panel help-section"><h2>Getting started</h2><h3>Where should I begin?</h3><p>Complete your profile, add experience records, list the skills you developed, then add supporting evidence. Review the suggested competency records and prepare a portfolio when you are ready.</p><h3>How are competency suggestions created?</h3><p>PriorProof uses the skill phrases you enter in experience records to create preliminary competency suggestions and organise them with curated skill definitions. It does not infer skills from job titles or automatically assess your ability. You can review and manage the suggestions.</p><h3>Does PriorProof certify my skills?</h3><p>No. PriorProof organises information you provide. It does not authenticate documents, verify claims or measure proficiency. Formal recognition depends on the relevant standards and authorised assessment processes.</p></section><section class="panel help-section"><h2>Evidence and portfolios</h2><h3>What can I add as evidence?</h3><p>You can record relevant supporting material such as reports, work samples, certificates, references and training outputs. Only upload files you are authorised to use.</p><h3>Are uploaded files included in my portfolio or backup?</h3><p>Portfolio and review-brief exports list evidence details and attached filenames; original files remain separately stored. JSON backups include workspace records but not original attachment files. Keep separate copies of important documents.</p><h3>Does a review pack get sent to an assessor?</h3><p>No. Review packs are preparation documents saved in your workspace. You download the brief and decide whether and how to share it.</p></section><section class="panel help-section"><h2>Account, storage and troubleshooting</h2><h3>Where is my data stored?</h3><p>Workspace records synchronise to your account through Supabase. Evidence attachments are kept in private account-scoped storage. A browser-local recovery copy is also maintained to support recovery if cloud synchronisation is interrupted.</p><h3>What does the sync indicator mean?</h3><p>“Saving changes” means a cloud save is in progress. “Changes saved” confirms the latest save completed. “Sync issue” means the latest cloud save may have failed; keep the browser open, check your connection and retry before signing out.</p><h3>Can I delete my account?</h3><p>The current development version does not provide a self-service control to permanently delete the authentication account. Clearing workspace records removes your experience, evidence and competency records while retaining profile details; it is not account deletion.</p><h3>How can I get help?</h3><p>A verified support contact has not yet been configured. This help page will be updated with the service operator's support details before public launch.</p><p class="helper-text">PriorProof is under development. Avoid uploading highly sensitive information, and do not use it as the only copy of important records.</p></section>`,'/app/help');}
 export function passwordResetPage(){return `<div class="auth-layout"><div class="auth-brand"><a href="/" data-link><img src="/logo.svg" alt="PriorProof"></a><div><span class="eyebrow light">ACCOUNT SECURITY</span><h1>Choose a new password.</h1><p>Set a new password for your PriorProof account.</p></div><small>PriorProof · Your skills deserve recognition.</small></div><div class="auth-form-wrap"><div class="auth-top-tools"><a class="back-home" href="/login" data-link>← Back to sign in</a><button class="theme-toggle" type="button" data-theme-toggle>◐ <span>Dark mode</span></button></div><form id="passwordResetForm" class="auth-form" novalidate><span class="eyebrow">PASSWORD RESET</span><h2>Set a new password</h2><p class="muted">Use at least 8 characters. Enter the new password twice to confirm it.</p><label>New password<div class="password-wrap"><input id="newPassword" name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="Enter a new password"><button type="button" class="password-toggle" data-toggle-password="newPassword">Show</button></div></label><label>Confirm new password<div class="password-wrap"><input id="confirmNewPassword" name="confirmPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Re-enter your new password"><button type="button" class="password-toggle" data-toggle-password="confirmNewPassword">Show</button></div></label><p class="auth-feedback" id="passwordResetFeedback" role="status" aria-live="polite"></p><button class="btn btn-primary full-btn" type="submit">Update password</button></form></div></div>`;}
 export function authPage(mode){return `<div class="auth-layout"><div class="auth-brand"><a href="/" data-link><img src="/logo.svg" alt="PriorProof"></a><div><span class="eyebrow light">YOUR EXPERIENCE MATTERS</span><h1>Make your skills visible.</h1><p>Document your journey. Connect your evidence. Build your portfolio.</p></div><small>PriorProof · Your skills deserve recognition.</small></div><div class="auth-form-wrap"><div class="auth-top-tools"><a class="back-home" href="/" data-link>← Back to homepage</a><button class="theme-toggle" type="button" data-theme-toggle>◐ <span>Dark mode</span></button></div><form id="authForm" class="auth-form" novalidate><span class="eyebrow">${mode==='login'?'WELCOME BACK':'GET STARTED'}</span><h2>${mode==='login'?'Sign in to PriorProof':'Create your account'}</h2><p class="muted">${mode==='login'?'Access your personal workspace.':'Start documenting your experience and skills.'}</p>${mode==='register'?'<label>Full name<input name="fullName" autocomplete="name" required placeholder="Your full name"></label>':''}<label>Email address<input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label><label>Password<div class="password-wrap"><input id="authPassword" name="password" type="password" autocomplete="${mode==='login'?'current-password':'new-password'}" required minlength="8" placeholder="Enter your password"><button type="button" class="password-toggle" id="togglePassword" aria-label="Show password">Show</button></div></label>${mode==='register'?'<label>Confirm password<div class="password-wrap"><input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Re-enter your password"><button type="button" class="password-toggle" id="toggleConfirmPassword" aria-label="Show confirmation password">Show</button></div></label><label class="auth-check"><input type="checkbox" name="terms" required><span>I agree to the <a href="/terms" data-link>Terms of Use</a> and acknowledge the <a href="/privacy" data-link>Privacy Notice</a>.</span></label>':'<div class="auth-options"><span class="helper-text">Your sign-in session is securely maintained on this device.</span><button type="button" class="text-link" id="forgotPassword">Forgot password?</button></div>'}<p class="auth-feedback" id="authFeedback" role="status" aria-live="polite"></p><button class="btn btn-primary full-btn" type="submit">${mode==='login'?'Sign in':'Create account'} →</button><div class="auth-divider"><span>OR CONTINUE WITH</span></div><button type="button" class="google-button" id="googleSignIn"><svg class="google-logo" viewBox="0 0 48 48" role="img" aria-label="Google"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.3A20 20 0 0 0 24 44z"/><path fill="#FBBC05" d="M12.8 27.7a12 12 0 0 1 0-7.4V15H5.9a20 20 0 0 0 0 18z"/><path fill="#EA4335" d="M24 12.1c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6.1 29.5 4 24 4A20 20 0 0 0 5.9 15l6.9 5.3c1.6-4.7 6-8.2 11.2-8.2z"/></svg> Continue with Google</button><div class="auth-switch">${mode==='login'? 'New to PriorProof? <a href="/register" data-link>Create an account</a>':'Already registered? <a href="/login" data-link>Sign in</a>'}</div><p class="helper-text">Sign in securely with your email or Google account. Your workspace and evidence attachments are stored in private account storage.</p></form></div></div>`;}
@@ -499,6 +499,12 @@ function openEntryDialog(kind,editId=null){
  dialog.showModal();
 }
 export function bindAppActions(){
+  const backupFeedback=document.getElementById('backupFeedback');
+  const setBackupFeedback=(message,type='')=>{
+   if(!backupFeedback)return;
+   backupFeedback.textContent=message;
+   backupFeedback.className='helper-text'+(type?' '+type:'');
+  };
  document.querySelectorAll('[data-toggle-password]').forEach(button=>button.addEventListener('click',()=>{const field=document.getElementById(button.dataset.togglePassword);if(!field)return;const show=field.type==='password';field.type=show?'text':'password';button.textContent=show?'Hide':'Show';}));
  document.getElementById('passwordResetForm')?.addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;if(!form.reportValidity())return;const password=form.elements.namedItem('password').value,confirmation=form.elements.namedItem('confirmPassword').value,feedback=document.getElementById('passwordResetFeedback'),submit=form.querySelector('button[type="submit"]');if(password!==confirmation){feedback.textContent='The passwords do not match.';feedback.className='auth-feedback error';return;}if(submit){submit.disabled=true;submit.textContent='Updating…';}try{const {error}=await updateAccountPassword(password);if(error)throw error;feedback.textContent='Your password has been updated. You can now continue to your workspace.';feedback.className='auth-feedback';form.reset();window.setTimeout(()=>navigate('/app/dashboard'),900);}catch(error){feedback.textContent=error.message||'Could not update your password. Please reopen the reset link and try again.';feedback.className='auth-feedback error';}finally{if(submit?.isConnected){submit.disabled=false;submit.textContent='Update password';}}});
  document.getElementById('printPortfolio')?.addEventListener('click',()=>window.print());
@@ -575,10 +581,38 @@ export function bindAppActions(){
   }
   window.dispatchEvent(new PopStateEvent('popstate'));
  });
- document.getElementById('exportData')?.addEventListener('click',()=>{const backup={app:'PriorProof',schemaVersion:1,exportedAt:new Date().toISOString(),data:getData()};const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='priorproof-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);});
+  document.getElementById('exportData')?.addEventListener('click',()=>{
+   const button=document.getElementById('exportData');
+   if(button.disabled)return;
+   button.disabled=true;
+   button.textContent='Preparing backup…';
+   let url=null;
+   try{
+    const backup={app:'PriorProof',schemaVersion:1,exportedAt:new Date().toISOString(),data:getData()};
+    const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+    url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='priorproof-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    setBackupFeedback('Your JSON backup has been prepared. Keep it somewhere private; original attachment files are not included.');
+   }catch(error){
+    if(url)URL.revokeObjectURL(url);
+    setBackupFeedback(error.message||'Could not create your backup. Please try again.','error');
+   }finally{
+    button.disabled=false;
+    button.textContent='Export backup (JSON)';
+   }
+  });
  document.getElementById('importDataFile')?.addEventListener('change',async event=>{
-  const file=event.target.files?.[0];
-  if(!file)return;
+  const input=event.currentTarget;
+  const file=input.files?.[0];
+  if(!file||input.disabled)return;
+  input.disabled=true;
+  setBackupFeedback('Checking your backup file…');
   try{
    if(file.size>MAX_BACKUP_FILE_SIZE)throw new Error('The backup file is larger than 10 MB.');
    const parsed=JSON.parse(await file.text());
@@ -586,7 +620,6 @@ export function bindAppActions(){
    const {workspace:restored,counts:backupCounts}=prepareRestoredWorkspace(parsed,currentUser);
    const counts=backupCounts.experiences+' experience record(s), '+backupCounts.evidence+' evidence record(s) and '+backupCounts.competencies+' competency suggestion(s)';
    if(!confirm('Restore this backup? It contains '+counts+'. The current workspace will be replaced. Attachments are not included in JSON backups. Continue?'))return;
-   // Persist the restored records before removing old attachment files.
    await saveDataAndWait(restored);
    let cleanupMessage='Backup restored and saved. Attachments are not included in JSON backups; add them again from your original files if needed.';
    try{
@@ -594,126 +627,15 @@ export function bindAppActions(){
    }catch(cleanupError){
     cleanupMessage+=' Some old attachment files could not be removed. They are no longer linked to the restored records and may remain in private storage until a dedicated cleanup control is available.';
    }
-   alert(cleanupMessage);
+   setBackupFeedback(cleanupMessage);
    window.dispatchEvent(new PopStateEvent('popstate'));
   }catch(error){
-   alert(error.message||'Could not restore this backup. Existing evidence attachments were not deliberately removed.');
+   setBackupFeedback(error.message||'Could not restore this backup. Existing evidence attachments were not deliberately removed.','error');
   }finally{
-   event.target.value='';
+   input.value='';
+   input.disabled=false;
   }
- });
- document.querySelectorAll('[data-edit-experience]').forEach(button=>button.addEventListener('click',()=>openEntryDialog('experience',button.dataset.editExperience)));
- document.querySelectorAll('[data-delete-experience]').forEach(button=>button.addEventListener('click',async()=>{
-  if(button.disabled||!confirm('Remove this experience and its linked evidence records?'))return;
-  button.disabled=true;
-  button.textContent='Removing…';
-  const d=getData(),id=button.dataset.deleteExperience;
-  const removed=removeExperienceRelations(d,id,skillDefinition);
-  try{
-   // Commit record removal before deleting files, so a failed save never leaves broken attachment references.
-   await saveDataAndWait(d);
-  }catch(error){
-   alert(error.message||'Could not save the removal. Evidence attachments were kept.');
-   button.disabled=false;
-   button.textContent='Delete';
-   return;
-  }
-  let failed=0;
-  for(const item of removed){
-   if(!item.fileId&&!item.filePath)continue;
-   try{await deleteEvidenceFile(item.fileId,item.filePath);}catch(error){failed++;}
-  }
-  if(failed)alert('The experience and its evidence records were removed and saved, but '+failed+' attachment file(s) could not be deleted. They are no longer linked to your records and may remain in private storage.');
-  window.dispatchEvent(new PopStateEvent('popstate'));
- }));
- document.querySelectorAll('[data-edit-evidence]').forEach(button=>button.addEventListener('click',()=>openEntryDialog('evidence',button.dataset.editEvidence)));
- document.querySelectorAll('[data-delete-evidence]').forEach(button=>button.addEventListener('click',async()=>{
-  if(button.disabled||!confirm('Remove this evidence record?'))return;
-  button.disabled=true;
-  button.textContent='Removing…';
-  const d=getData(),id=button.dataset.deleteEvidence,item=d.evidence.find(e=>e.id===id);
-  removeEvidenceRelations(d,id);
-  try{
-   // Persist the record change before attempting file deletion.
-   await saveDataAndWait(d);
-  }catch(error){
-   alert(error.message||'Could not save the removal. The evidence attachment was kept.');
-   button.disabled=false;
-   button.textContent='Delete';
-   return;
-  }
-  if(item?.fileId||item?.filePath){
-   try{await deleteEvidenceFile(item.fileId,item.filePath);}
-   catch(error){alert('The evidence record was removed and saved, but its attachment could not be deleted. The file is no longer linked to your records and may remain in private storage.');}
-  }
-  window.dispatchEvent(new PopStateEvent('popstate'));
- }));
- document.querySelectorAll('[data-map-form]').forEach(form=>form.addEventListener('submit',async e=>{
-   e.preventDefault();
-   const submit=form.querySelector('button[type="submit"]'),d=getData(),competency=d.competencies.find(c=>c.id===form.dataset.mapForm),evidenceId=String(new FormData(form).get('evidenceId')||'');
-   if(!competency||!evidenceId)return;
-   const item=d.evidence.find(x=>x.id===evidenceId);
-   if(!item)return;
-   competency.evidenceIds=[...new Set([...(competency.evidenceIds||[]),evidenceId])];
-   if(submit){submit.disabled=true;submit.textContent='Saving…';}
-   try{await saveDataAndWait(d);window.dispatchEvent(new PopStateEvent('popstate'));}
-   catch(error){alert(error.message||'Could not save this evidence link. Please try again.');if(submit){submit.disabled=false;submit.textContent='Link evidence';}}
-  }));
-  document.querySelectorAll('[data-unlink-evidence]').forEach(button=>button.addEventListener('click',async()=>{
-   const d=getData(),competency=d.competencies.find(c=>c.id===button.dataset.unlinkEvidence);
-   if(!competency)return;
-   if(!confirm('Remove this evidence link? The evidence record itself will remain in your repository.'))return;
-   competency.evidenceIds=(competency.evidenceIds||[]).filter(id=>id!==button.dataset.evidenceId);
-   button.disabled=true;
-   try{await saveDataAndWait(d);window.dispatchEvent(new PopStateEvent('popstate'));}
-   catch(error){alert(error.message||'Could not save this change. Please try again.');button.disabled=false;}
-  }));
-  const evidenceSearch=document.getElementById('evidenceSearch'),evidenceType=document.getElementById('evidenceTypeFilter'),evidenceStatus=document.getElementById('evidenceStatusFilter');
- if(evidenceSearch&&evidenceType&&evidenceStatus){
-  const cards=[...document.querySelectorAll('[data-evidence-card]')],count=document.getElementById('evidenceResultCount'),empty=document.getElementById('evidenceNoResults');
-  const applyEvidenceFilters=()=>{const q=evidenceSearch.value.trim().toLowerCase(),type=evidenceType.value,status=evidenceStatus.value;let visible=0;cards.forEach(card=>{const match=card.textContent.toLowerCase().includes(q)&&(!type||card.dataset.evidenceType===type)&&(!status||card.dataset.evidenceStatus===status);card.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+cards.length+' record(s)';if(empty)empty.hidden=visible!==0;};
-  evidenceSearch.addEventListener('input',applyEvidenceFilters);evidenceType.addEventListener('change',applyEvidenceFilters);evidenceStatus.addEventListener('change',applyEvidenceFilters);
- }
- const competencySearch=document.getElementById('competencySearch'),competencyCategory=document.getElementById('competencyCategory');
-  if(competencySearch&&competencyCategory){
-   const cards=[...document.querySelectorAll('[data-competency-card]')],count=document.getElementById('competencyResultCount'),empty=document.getElementById('competencyNoResults');
-   const applyCompetencyFilters=()=>{const q=competencySearch.value.trim().toLowerCase(),category=competencyCategory.value;let visible=0;cards.forEach(card=>{const match=card.textContent.toLowerCase().includes(q)&&(!category||card.dataset.category===category);card.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+cards.length+' suggestion(s)';if(empty)empty.hidden=visible!==0;};
-   competencySearch.addEventListener('input',applyCompetencyFilters);competencyCategory.addEventListener('change',applyCompetencyFilters);
-  }
- const reviewEvidenceSearch=document.getElementById('reviewEvidenceSearch');
- if(reviewEvidenceSearch){
-  const options=[...document.querySelectorAll('[data-review-evidence-option]')],count=document.getElementById('reviewEvidenceCount'),empty=document.getElementById('reviewEvidenceNoResults');
-  reviewEvidenceSearch.addEventListener('input',()=>{const q=reviewEvidenceSearch.value.trim().toLowerCase();let visible=0;options.forEach(option=>{const match=option.textContent.toLowerCase().includes(q);option.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+options.length+' evidence record(s) shown';if(empty)empty.hidden=visible!==0;});
- }
- const gapSearch=document.getElementById('gapSearch'),gapStatus=document.getElementById('gapStatusFilter'),gapCategory=document.getElementById('gapCategoryFilter');
- if(gapSearch&&gapStatus&&gapCategory){
-  const cards=[...document.querySelectorAll('[data-gap-card]')],count=document.getElementById('gapResultCount'),empty=document.getElementById('gapNoResults');
-  const applyGapFilters=()=>{const q=gapSearch.value.trim().toLowerCase(),status=gapStatus.value,category=gapCategory.value;let visible=0;cards.forEach(card=>{const match=card.textContent.toLowerCase().includes(q)&&(!status||card.dataset.gapState===status)&&(!category||card.dataset.gapCategory===category);card.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+cards.length+' competency record(s)';if(empty)empty.hidden=visible!==0;};
-  gapSearch.addEventListener('input',applyGapFilters);gapStatus.addEventListener('change',applyGapFilters);gapCategory.addEventListener('change',applyGapFilters);
- }
-  document.querySelectorAll('[data-download-evidence]').forEach(button=>button.addEventListener('click',async()=>{try{const item=getData().evidence.find(e=>e.id===button.dataset.downloadEvidence);const file=item?await getEvidenceFile(item.fileId||item.id,item.filePath):null;if(!file){alert('The file is not available in this account.');return;}const url=URL.createObjectURL(file.blob),a=document.createElement('a');a.href=url;a.download=item?.fileName||file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}catch(error){alert(error.message||'Could not retrieve the file.');}}));
-
- document.querySelectorAll('#addExperience').forEach(button=>button.addEventListener('click',()=>openEntryDialog('experience')));
- document.querySelectorAll('#addEvidence').forEach(button=>button.addEventListener('click',()=>openEntryDialog('evidence')));
- const reviewPackForm=document.getElementById('reviewPackForm');
- reviewPackForm?.addEventListener('submit',async event=>{
-  event.preventDefault();
-  if(!reviewPackForm.reportValidity())return;
-  const d=getData(),f=new FormData(reviewPackForm),competency=d.competencies.find(x=>x.id===f.get('competencyId'));
-  if(!competency){alert('Choose a valid competency before saving this review pack.');return;}
-  const selectedEvidence=[...new Set(f.getAll('evidenceIds').filter(id=>d.evidence.some(item=>item.id===id)))];
-  const submit=reviewPackForm.querySelector('button[type="submit"]');
-  if(submit){submit.disabled=true;submit.textContent='Saving review pack…';}
-  d.assessments=Array.isArray(d.assessments)?d.assessments:[];
-  d.assessments.unshift({
-   id:crypto.randomUUID(),
-   competencyId:competency.id,
-   competencyName:competency.name,
-   evidenceIds:selectedEvidence,
-   context:String(f.get('context')||'').trim(),
-   status:'Prepared - not submitted',
-   createdAt:new Date().toISOString()
-  });
+ });;
   try{
    await saveDataAndWait(d);
    window.dispatchEvent(new PopStateEvent('popstate'));
