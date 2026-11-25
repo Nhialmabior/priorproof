@@ -282,8 +282,42 @@ export function saveData(data) {
   }, 450);
 }
 
-export function resetData() {
-  if (!activeUserId) return structuredClone(initialData);
+export async function saveDataAndWait(data) {
+  if (!activeUserId) throw new Error('Your workspace is not linked to a signed-in account.');
+
+  const userId = activeUserId;
+  const snapshot = structuredClone(data);
+  snapshot.user = { ...snapshot.user, id: userId };
+  const version = ++saveVersion;
+
+  try {
+    writeLocal(userId, snapshot);
+    markPendingSave(userId);
+  } catch (error) {
+    dispatchSyncStatus('error', 'Could not save a local recovery copy. Your browser storage may be full or unavailable.');
+    throw new Error('The workspace could not be saved locally. No attachments were removed.');
+  }
+
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+
+  window.dispatchEvent(new CustomEvent('priorproof:data-updated'));
+  dispatchSyncStatus('saving');
+
+  try {
+    await queueWorkspaceSave(userId, snapshot, version);
+  } catch (error) {
+    dispatchSyncStatus('error', error.message || 'Cloud save failed.');
+    throw new Error('The workspace was kept in this browser, but the cloud save failed. Your recovery copy is pending synchronisation. No attachments were removed.');
+  }
+
+  return snapshot;
+}
+
+export async function resetData() {
+  if (!activeUserId) throw new Error('Your workspace is not linked to a signed-in account.');
   const current = getData();
   const blank = {
     user: { ...current.user },
@@ -292,7 +326,7 @@ export function resetData() {
     competencies: [],
     assessments: []
   };
-  saveData(blank);
+  await saveDataAndWait(blank);
   return blank;
 }
 
