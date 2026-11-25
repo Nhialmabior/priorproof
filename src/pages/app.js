@@ -254,6 +254,7 @@ function openEntryDialog(kind,editId=null){
  dialog.addEventListener('click',e=>{if(e.target===dialog)close();});
  dialog.querySelector('form').addEventListener('submit',async e=>{
   e.preventDefault();const f=new FormData(e.currentTarget),d=getData();
+  let uploadedAttachment=null,previousAttachment=null;
   if(isExperience){
    const skills=String(f.get('skills')||'').split(',').map(s=>s.trim()).filter(Boolean);
    const exp={id:editRecord?editRecord.id:crypto.randomUUID(),title:String(f.get('title')).trim(),organisation:String(f.get('organisation')||'').trim()||'Independent experience',category:f.get('category'),description:String(f.get('description')).trim(),contribution:String(f.get('contribution')||'').trim(),outcome:String(f.get('outcome')||'').trim(),learning:String(f.get('learning')||'').trim(),startDate:f.get('startDate')||'',endDate:f.get('endDate')||'',skills};
@@ -273,7 +274,7 @@ function openEntryDialog(kind,editId=null){
    const file=f.get('file'),evId=editRecord?editRecord.id:crypto.randomUUID();
    const hasNewFile=Boolean(file&&file.size);
    let attachment=null;
-   if(hasNewFile){try{attachment=await saveEvidenceFile(evId,file,editRecord?.filePath||null);}catch(error){alert(error.message||'The file could not be uploaded.');return;}}
+   if(hasNewFile){try{attachment=await saveEvidenceFile(evId,file);uploadedAttachment=attachment;previousAttachment=editRecord?.filePath||null;}catch(error){alert(error.message||'The file could not be uploaded.');return;}}
    const ev={id:evId,title:String(f.get('title')).trim(),type:f.get('type'),experienceId:f.get('experienceId')||null,source:String(f.get('source')||'').trim(),evidenceDate:f.get('evidenceDate')||'',description:String(f.get('description')||'').trim(),status:editRecord?.status||'Self-reported',fileId:hasNewFile?evId:(editRecord?.fileId||null),filePath:hasNewFile?attachment.path:(editRecord?.filePath||null),fileName:hasNewFile?attachment.name:(editRecord?.fileName||''),fileSize:hasNewFile?attachment.size:(editRecord?.fileSize||0),fileType:hasNewFile?attachment.type:(editRecord?.fileType||'')};
    if(editRecord){const index=d.evidence.findIndex(item=>item.id===editRecord.id);if(index>=0)d.evidence[index]=ev;}else d.evidence.unshift(ev);
    // Preserve manually selected competency links when only evidence details change.
@@ -285,7 +286,18 @@ function openEntryDialog(kind,editId=null){
     });
    }
   }
-  saveData(d);close();window.dispatchEvent(new PopStateEvent('popstate'));
+  try{
+   // Wait for the new record and attachment reference to be saved before removing an older file.
+   await saveDataAndWait(d);
+  }catch(error){
+   alert(error.message||'Your changes could not be confirmed in the cloud. Keep this dialog open and retry; existing attachments have been preserved.');
+   return;
+  }
+  if(uploadedAttachment&&previousAttachment&&previousAttachment!==uploadedAttachment.path){
+   try{await deleteEvidenceFile(editRecord.id,previousAttachment);}
+   catch(error){alert('Your updated evidence record and new attachment were saved, but the previous attachment could not be removed. It is no longer linked and may remain in private storage.');}
+  }
+  close();window.dispatchEvent(new PopStateEvent('popstate'));
  });
  dialog.showModal();
 }
