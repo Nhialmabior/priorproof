@@ -239,3 +239,5 @@
 .profile-photo-field>div:last-child{display:grid;justify-items:start;gap:6px}
 .profile-photo-field input[type=file]{max-width:100%;font-size:10px}
 @media(max-width:600px){.account-menu{right:-6px}.profile-photo-field{align-items:flex-start}}
+
+.sync-status[hidden]{display:none}
