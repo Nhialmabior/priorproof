@@ -65,3 +65,9 @@ export async function signOut() {
 export function onAuthStateChange(callback) {
   return getSupabase().auth.onAuthStateChange(callback);
 }
+
+export async function updateAccountProfile({ fullName, email }) {
+  const updates = { data: { full_name: fullName } };
+  if (email) updates.email = email;
+  return getSupabase().auth.updateUser(updates);
+}
