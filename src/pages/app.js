@@ -6,6 +6,7 @@ import { saveEvidenceFile, getEvidenceFile, deleteEvidenceFile, clearEvidenceFil
 import { updateAccountProfile } from '../services/supabase.js';
 import { MAX_BACKUP_FILE_SIZE, prepareRestoredWorkspace } from '../utils/backupValidation.js';
 import { syncExperienceCompetencies, removeExperienceRelations, syncEvidenceCompetencyLinks, removeEvidenceRelations } from '../utils/workspaceRelations.js';
+import { validateProfileName, validateProfilePhoto } from '../utils/profileValidation.js';
 
 const stat=(label,value,sub,icon)=>`<article class="stat-card"><div class="stat-top"><span>${label}</span><i>${icon}</i></div><strong>${value}</strong><small>${sub}</small></article>`;
 const heading=(eyebrow,title,desc,action='')=>`<div class="page-heading"><div><span class="eyebrow">${eyebrow}</span><h1>${title}</h1><p>${desc}</p></div>${action}</div>`;
@@ -501,9 +502,59 @@ export function bindAppActions(){
  document.querySelectorAll('[data-toggle-password]').forEach(button=>button.addEventListener('click',()=>{const field=document.getElementById(button.dataset.togglePassword);if(!field)return;const show=field.type==='password';field.type=show?'text':'password';button.textContent=show?'Hide':'Show';}));
  document.getElementById('passwordResetForm')?.addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;if(!form.reportValidity())return;const password=form.elements.namedItem('password').value,confirmation=form.elements.namedItem('confirmPassword').value,feedback=document.getElementById('passwordResetFeedback'),submit=form.querySelector('button[type="submit"]');if(password!==confirmation){feedback.textContent='The passwords do not match.';feedback.className='auth-feedback error';return;}if(submit){submit.disabled=true;submit.textContent='Updating…';}try{const {error}=await updateAccountPassword(password);if(error)throw error;feedback.textContent='Your password has been updated. You can now continue to your workspace.';feedback.className='auth-feedback';form.reset();window.setTimeout(()=>navigate('/app/dashboard'),900);}catch(error){feedback.textContent=error.message||'Could not update your password. Please reopen the reset link and try again.';feedback.className='auth-feedback error';}finally{if(submit?.isConnected){submit.disabled=false;submit.textContent='Update password';}}});
  document.getElementById('printPortfolio')?.addEventListener('click',()=>window.print());
- document.getElementById('profilePhotoFile')?.addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)){alert('Choose a JPG, PNG or WebP image.');event.target.value='';return;}if(file.size>1024*1024){alert('Please choose an image smaller than 1 MB.');event.target.value='';return;}const reader=new FileReader();reader.onload=()=>{const value=String(reader.result||'');document.getElementById('profilePhotoValue').value=value;document.getElementById('profilePhotoPreview').innerHTML='<img src="'+value+'" alt="Selected profile photo">';};reader.onerror=()=>alert('Could not read this image. Please try another file.');reader.readAsDataURL(file);});
- document.getElementById('removeProfilePhoto')?.addEventListener('click',()=>{document.getElementById('profilePhotoValue').value='';document.getElementById('profilePhotoFile').value='';const preview=document.getElementById('profilePhotoPreview');preview.textContent=(document.querySelector('#profileForm input[name="fullName"]')?.value||'A').trim().slice(0,1).toUpperCase();});
- document.getElementById('profileForm')?.addEventListener('submit',async e=>{e.preventDefault();const form=e.currentTarget;if(!form.reportValidity())return;const d=getData(),f=new FormData(form),fullName=String(f.get('fullName')||'').trim(),email=String(f.get('email')||'').trim(),oldEmail=d.user.email||'';const submit=form.querySelector('button[type="submit"]');if(submit){submit.disabled=true;submit.textContent='Saving…';}try{const {data,error}=await updateAccountProfile({fullName,email:email!==oldEmail?email:undefined});if(error)throw error;d.user={...d.user,fullName,email:email!==oldEmail?(data?.user?.email||oldEmail):oldEmail,phoneNumber:String(f.get('phoneNumber')||'').trim(),profilePhoto:String(f.get('profilePhoto')||''),targetOccupation:String(f.get('targetOccupation')||'').trim(),location:String(f.get('location')||'').trim(),summary:String(f.get('summary')||'').trim(),interests:String(f.get('interests')||'').trim()};saveData(d);if(email!==oldEmail&&!data?.user?.email?.toLowerCase().includes(email.toLowerCase()))alert('Profile details saved. Supabase has sent an email confirmation link to your new email address. Your sign-in email changes after confirmation.');else alert('Your profile has been updated.');navigate('/app/dashboard');}catch(error){alert(error.message||'Could not update your profile.');}finally{if(submit?.isConnected){submit.disabled=false;submit.textContent='Save profile';}}});
+ let profilePhotoReader=null;
+ document.getElementById('profilePhotoFile')?.addEventListener('change',event=>{
+  const file=event.target.files?.[0],submit=document.querySelector('#profileForm button[type="submit"]');
+  if(!file)return;
+  if(profilePhotoReader){profilePhotoReader.abort();profilePhotoReader=null;}
+  const validationError=validateProfilePhoto(file);
+  if(validationError){alert(validationError);event.target.value='';return;}
+  if(submit){submit.disabled=true;submit.textContent='Loading photo…';}
+  const reader=new FileReader();profilePhotoReader=reader;
+  const finish=()=>{if(profilePhotoReader===reader)profilePhotoReader=null;if(submit?.isConnected){submit.disabled=false;submit.textContent='Save profile';}};
+  reader.onload=()=>{
+   if(event.target.files?.[0]===file){
+    const value=String(reader.result||'');
+    document.getElementById('profilePhotoValue').value=value;
+    document.getElementById('profilePhotoPreview').innerHTML='<img src="'+value+'" alt="Selected profile photo">';
+   }
+   finish();
+  };
+  reader.onerror=()=>{alert('Could not read this image. Please try another file.');finish();};
+  reader.readAsDataURL(file);
+ });
+ document.getElementById('removeProfilePhoto')?.addEventListener('click',()=>{
+  if(profilePhotoReader){profilePhotoReader.abort();profilePhotoReader=null;}
+  document.getElementById('profilePhotoValue').value='';
+  document.getElementById('profilePhotoFile').value='';
+  const submit=document.querySelector('#profileForm button[type="submit"]');
+  if(submit){submit.disabled=false;submit.textContent='Save profile';}
+  const preview=document.getElementById('profilePhotoPreview');
+  preview.textContent=(document.querySelector('#profileForm input[name="fullName"]')?.value||'A').trim().slice(0,1).toUpperCase();
+ });
+ document.getElementById('profileForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const form=e.currentTarget;
+  if(!form.reportValidity())return;
+  const d=getData(),f=new FormData(form),fullName=String(f.get('fullName')||'').trim(),email=String(f.get('email')||'').trim(),oldEmail=d.user.email||'';
+  const nameError=validateProfileName(fullName);
+  if(nameError){alert(nameError);form.elements.namedItem('fullName').focus();return;}
+  const submit=form.querySelector('button[type="submit"]');
+  if(submit){submit.disabled=true;submit.textContent='Saving…';}
+  try{
+   const {data,error}=await updateAccountProfile({fullName,email:email!==oldEmail?email:undefined});
+   if(error)throw error;
+   d.user={...d.user,fullName,email:email!==oldEmail?(data?.user?.email||oldEmail):oldEmail,phoneNumber:String(f.get('phoneNumber')||'').trim(),profilePhoto:String(f.get('profilePhoto')||''),targetOccupation:String(f.get('targetOccupation')||'').trim(),location:String(f.get('location')||'').trim(),summary:String(f.get('summary')||'').trim(),interests:String(f.get('interests')||'').trim()};
+   await saveDataAndWait(d);
+   if(email!==oldEmail&&!data?.user?.email?.toLowerCase().includes(email.toLowerCase()))alert('Your profile details were saved. Supabase has sent a confirmation link to your new email address. Your sign-in email changes after confirmation.');
+   else alert('Your profile has been updated and synchronised.');
+   navigate('/app/dashboard');
+  }catch(error){
+   alert(error.message||'Could not update your profile. If you changed your account name or email, check your account settings before retrying.');
+  }finally{
+   if(submit?.isConnected){submit.disabled=false;submit.textContent='Save profile';}
+  }
+ });
  document.getElementById('resetDemo')?.addEventListener('click',async()=>{
   if(!confirm('Clear all experience, evidence, competency and review records from your account? Your profile will remain. Private evidence attachments will also be deleted.'))return;
   const button=document.getElementById('resetDemo');
