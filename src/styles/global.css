@@ -2,3 +2,28 @@ body{margin:0;min-width:320px}a{color:inherit;text-decoration:none}button,input{
 :root[data-theme="dark"] .footer{border-color:var(--line)}
 :root[data-theme="dark"] .notice{border-color:var(--line)}
 :root[data-theme="dark"] .pill{background:#263b56;color:#c9dcf4}
+
+/* Keyboard accessibility and consistent interaction feedback. */
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{
+  outline:3px solid var(--blue);
+  outline-offset:3px;
+}
+:where(button,input,select,textarea):disabled{
+  cursor:not-allowed;
+  opacity:.62;
+}
+:where(input,select,textarea)[aria-invalid="true"]{
+  border-color:#c44545;
+  box-shadow:0 0 0 2px rgba(196,69,69,.12);
+}
+:where(input,select,textarea):focus-visible{
+  border-color:var(--blue);
+}
+@media(forced-colors:active){
+  :where(a,button,input,select,textarea,[tabindex]):focus-visible{
+    outline:2px solid Highlight;
+  }
+}
+:root[data-theme="dark"] :where(a,button,input,select,textarea,[tabindex]):focus-visible{
+  outline-color:#82b7f0;
+}
