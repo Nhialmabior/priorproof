@@ -121,11 +121,12 @@ export async function flushWorkspaceSave() {
     }
   }
 
+  // A previous request may have failed. Keep its local recovery copy and let
+  // the pending-save branch below retry it instead of abandoning the retry.
   try {
     await saveQueue;
-  } catch (error) {
-    dispatchSyncStatus('error', error.message || 'Cloud save failed.');
-    throw new Error('A workspace save is still pending. Please check your connection and try again.');
+  } catch {
+    // The pending marker remains set until a later successful cloud write.
   }
 
   if (hasPendingSave(userId)) {
