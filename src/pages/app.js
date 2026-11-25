@@ -292,37 +292,43 @@ export function gapPage(){
   return {competency:c,items,unrelated,withFiles};
  });
  const total=rows.length,withEvidence=rows.filter(r=>r.items.length).length,missing=total-withEvidence;
-  const relevanceChecks=rows.filter(r=>r.unrelated.length).length;
-  const pct=total?Math.round(withEvidence/total*100):0;
-  const cards=rows.map(({competency:c,items,unrelated,withFiles})=>{
-   let recommendation='';
-   if(!items.length) recommendation='Consider adding a relevant work sample, activity record, training output or reference. This is a documentation prompt, not an indication that you lack the skill.';
-   else if(unrelated.length) recommendation='Review whether the linked evidence genuinely relates to this competency. Evidence connected to another experience may still be relevant, but the relationship should be clear.';
-   else recommendation='Check that each item is relevant, current and appropriate to support the experience you have recorded. Keep original documents and seek an authorised review where required.';
-   return `<article class="panel gap-card">
-   <div class="gap-card-head"><div><span class="eyebrow">${escapeHtml(c.category||'General')}</span><h3>${escapeHtml(c.name)}</h3></div><span class="pill ${items.length?'':'pending'}">${items.length?'Evidence linked':'No evidence linked'}</span></div>
+ const relevanceChecks=rows.filter(r=>r.unrelated.length).length;
+ const pct=total?Math.round(withEvidence/total*100):0;
+ const categories=[...new Set(rows.map(r=>r.competency.category||'General'))].sort((a,b)=>a.localeCompare(b));
+ const cards=rows.map(({competency:c,items,unrelated,withFiles})=>{
+  const state=!items.length?'missing':unrelated.length?'review':'linked';
+  let recommendation='';
+  if(state==='missing') recommendation='Consider adding a relevant work sample, activity record, training output or reference. This is a documentation prompt, not an indication that you lack the skill.';
+  else if(state==='review') recommendation='Review whether the linked evidence genuinely relates to this competency. Evidence connected to another experience may still be relevant, but make the relationship clear.';
+  else recommendation='Check that each item is relevant, current and appropriate to support the experience you have recorded.';
+  return `<article class="panel gap-card" data-gap-card data-gap-state="${state}" data-gap-category="${escapeHtml((c.category||'General').toLowerCase())}">
+   <div class="gap-card-head"><div><span class="eyebrow">${escapeHtml(c.category||'General')}</span><h3>${escapeHtml(c.name)}</h3></div><span class="pill ${state==='missing'||state==='review'?'pending':''}">${state==='missing'?'No evidence linked':state==='review'?'Review relevance':'Evidence linked'}</span></div>
    <div class="gap-metrics"><span><b>${items.length}</b> linked item(s)</span><span><b>${withFiles}</b> with file attached</span><span><b>${unrelated.length}</b> relevance check(s)</span></div>
    <div class="gap-evidence-list"><b>Evidence register</b>
-    ${items.length?items.map(e=>`<div class="gap-evidence-row"><div><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml(e.type||'Supporting material')}${e.fileName?' · File attached':''}</small></div><span class="pill">${escapeHtml(evidenceStatusLabel(e))}</span></div>`).join(''):'<p class="muted">No evidence is currently linked to this competency.</p>'}
+    ${items.length?items.map(e=>`<div class="gap-evidence-row"><div><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml(e.type||'Supporting material')}${e.fileName?' · File attached':' · Description only'}</small></div><span class="pill">Not independently verified</span></div>`).join(''):'<p class="muted">No evidence is currently linked to this competency.</p>'}
    </div>
    ${unrelated.length?'<p class="gap-caution">Check relevance: '+unrelated.length+' linked item(s) are associated with a different experience record. They may still be relevant, but review the connection.</p>':''}
-   <div class="gap-recommendation"><b>Suggested action</b><p>${recommendation}</p></div>
+   <div class="gap-recommendation"><b>Suggested action</b><p>${recommendation}</p><div class="gap-card-actions"><a class="btn btn-outline btn-small" href="/app/competencies" data-link>Manage evidence links</a>${state==='missing'?'<a class="btn btn-primary btn-small" href="/app/evidence" data-link>Add evidence</a>':''}</div></div>
   </article>`;
  }).join('');
  const content=`<section class="panel gap-overview">
-  <div class="gap-overview-top"><div><h2>Evidence coverage</h2><p class="muted">Based on evidence links in this workspace, not a formal skills assessment.</p></div><span class="gap-percent">${pct}%</span></div>
-  <div class="coverage-number">${withEvidence}<span> / ${total}</span></div><p>Competencies with at least one linked evidence item</p>
+  <div class="gap-overview-top"><div><h2>Evidence coverage</h2><p class="muted">A summary of evidence links across your suggested competencies—not a skills score.</p></div><span class="gap-percent">${pct}%</span></div>
+  <div class="coverage-number">${withEvidence}<span> / ${total}</span></div><p>Suggested competencies with at least one linked evidence record</p>
   <div class="progress"><i style="width:${pct}%"></i></div>
   <div class="gap-summary-grid">
    <div><strong>${missing}</strong><span>No linked evidence</span></div>
    <div><strong>${withEvidence}</strong><span>With linked evidence</span></div>
    <div><strong>${relevanceChecks}</strong><span>Need a relevance check</span></div>
   </div>
-  <p class="gap-disclaimer"><b>How to read this:</b> These figures describe the records and links in your workspace only. They do not measure your ability or indicate that you lack a competency. A file attachment or user-selected link does not establish authenticity, competence or independent verification. Any status label shown on an evidence record is not authenticated by PriorProof.</p>
+  <p class="gap-disclaimer"><b>Important:</b> These figures describe records and links in your workspace only. They do not measure ability or indicate that you lack a competency. Attachments and user-selected links do not establish authenticity, competence or independent verification.</p>
  </section>
- <div class="gap-section-heading"><div><h2>Competency-by-competency review</h2><p>Use these suggestions to decide what to strengthen next.</p></div><a href="/app/competencies" data-link>Manage evidence links →</a></div>
- <div class="gap-card-list">${cards||'<section class="panel empty-state"><h3>No competency suggestions yet</h3><p>Add experience records and list the skills you developed. PriorProof will create preliminary suggestions for you to review.</p><a class="btn btn-primary" href="/app/experience" data-link>Go to experience</a></section>'}</div>`;
- return simplePage('Gap analysis','Review documentation coverage, check evidence relevance and identify where supporting material may be useful.',content,'/app/gap-analysis');
+ <section class="panel gap-tools">
+  <div class="gap-tools-heading"><div><h2>Review your competencies</h2><p id="gapResultCount" aria-live="polite">${total} competency record(s)</p></div><a href="/app/competencies" data-link>Manage skills →</a></div>
+  ${total?`<div class="gap-filters"><label>Search competencies<input type="search" id="gapSearch" placeholder="Search skill, category or evidence"></label><label>Documentation status<select id="gapStatusFilter"><option value="">All statuses</option><option value="missing">No evidence linked</option><option value="linked">Evidence linked</option><option value="review">Review relevance</option></select></label><label>Category<select id="gapCategoryFilter"><option value="">All categories</option>${categories.map(category=>`<option value="${escapeHtml(category.toLowerCase())}">${escapeHtml(category)}</option>`).join('')}</select></label></div>`:''}
+ </section>
+ <div class="gap-card-list">${cards||'<section class="panel empty-state"><h3>No competency suggestions yet</h3><p>Add experience records and list the skills you developed. PriorProof will create preliminary suggestions for you to review.</p><a class="btn btn-primary" href="/app/experience" data-link>Go to experience</a></section>'}</div>
+ ${total?'<p id="gapNoResults" class="empty-state" hidden>No competencies match these filters. Try another search or status.</p>':''}`;
+ return simplePage('Gap analysis','Review evidence links, check relevance and decide where your documentation may need attention.',content,'/app/gap-analysis');
 }
 export function portfolioPage(){
  const d=getData();
@@ -649,6 +655,12 @@ export function bindAppActions(){
    const applyCompetencyFilters=()=>{const q=competencySearch.value.trim().toLowerCase(),category=competencyCategory.value;let visible=0;cards.forEach(card=>{const match=card.textContent.toLowerCase().includes(q)&&(!category||card.dataset.category===category);card.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+cards.length+' suggestion(s)';if(empty)empty.hidden=visible!==0;};
    competencySearch.addEventListener('input',applyCompetencyFilters);competencyCategory.addEventListener('change',applyCompetencyFilters);
   }
+ const gapSearch=document.getElementById('gapSearch'),gapStatus=document.getElementById('gapStatusFilter'),gapCategory=document.getElementById('gapCategoryFilter');
+ if(gapSearch&&gapStatus&&gapCategory){
+  const cards=[...document.querySelectorAll('[data-gap-card]')],count=document.getElementById('gapResultCount'),empty=document.getElementById('gapNoResults');
+  const applyGapFilters=()=>{const q=gapSearch.value.trim().toLowerCase(),status=gapStatus.value,category=gapCategory.value;let visible=0;cards.forEach(card=>{const match=card.textContent.toLowerCase().includes(q)&&(!status||card.dataset.gapState===status)&&(!category||card.dataset.gapCategory===category);card.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+cards.length+' competency record(s)';if(empty)empty.hidden=visible!==0;};
+  gapSearch.addEventListener('input',applyGapFilters);gapStatus.addEventListener('change',applyGapFilters);gapCategory.addEventListener('change',applyGapFilters);
+ }
   document.querySelectorAll('[data-download-evidence]').forEach(button=>button.addEventListener('click',async()=>{try{const item=getData().evidence.find(e=>e.id===button.dataset.downloadEvidence);const file=item?await getEvidenceFile(item.fileId||item.id,item.filePath):null;if(!file){alert('The file is not available in this account.');return;}const url=URL.createObjectURL(file.blob),a=document.createElement('a');a.href=url;a.download=item?.fileName||file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}catch(error){alert(error.message||'Could not retrieve the file.');}}));
 
  document.querySelectorAll('#addExperience').forEach(button=>button.addEventListener('click',()=>openEntryDialog('experience')));
