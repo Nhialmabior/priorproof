@@ -34,6 +34,7 @@ button,input,select,textarea{max-width:100%}
   .public-nav nav.open{display:flex}
   .public-nav nav a{padding:7px 0}
   .public-nav nav .btn{align-self:flex-start}
+  .public-nav nav .public-theme-toggle{align-self:flex-start}
   .public-nav .public-account-wrap{margin:4px 0 0}
   .public-nav .public-account-menu{top:calc(100% + 8px);right:auto;left:0}
   .hero{grid-template-columns:minmax(0,1fr);gap:24px;padding-top:52px;padding-bottom:58px}
