@@ -41,11 +41,11 @@ test('editing experience skills reuses matching competencies and refreshes prove
   const teamwork = data.competencies.find(item => item.id === 'comp-1');
   const research = data.competencies.find(item => item.id === 'comp-2');
   assert.ok(teamwork, 'A competency with a remaining evidence link should be retained');
-  assert.deepEqual(teamwork.experienceIds, []);
-  assert.deepEqual(teamwork.sourceSkills, []);
+  assert.deepEqual(teamwork.experienceIds, ['exp-1']);
+  assert.deepEqual(teamwork.sourceSkills, ['Collaboration']);
   assert.ok(research.experienceIds.includes('exp-1'));
   assert.deepEqual(research.sourceSkills.sort(), ['Research']);
-  assert.equal(data.competencies.some(item => item.name === 'Teamwork'), true);
+  assert.equal(data.competencies.filter(item => item.name === 'Teamwork').length, 1);
   assert.equal(data.competencies.find(item => item.name === 'Teamwork').experienceIds.includes('exp-1'), true);
 });
 
@@ -98,5 +98,6 @@ test('evidence-only competency remains until its final evidence link is removed'
   removeEvidenceRelations(data, 'ev-3');
   assert.equal(data.competencies.find(item => item.id === 'comp-3'), undefined, 'An evidence-only competency is removed with its final evidence link');
   removeEvidenceRelations(data, 'ev-1');
-  assert.equal(data.competencies.some(item => item.id === 'comp-1'), false);
+  assert.ok(data.competencies.find(item => item.id === 'comp-1'), 'The experience link keeps the competency after its evidence link is removed');
+  assert.deepEqual(data.competencies.find(item => item.id === 'comp-1').evidenceIds, []);
 });
