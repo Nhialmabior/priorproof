@@ -223,7 +223,10 @@ async function render() {
     }
   });
   document.getElementById('signOutButton')?.addEventListener('click', async event => {
-    event.currentTarget.disabled = true;
+    const button = event.currentTarget;
+    if (button.disabled) return;
+    button.disabled = true;
+    button.textContent = 'Signing out…';
     try {
       // Do not end the authenticated session while a recent workspace edit is unsynchronised.
       await flushWorkspaceSave();
@@ -233,8 +236,11 @@ async function render() {
       clearActiveWorkspace();
       navigate('/login');
     } catch (error) {
-      event.currentTarget.disabled = false;
-      alert(error.message || 'Could not sign out.');
+      if (button.isConnected) {
+        button.disabled = false;
+        button.textContent = 'Sign out';
+      }
+      alert(error.message || 'Could not sign out. Your session is still active.');
     }
   });
 }
@@ -294,7 +300,7 @@ async function start() {
   } catch (error) {
     console.error('Supabase setup:', error);
     const root = document.querySelector('#app');
-    root.innerHTML = '<main style="max-width:720px;margin:10vh auto;padding:24px;font-family:system-ui"><h1>PriorProof setup required</h1><p>Supabase credentials are missing or invalid. Create a local .env file using .env.example, then restart the development server.</p></main>';
+    root.innerHTML = '<main style="max-width:720px;margin:10vh auto;padding:24px;font-family:system-ui"><h1>PriorProof could not start</h1><p>Check your internet connection and refresh the page. If the problem continues, verify that your local Supabase settings are configured correctly.</p><a href="/">Return to PriorProof</a></main>';
     return;
   }
   await render();
