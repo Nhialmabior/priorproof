@@ -214,3 +214,28 @@
 .sync-status[data-status="error"]{color:#b54747}
 .sync-status>span{font-weight:600}
 @media(max-width:700px){.sync-status>span{display:none}.sync-status{font-size:14px}}
+
+
+/* Account menu and editable profile photo */
+.account-menu-wrap{position:relative}
+.account-trigger{display:grid;place-items:center;padding:0;border:2px solid #e3eaf1;overflow:hidden;cursor:pointer;background:#eaf1f8;color:var(--navy);font-weight:800}
+.account-trigger img,.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.account-menu{position:absolute;z-index:50;right:0;top:calc(100% + 12px);width:min(310px,calc(100vw - 32px));padding:15px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 42px rgba(20,43,80,.16);color:#24334a}
+.account-menu[hidden]{display:none}
+.account-menu-profile{display:flex;align-items:center;gap:11px;padding-bottom:13px;border-bottom:1px solid #edf0f4}
+.account-menu-avatar{width:42px;height:42px;flex:0 0 42px;overflow:hidden;display:grid;place-items:center}
+.account-menu-profile>div:last-child{min-width:0}
+.account-menu-profile strong,.account-menu-profile small{display:block;overflow-wrap:anywhere}
+.account-menu-profile strong{font-size:12px}
+.account-menu-profile small{font-size:10px;color:#78869a;margin-top:3px}
+.account-menu-details{display:grid;grid-template-columns:75px minmax(0,1fr);gap:8px;padding:13px 0;font-size:10px}
+.account-menu-details span{color:#78869a}
+.account-menu-details b{font-weight:600;overflow-wrap:anywhere}
+.account-menu>a,.account-menu-signout{display:flex;width:100%;justify-content:space-between;align-items:center;padding:10px 2px;border:0;border-top:1px solid #edf0f4;background:transparent;color:var(--blue);font:700 11px inherit;text-decoration:none;cursor:pointer}
+.account-menu-signout{color:#a13e3e}
+.profile-photo-field{display:flex;align-items:center;gap:17px;padding-bottom:18px;border-bottom:1px solid #edf0f4}
+.profile-photo-preview{width:76px;height:76px;flex:0 0 76px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#eaf1f8;color:var(--navy);font-size:26px;font-weight:800}
+.profile-photo-preview img{width:100%;height:100%;object-fit:cover}
+.profile-photo-field>div:last-child{display:grid;justify-items:start;gap:6px}
+.profile-photo-field input[type=file]{max-width:100%;font-size:10px}
+@media(max-width:600px){.account-menu{right:-6px}.profile-photo-field{align-items:flex-start}}
