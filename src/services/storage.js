@@ -24,6 +24,12 @@ function blankWorkspace(user) {
   };
 }
 
+function dispatchSyncStatus(status, message = '') {
+  window.dispatchEvent(new CustomEvent('priorproof:sync-status', {
+    detail: { status, message }
+  }));
+}
+
 function workspaceKey(userId) {
   return `priorproof-workspace-v1:${userId}`;
 }
@@ -130,6 +136,7 @@ export function saveData(data) {
   snapshot.user = { ...snapshot.user, id: activeUserId };
   writeLocal(activeUserId, snapshot);
   window.dispatchEvent(new CustomEvent('priorproof:data-updated'));
+  dispatchSyncStatus('saving');
 
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
@@ -138,12 +145,10 @@ export function saveData(data) {
     saveQueue = saveQueue
       .catch(() => {})
       .then(() => persistWorkspace(userId, snapshot))
-      .then(() => window.dispatchEvent(new CustomEvent('priorproof:sync-status', { detail: { status: 'saved' } })))
+      .then(() => dispatchSyncStatus('saved'))
       .catch(error => {
         console.error('PriorProof cloud save failed:', error);
-        window.dispatchEvent(new CustomEvent('priorproof:sync-status', {
-          detail: { status: 'error', message: error.message || 'Cloud save failed.' }
-        }));
+        dispatchSyncStatus('error', error.message || 'Cloud save failed.');
       });
   }, 450);
 }
