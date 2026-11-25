@@ -608,34 +608,171 @@ export function bindAppActions(){
    }
   });
  document.getElementById('importDataFile')?.addEventListener('change',async event=>{
-  const input=event.currentTarget;
-  const file=input.files?.[0];
-  if(!file||input.disabled)return;
-  input.disabled=true;
-  setBackupFeedback('Checking your backup file…');
-  try{
-   if(file.size>MAX_BACKUP_FILE_SIZE)throw new Error('The backup file is larger than 10 MB.');
-   const parsed=JSON.parse(await file.text());
-   const currentUser=getData().user||{};
-   const {workspace:restored,counts:backupCounts}=prepareRestoredWorkspace(parsed,currentUser);
-   const counts=backupCounts.experiences+' experience record(s), '+backupCounts.evidence+' evidence record(s) and '+backupCounts.competencies+' competency suggestion(s)';
-   if(!confirm('Restore this backup? It contains '+counts+'. The current workspace will be replaced. Attachments are not included in JSON backups. Continue?'))return;
-   await saveDataAndWait(restored);
-   let cleanupMessage='Backup restored and saved. Attachments are not included in JSON backups; add them again from your original files if needed.';
+   const input=event.currentTarget;
+   const file=input.files?.[0];
+   if(!file||input.disabled)return;
+   input.disabled=true;
+   setBackupFeedback('Checking your backup file…');
    try{
-    await clearEvidenceFiles();
-   }catch(cleanupError){
-    cleanupMessage+=' Some old attachment files could not be removed. They are no longer linked to the restored records and may remain in private storage until a dedicated cleanup control is available.';
+    if(file.size>MAX_BACKUP_FILE_SIZE)throw new Error('The backup file is larger than 10 MB.');
+    const parsed=JSON.parse(await file.text());
+    const currentUser=getData().user||{};
+    const {workspace:restored,counts:backupCounts}=prepareRestoredWorkspace(parsed,currentUser);
+    const counts=backupCounts.experiences+' experience record(s), '+backupCounts.evidence+' evidence record(s) and '+backupCounts.competencies+' competency suggestion(s)';
+    if(!confirm('Restore this backup? It contains '+counts+'. The current workspace will be replaced. Attachments are not included in JSON backups. Continue?'))return;
+    await saveDataAndWait(restored);
+    let cleanupMessage='Backup restored and saved. Attachments are not included in JSON backups; add them again from your original files if needed.';
+    try{
+     await clearEvidenceFiles();
+    }catch(cleanupError){
+     cleanupMessage+=' Some old attachment files could not be removed. They are no longer linked to the restored records and may remain in private storage until a dedicated cleanup control is available.';
+    }
+    setBackupFeedback(cleanupMessage);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+   }catch(error){
+    setBackupFeedback(error.message||'Could not restore this backup. Existing evidence attachments were not deliberately removed.','error');
+   }finally{
+    input.value='';
+    input.disabled=false;
    }
-   setBackupFeedback(cleanupMessage);
-   window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  document.querySelectorAll('[data-edit-experience]').forEach(button=>button.addEventListener('click',()=>openEntryDialog('experience',button.dataset.editExperience)));
+ document.querySelectorAll('[data-delete-experience]').forEach(button=>button.addEventListener('click',async()=>{
+  if(button.disabled||!confirm('Remove this experience and its linked evidence records?'))return;
+  button.disabled=true;
+  button.textContent='Removing…';
+  const d=getData(),id=button.dataset.deleteExperience;
+  const removed=removeExperienceRelations(d,id,skillDefinition);
+  try{
+   // Commit record removal before deleting files, so a failed save never leaves broken attachment references.
+   await saveDataAndWait(d);
   }catch(error){
-   setBackupFeedback(error.message||'Could not restore this backup. Existing evidence attachments were not deliberately removed.','error');
-  }finally{
-   input.value='';
-   input.disabled=false;
+   alert(error.message||'Could not save the removal. Evidence attachments were kept.');
+   button.disabled=false;
+   button.textContent='Delete';
+   return;
   }
- });;
+  let failed=0;
+  for(const item of removed){
+   if(!item.fileId&&!item.filePath)continue;
+   try{await deleteEvidenceFile(item.fileId,item.filePath);}catch(error){failed++;}
+  }
+  if(failed)alert('The experience and its evidence records were removed and saved, but '+failed+' attachment file(s) could not be deleted. They are no longer linked to your records and may remain in private storage.');
+  window.dispatchEvent(new PopStateEvent('popstate'));
+ }));
+ document.querySelectorAll('[data-edit-evidence]').forEach(button=>button.addEventListener('click',()=>openEntryDialog('evidence',button.dataset.editEvidence)));
+ document.querySelectorAll('[data-delete-evidence]').forEach(button=>button.addEventListener('click',async()=>{
+  if(button.disabled||!confirm('Remove this evidence record?'))return;
+  button.disabled=true;
+  button.textContent='Removing…';
+  const d=getData(),id=button.dataset.deleteEvidence,item=d.evidence.find(e=>e.id===id);
+  removeEvidenceRelations(d,id);
+  try{
+   // Persist the record change before attempting file deletion.
+   await saveDataAndWait(d);
+  }catch(error){
+   alert(error.message||'Could not save the removal. The evidence attachment was kept.');
+   button.disabled=false;
+   button.textContent='Delete';
+   return;
+  }
+  if(item?.fileId||item?.filePath){
+   try{await deleteEvidenceFile(item.fileId,item.filePath);}
+   catch(error){alert('The evidence record was removed and saved, but its attachment could not be deleted. The file is no longer linked to your records and may remain in private storage.');}
+  }
+  window.dispatchEvent(new PopStateEvent('popstate'));
+ }));
+ document.querySelectorAll('[data-map-form]').forEach(form=>form.addEventListener('submit',async e=>{
+   e.preventDefault();
+   const submit=form.querySelector('button[type="submit"]'),d=getData(),competency=d.competencies.find(c=>c.id===form.dataset.mapForm),evidenceId=String(new FormData(form).get('evidenceId')||'');
+   if(!competency||!evidenceId)return;
+   const item=d.evidence.find(x=>x.id===evidenceId);
+   if(!item)return;
+   competency.evidenceIds=[...new Set([...(competency.evidenceIds||[]),evidenceId])];
+   if(submit){submit.disabled=true;submit.textContent='Saving…';}
+   try{await saveDataAndWait(d);window.dispatchEvent(new PopStateEvent('popstate'));}
+   catch(error){alert(error.message||'Could not save this evidence link. Please try again.');if(submit){submit.disabled=false;submit.textContent='Link evidence';}}
+  }));
+  document.querySelectorAll('[data-unlink-evidence]').forEach(button=>button.addEventListener('click',async()=>{
+   const d=getData(),competency=d.competencies.find(c=>c.id===button.dataset.unlinkEvidence);
+   if(!competency)return;
+   if(!confirm('Remove this evidence link? The evidence record itself will remain in your repository.'))return;
+   competency.evidenceIds=(competency.evidenceIds||[]).filter(id=>id!==button.dataset.evidenceId);
+   button.disabled=true;
+   try{await saveDataAndWait(d);window.dispatchEvent(new PopStateEvent('popstate'));}
+   catch(error){alert(error.message||'Could not save this change. Please try again.');button.disabled=false;}
+  }));
+  const evidenceSearch=document.getElementById('evidenceSearch'),evidenceType=document.getElementById('evidenceTypeFilter'),evidenceStatus=document.getElementById('evidenceStatusFilter');
+ if(evidenceSearch&&evidenceType&&evidenceStatus){
+  const cards=[...document.querySelectorAll('[data-evidence-card]')],count=document.getElementById('evidenceResultCount'),empty=document.getElementById('evidenceNoResults');
+  const applyEvidenceFilters=()=>{const q=evidenceSearch.value.trim().toLowerCase(),type=evidenceType.value,status=evidenceStatus.value;let visible=0;cards.forEach(card=>{const match=card.textContent.toLowerCase().includes(q)&&(!type||card.dataset.evidenceType===type)&&(!status||card.dataset.evidenceStatus===status);card.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+cards.length+' record(s)';if(empty)empty.hidden=visible!==0;};
+  evidenceSearch.addEventListener('input',applyEvidenceFilters);evidenceType.addEventListener('change',applyEvidenceFilters);evidenceStatus.addEventListener('change',applyEvidenceFilters);
+ }
+ const competencySearch=document.getElementById('competencySearch'),competencyCategory=document.getElementById('competencyCategory');
+  if(competencySearch&&competencyCategory){
+   const cards=[...document.querySelectorAll('[data-competency-card]')],count=document.getElementById('competencyResultCount'),empty=document.getElementById('competencyNoResults');
+   const applyCompetencyFilters=()=>{const q=competencySearch.value.trim().toLowerCase(),category=competencyCategory.value;let visible=0;cards.forEach(card=>{const match=card.textContent.toLowerCase().includes(q)&&(!category||card.dataset.category===category);card.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+cards.length+' suggestion(s)';if(empty)empty.hidden=visible!==0;};
+   competencySearch.addEventListener('input',applyCompetencyFilters);competencyCategory.addEventListener('change',applyCompetencyFilters);
+  }
+ const reviewEvidenceSearch=document.getElementById('reviewEvidenceSearch');
+ if(reviewEvidenceSearch){
+  const options=[...document.querySelectorAll('[data-review-evidence-option]')],count=document.getElementById('reviewEvidenceCount'),empty=document.getElementById('reviewEvidenceNoResults');
+  reviewEvidenceSearch.addEventListener('input',()=>{const q=reviewEvidenceSearch.value.trim().toLowerCase();let visible=0;options.forEach(option=>{const match=option.textContent.toLowerCase().includes(q);option.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+options.length+' evidence record(s) shown';if(empty)empty.hidden=visible!==0;});
+ }
+ const gapSearch=document.getElementById('gapSearch'),gapStatus=document.getElementById('gapStatusFilter'),gapCategory=document.getElementById('gapCategoryFilter');
+ if(gapSearch&&gapStatus&&gapCategory){
+  const cards=[...document.querySelectorAll('[data-gap-card]')],count=document.getElementById('gapResultCount'),empty=document.getElementById('gapNoResults');
+  const applyGapFilters=()=>{const q=gapSearch.value.trim().toLowerCase(),status=gapStatus.value,category=gapCategory.value;let visible=0;cards.forEach(card=>{const match=card.textContent.toLowerCase().includes(q)&&(!status||card.dataset.gapState===status)&&(!category||card.dataset.gapCategory===category);card.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+cards.length+' competency record(s)';if(empty)empty.hidden=visible!==0;};
+  gapSearch.addEventListener('input',applyGapFilters);gapStatus.addEventListener('change',applyGapFilters);gapCategory.addEventListener('change',applyGapFilters);
+ }
+   document.querySelectorAll('[data-download-evidence]').forEach(button=>button.addEventListener('click',async()=>{
+    if(button.disabled)return;
+    const originalLabel=button.textContent;
+    button.disabled=true;
+    button.textContent='Preparing…';
+    let url=null;
+    try{
+     const item=getData().evidence.find(e=>e.id===button.dataset.downloadEvidence);
+     const file=item?await getEvidenceFile(item.fileId||item.id,item.filePath):null;
+     if(!file?.blob)throw new Error('The attachment is not available in this account. Check whether the original file needs to be uploaded again.');
+     url=URL.createObjectURL(file.blob);
+     const a=document.createElement('a');
+     a.href=url;
+     a.download=item.fileName||file.name||'evidence-file';
+     document.body.appendChild(a);
+     a.click();
+     a.remove();
+     setTimeout(()=>URL.revokeObjectURL(url),60000);
+    }catch(error){
+     if(url)URL.revokeObjectURL(url);
+     alert(error.message||'Could not retrieve the file. Please check your connection and try again.');
+    }finally{
+     button.disabled=false;
+     button.textContent=originalLabel;
+    }
+   }));
+
+ document.querySelectorAll('#addExperience').forEach(button=>button.addEventListener('click',()=>openEntryDialog('experience')));
+ document.querySelectorAll('#addEvidence').forEach(button=>button.addEventListener('click',()=>openEntryDialog('evidence')));
+ const reviewPackForm=document.getElementById('reviewPackForm');
+ reviewPackForm?.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(!reviewPackForm.reportValidity())return;
+  const d=getData(),f=new FormData(reviewPackForm),competency=d.competencies.find(x=>x.id===f.get('competencyId'));
+  if(!competency){alert('Choose a valid competency before saving this review pack.');return;}
+  const selectedEvidence=[...new Set(f.getAll('evidenceIds').filter(id=>d.evidence.some(item=>item.id===id)))];
+  const submit=reviewPackForm.querySelector('button[type="submit"]');
+  if(submit){submit.disabled=true;submit.textContent='Saving review pack…';}
+  d.assessments=Array.isArray(d.assessments)?d.assessments:[];
+  d.assessments.unshift({
+   id:crypto.randomUUID(),
+   competencyId:competency.id,
+   competencyName:competency.name,
+   evidenceIds:selectedEvidence,
+   context:String(f.get('context')||'').trim(),
+   status:'Prepared - not submitted',
+   createdAt:new Date().toISOString()
+  });
   try{
    await saveDataAndWait(d);
    window.dispatchEvent(new PopStateEvent('popstate'));
