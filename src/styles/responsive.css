@@ -1,1 +1,38 @@
 @media(max-width:1000px){.hero{gap:20px}.category-grid{grid-template-columns:repeat(3,1fr)}.steps-grid{grid-template-columns:repeat(2,1fr)}.sidebar{width:220px}.app-main{margin-left:220px}.stats-grid{grid-template-columns:repeat(2,1fr)}.dashboard-grid{grid-template-columns:1fr}.competency-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:720px){.wrap{width:min(100% - 32px,560px)}.public-nav{height:70px;padding:0 16px}.brand img{width:165px}.mobile-menu{display:block}.public-nav nav{display:none;position:absolute;top:69px;left:0;right:0;background:#fff;border-bottom:1px solid var(--line);padding:18px;flex-direction:column;align-items:stretch;gap:17px}.public-nav nav.open{display:flex}.hero{grid-template-columns:1fr;padding-top:55px;padding-bottom:55px}.hero-visual{min-height:350px}.preview-window{width:100%}.floating-note{right:0;bottom:3px}.three-cards{grid-template-columns:1fr}.steps-grid{grid-template-columns:1fr 1fr}.category-grid{grid-template-columns:repeat(2,1fr)}.cta-section{margin-top:45px;margin-bottom:45px;padding:30px;display:block}.cta-section .btn{margin-top:20px}.footer-inner{grid-template-columns:1fr}.footer-links{justify-content:flex-start;flex-wrap:wrap;gap:15px}.footer-inner>small{grid-column:auto}.inner-feature{grid-template-columns:1fr}.auth-layout{grid-template-columns:1fr}.auth-brand{min-height:240px;padding:25px}.auth-brand>div{margin:35px 0}.auth-brand h1{font-size:35px}.auth-form-wrap{padding:25px}.sidebar{transform:translateX(-100%);transition:.25s;width:255px;box-shadow:var(--shadow)}.sidebar.open{transform:translateX(0)}.app-main{margin-left:0}.app-topbar{padding:0 16px}.icon-btn{display:block}.crumb{margin-right:auto;margin-left:12px}.app-content{padding:22px 16px}.page-heading{align-items:flex-start;flex-direction:column}.page-heading h1{font-size:26px}.stats-grid{gap:9px}.stat-card{padding:14px}.stat-card>strong{font-size:24px}.stat-top{font-size:10px}.dashboard-grid{gap:12px}.competency-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.form-full{grid-column:auto}.portfolio-sheet{padding:25px 20px}.portfolio-top{margin-bottom:30px}.demo-tag{display:none}}@media(max-width:420px){.steps-grid{grid-template-columns:1fr}.hero-actions{flex-direction:column;align-items:stretch}.hero-actions .btn{width:100%}.preview-body{padding:17px}.preview-stats{gap:5px}.preview-stats>div{padding:10px 6px}.preview-stats strong{font-size:18px}.status{display:none}.stats-grid{grid-template-columns:1fr 1fr}.stat-card>small{font-size:9px}}@media print{.sidebar,.app-topbar,.page-heading,.no-print{display:none!important}.app-main{margin:0}.app-content{padding:0}.portfolio-sheet{box-shadow:none;border:0;max-width:none;padding:10mm}.portfolio-sheet .helper-text{font-size:9px}}
+
+/* Small-screen layout hardening across the workspace */
+@media(max-width:1000px){
+  .app-topbar{gap:10px}
+  .top-actions{gap:8px}
+  .top-actions .theme-toggle span{display:inline}
+  .app-content{min-width:0}
+  .panel,.stat-card,.review-pack-card,.evidence-card,.competency-card{min-width:0}
+}
+@media(max-width:720px){
+  .app-topbar{min-height:64px;flex-wrap:nowrap}
+  .top-actions{margin-left:auto}
+  .top-actions .theme-toggle{padding:8px}
+  .top-actions .theme-toggle span{display:none}
+  .top-actions .btn{padding:9px 10px}
+  .crumb{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .app-content{overflow-x:hidden}
+  .page-heading>div,.page-heading>section{min-width:0}
+  .stats-grid,.dashboard-grid,.competency-grid,.form-grid{min-width:0}
+  .form-grid input,.form-grid select,.form-grid textarea{max-width:100%;min-width:0}
+  .table-wrap,.table-responsive{max-width:100%;overflow-x:auto}
+  .portfolio-sheet{max-width:100%;overflow-wrap:anywhere}
+  .account-menu{max-width:calc(100vw - 32px)}
+}
+@media(max-width:420px){
+  .app-topbar{padding:0 10px;gap:7px}
+  .icon-btn{flex:0 0 34px}
+  .crumb{font-size:11px;margin-left:5px}
+  .top-actions{gap:5px}
+  .top-actions .btn{font-size:11px;padding:8px}
+  .app-content{padding:18px 12px}
+  .page-heading h1{font-size:24px}
+  .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat-card{min-width:0}
+  .stat-card>strong{font-size:21px}
+  .row-between{align-items:flex-start;flex-wrap:wrap}
+}
