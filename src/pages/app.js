@@ -172,7 +172,7 @@ const skillCatalog={
  'customer relations':{name:'Customer service',category:'Business and enterprise'},
  'first aid awareness':{name:'First aid awareness',category:'Workplace practice'}
 };
-const normalizeSkill=value=>String(value||'').normalize('NFKC').trim().toLowerCase().replace(/[^a-z0-9+#. ]/g,' ').replace(/\\s+/g,' ').trim();
+const normalizeSkill=value=>String(value||'').normalize('NFKC').trim().toLowerCase().replace(/[^a-z0-9+#. ]/g,' ').replace(/\s+/g,' ').trim();
 const skillDefinition=value=>{
  const key=normalizeSkill(value),definition=skillCatalog[key];
  if(!definition)return {key,name:String(value||'').trim(),category:'General',matchType:'Uncatalogued phrase'};
