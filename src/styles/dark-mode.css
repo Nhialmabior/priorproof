@@ -173,6 +173,7 @@
 :root[data-theme="dark"] .coverage-number{color:#dce8f8}
 :root[data-theme="dark"] .coverage-number span{color:#9aaac0}
 :root[data-theme="dark"] .auth-brand{background:#101d30}
+:root[data-theme="dark"] .cta-section{background:#1c3554;color:#fff}
 :root[data-theme="dark"] .auth-brand p,
 :root[data-theme="dark"] .auth-brand small{color:#b8c8dc}
 :root[data-theme="dark"] .auth-form label,
