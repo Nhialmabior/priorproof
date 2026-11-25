@@ -654,8 +654,47 @@ export function bindAppActions(){
  document.querySelectorAll('#addExperience').forEach(button=>button.addEventListener('click',()=>openEntryDialog('experience')));
  document.querySelectorAll('#addEvidence').forEach(button=>button.addEventListener('click',()=>openEntryDialog('evidence')));
  const reviewPackForm=document.getElementById('reviewPackForm');
- reviewPackForm?.addEventListener('submit',event=>{event.preventDefault();const d=getData(),f=new FormData(reviewPackForm),c=d.competencies.find(x=>x.id===f.get('competencyId'));if(!c)return;d.assessments=Array.isArray(d.assessments)?d.assessments:[];d.assessments.unshift({id:crypto.randomUUID(),competencyId:c.id,competencyName:c.name,evidenceIds:f.getAll('evidenceIds').filter(id=>d.evidence.some(x=>x.id===id)),context:String(f.get('context')||'').trim(),status:'Prepared - not submitted',createdAt:new Date().toISOString()});saveData(d);window.dispatchEvent(new PopStateEvent('popstate'));});
- document.querySelectorAll('[data-delete-review-pack]').forEach(b=>b.addEventListener('click',()=>{if(!confirm('Delete this review preparation record?'))return;const d=getData();d.assessments=(d.assessments||[]).filter(x=>x.id!==b.dataset.deleteReviewPack);saveData(d);window.dispatchEvent(new PopStateEvent('popstate'));}));
+ reviewPackForm?.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(!reviewPackForm.reportValidity())return;
+  const d=getData(),f=new FormData(reviewPackForm),competency=d.competencies.find(x=>x.id===f.get('competencyId'));
+  if(!competency){alert('Choose a valid competency before saving this review pack.');return;}
+  const selectedEvidence=[...new Set(f.getAll('evidenceIds').filter(id=>d.evidence.some(item=>item.id===id)))];
+  const submit=reviewPackForm.querySelector('button[type="submit"]');
+  if(submit){submit.disabled=true;submit.textContent='Saving review pack…';}
+  d.assessments=Array.isArray(d.assessments)?d.assessments:[];
+  d.assessments.unshift({
+   id:crypto.randomUUID(),
+   competencyId:competency.id,
+   competencyName:competency.name,
+   evidenceIds:selectedEvidence,
+   context:String(f.get('context')||'').trim(),
+   status:'Prepared - not submitted',
+   createdAt:new Date().toISOString()
+  });
+  try{
+   await saveDataAndWait(d);
+   window.dispatchEvent(new PopStateEvent('popstate'));
+  }catch(error){
+   alert(error.message||'The review pack could not be saved. Your existing records have been kept.');
+   if(submit){submit.disabled=false;submit.textContent='Save review pack';}
+  }
+ });
+ document.querySelectorAll('[data-delete-review-pack]').forEach(button=>button.addEventListener('click',async()=>{
+  if(!confirm('Delete this review preparation record?'))return;
+  const d=getData();
+  d.assessments=(d.assessments||[]).filter(item=>item.id!==button.dataset.deleteReviewPack);
+  button.disabled=true;
+  button.textContent='Deleting…';
+  try{
+   await saveDataAndWait(d);
+   window.dispatchEvent(new PopStateEvent('popstate'));
+  }catch(error){
+   alert(error.message||'The review pack could not be deleted. Your existing records have been kept.');
+   button.disabled=false;
+   button.textContent='Delete';
+  }
+ }));
  document.querySelectorAll('[data-export-review-pack]').forEach(b=>b.addEventListener('click',()=>{
   const d=getData(),p=(d.assessments||[]).find(x=>x.id===b.dataset.exportReviewPack);
   if(!p)return;
