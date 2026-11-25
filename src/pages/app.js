@@ -9,7 +9,7 @@ const stat=(label,value,sub,icon)=>`<article class="stat-card"><div class="stat-
 const heading=(eyebrow,title,desc,action='')=>`<div class="page-heading"><div><span class="eyebrow">${eyebrow}</span><h1>${title}</h1><p>${desc}</p></div>${action}</div>`;
 const btn=(label,id)=>`<button class="btn btn-primary" id="${id}">${label} <span>+</span></button>`;
 const evidenceStatusLabel = () => 'Not independently verified';
-const formatExperienceDate=value=>{if(!value)return '';const match=String(value).match(/^(\\d{4})-(\\d{2})$/);if(!match)return String(value);return new Date(Number(match[1]),Number(match[2])-1,1).toLocaleDateString(undefined,{month:'short',year:'numeric'});};
+const formatExperienceDate=value=>{if(!value)return '';const match=String(value).match(/^(\d{4})-(\d{2})$/);if(!match)return String(value);return new Date(Number(match[1]),Number(match[2])-1,1).toLocaleDateString(undefined,{month:'short',year:'numeric'});};
 const skillCatalog={
  // Interpersonal and communication
  communication:{name:'Communication',category:'Interpersonal'},
@@ -296,7 +296,7 @@ export function gapPage(){
 }
 export function portfolioPage(){
  const d=getData();
- const safeDate=value=>{if(!value)return 'Not provided';const match=String(value).match(/^(\\d{4})-(\\d{2})$/);if(!match)return escapeHtml(value);return escapeHtml(new Date(Number(match[1]),Number(match[2])-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'}));};
+ const safeDate=value=>{if(!value)return 'Not provided';const match=String(value).match(/^(\d{4})-(\d{2})$/);if(!match)return escapeHtml(value);return escapeHtml(new Date(Number(match[1]),Number(match[2])-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'}));};
  const evidenceFor=experienceId=>d.evidence.filter(e=>e.experienceId===experienceId);
  const reportedSkills=[...new Set(d.experiences.flatMap(e=>e.skills||[]).map(s=>String(s).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
  const portfolioChecks=[
