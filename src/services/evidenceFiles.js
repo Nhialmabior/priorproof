@@ -1,4 +1,5 @@
 import { getSupabase } from './supabase.js';
+import { getEvidenceFileValidationError } from '../utils/evidenceValidation.js';
 
 const DB_NAME = 'priorproof-evidence-files';
 const STORE_NAME = 'files';
@@ -38,14 +39,8 @@ function safeFileName(name) {
 
 export async function saveEvidenceFile(id, file) {
   if (!file) return null;
-  if (!file.size) throw new Error('The selected file is empty. Please choose a different file.');
-  if (file.size > 5 * 1024 * 1024) throw new Error('Please choose a file that is 5 MB or smaller.');
-
-  const allowedExtensions = new Set(['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx', 'txt']);
-  const extension = String(file.name || '').split('.').pop().toLowerCase();
-  if (!allowedExtensions.has(extension)) {
-    throw new Error('Unsupported file type. Choose a PDF, PNG, JPG, Word document or TXT file.');
-  }
+  const validationError = getEvidenceFileValidationError(file);
+  if (validationError) throw new Error(validationError);
 
   const user = await currentUser();
   const path = user.id + '/' + id + '/' + crypto.randomUUID() + '-' + safeFileName(file.name);
@@ -105,12 +100,19 @@ export async function clearEvidenceFiles() {
   const objectPaths = [];
 
   async function collectFiles(folder) {
-    const { data, error } = await storage.list(folder, { limit: 1000 });
-    if (error) throw new Error('Could not list your evidence files: ' + error.message);
-    for (const entry of data || []) {
-      const path = folder + '/' + entry.name;
-      if (entry.id) objectPaths.push(path);
-      else await collectFiles(path);
+    const limit = 1000;
+    let offset = 0;
+    while (true) {
+      const { data, error } = await storage.list(folder, { limit, offset });
+      if (error) throw new Error('Could not list your evidence files: ' + error.message);
+      const entries = data || [];
+      for (const entry of entries) {
+        const path = folder + '/' + entry.name;
+        if (entry.id) objectPaths.push(path);
+        else await collectFiles(path);
+      }
+      if (entries.length < limit) break;
+      offset += limit;
     }
   }
 
@@ -120,6 +122,7 @@ export async function clearEvidenceFiles() {
     if (error) throw new Error('Could not clear your cloud evidence files: ' + error.message);
   }
 
+  if (!('indexedDB' in window)) return;
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite');
