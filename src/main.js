@@ -25,10 +25,8 @@ async function render() {
   const route = currentRoute();
   if (route === '/auth/popup-callback') return;
   const protectedRoute = route.startsWith('/app/');
-  // Public pages always use the public light theme; the saved preference belongs to the workspace.
-  document.documentElement.dataset.theme = protectedRoute
-    ? (localStorage.getItem('priorproof-theme') === 'dark' ? 'dark' : 'light')
-    : 'light';
+  // Apply the saved colour preference consistently across public and workspace pages.
+  document.documentElement.dataset.theme = localStorage.getItem('priorproof-theme') === 'dark' ? 'dark' : 'light';
   if ((protectedRoute || route === '/reset-password') && !currentSession) {
     navigate('/login');
     return;
