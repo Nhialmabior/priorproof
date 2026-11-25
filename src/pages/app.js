@@ -420,7 +420,8 @@ function openEntryDialog(kind,editId=null){
    try{await deleteEvidenceFile(editRecord.id,previousAttachment);}
    catch(error){alert('Your updated evidence record and new attachment were saved, but the previous attachment could not be removed. It is no longer linked and may remain in private storage.');}
   }
-  close();window.dispatchEvent(new PopStateEvent('popstate'));
+  close();
+  window.dispatchEvent(new PopStateEvent('popstate'));
  });
  dialog.showModal();
 }
