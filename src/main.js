@@ -79,15 +79,8 @@ async function render() {
     if (publicLinks) {
       publicLinks.innerHTML = `<a class="${route === '/' ? 'active' : ''}" href="/" data-link>Home</a><a class="${route === '/how-it-works' ? 'active' : ''}" href="/how-it-works" data-link>How it works</a><a class="${route === '/about' ? 'active' : ''}" href="/about" data-link>About</a><div class="account-menu-wrap public-account-wrap"><button class="avatar account-trigger public-profile-trigger" id="accountMenuToggle" type="button" aria-label="Open profile menu" aria-expanded="false">${avatar}</button><div class="account-menu public-account-menu" id="accountMenu" hidden><div class="account-menu-profile"><div class="avatar account-menu-avatar">${avatar}</div><div><strong>${escapeHtml(displayName)}</strong><small>${escapeHtml(email)}</small></div></div><a href="/app/profile" data-link>My Account <span>→</span></a><a href="/app/dashboard" data-link>My Workspace <span>→</span></a><button type="button" class="account-menu-signout" id="signOutButton">Sign out</button></div></div>`;
     }
-    document.querySelectorAll('.footer-links a[href="/login"], .footer-links a[href="/register"]').forEach(link => {
-      if (link.getAttribute('href') === '/login') {
-        link.textContent = 'My Workspace';
-        link.setAttribute('href', '/app/dashboard');
-      } else {
-        link.textContent = 'My Account';
-        link.setAttribute('href', '/app/profile');
-      }
-    });
+    // Authentication actions are kept in the profile menu, not duplicated in the footer.
+    document.querySelectorAll('.footer-links a[href="/login"], .footer-links a[href="/register"]').forEach(link => link.remove());
   }
 
   bindLayout();
