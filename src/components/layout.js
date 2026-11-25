@@ -8,7 +8,7 @@ export function publicNav(active = '') {
   <nav id="publicLinks"><a class="${active==='home'?'active':''}" href="/" data-link>Home</a><a class="${active==='how'?'active':''}" href="/how-it-works" data-link>How it works</a><a class="${active==='about'?'active':''}" href="/about" data-link>About</a><a class="nav-login" href="/login" data-link>Sign in</a><a class="btn btn-primary btn-small" href="/register" data-link>Get started</a></nav></header>`;
 }
 const menu = [
-  ['Overview','/app/dashboard','▦'],['My Profile','/app/profile','◉'],['My Experience','/app/experience','▤'],['My Evidence','/app/evidence','▧'],['Competencies','/app/competencies','◇'],['Gap Analysis','/app/gap-analysis','⌁'],['My Portfolio','/app/portfolio','▣'],['Assessments','/app/assessments','✓']
+  ['Overview','/app/dashboard','▦'],['My Experience','/app/experience','▤'],['My Evidence','/app/evidence','▧'],['Competencies','/app/competencies','◇'],['Gap Analysis','/app/gap-analysis','⌁'],['My Portfolio','/app/portfolio','▣'],['Assessments','/app/assessments','✓']
 ];
 export function appShell(content, active = '/app/dashboard', user = {}) {
   return `<div class="app-layout"><aside class="sidebar" id="sidebar"><a href="/app/dashboard" data-link class="side-brand"><img src="/logo.svg" alt="PriorProof"></a><div class="side-label">WORKSPACE</div>
