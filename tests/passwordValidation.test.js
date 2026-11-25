@@ -12,6 +12,7 @@ test('requires lowercase, uppercase, number and symbol', () => {
   assert.match(validateStrongPassword('abcdefghijk1!'), /uppercase/);
   assert.match(validateStrongPassword('Abcdefghijkl!'), /number/);
   assert.match(validateStrongPassword('Abcdefghijkl1'), /symbol/);
+  assert.match(validateStrongPassword('Abcdefghijk 1'), /symbol/);
 });
 
 test('accepts a password meeting all requirements', () => {
