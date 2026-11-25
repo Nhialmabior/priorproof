@@ -335,3 +335,13 @@
 #gapNoResults{margin-top:14px}
 @media(max-width:720px){.gap-filters{grid-template-columns:1fr 1fr}.gap-filters label:first-child{grid-column:1/-1}}
 @media(max-width:480px){.gap-summary-grid{grid-template-columns:1fr}.gap-tools-heading{align-items:flex-start;flex-direction:column}.gap-filters{grid-template-columns:1fr}.gap-filters label:first-child{grid-column:auto}.gap-card-actions .btn{flex:1;justify-content:center}}
+
+
+/* Review pack evidence picker */
+.review-evidence-search{display:block;margin:12px 0 8px;font-size:11px;font-weight:700}
+.review-evidence-search input{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:10px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--navy);font:inherit;font-size:11px}
+.review-evidence-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:310px;overflow:auto;padding:2px}
+.review-evidence-option[hidden]{display:none!important}
+.review-evidence-option{min-width:0}
+.review-pack-card>.pill.pending{background:#fff4dc;color:#8a641f}
+@media(max-width:680px){.review-evidence-list{grid-template-columns:1fr}}
