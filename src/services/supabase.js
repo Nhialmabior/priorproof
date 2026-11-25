@@ -48,8 +48,12 @@ export async function signUpWithPassword({ email, password, fullName }) {
 
 export async function sendPasswordReset(email) {
   return getSupabase().auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/login`
+    redirectTo: `${window.location.origin}/reset-password`
   });
+}
+
+export async function updateAccountPassword(password) {
+  return getSupabase().auth.updateUser({ password });
 }
 
 export async function getCurrentSession() {
