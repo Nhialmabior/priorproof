@@ -3,6 +3,7 @@ import './styles/global.css';
 import './styles/public.css';
 import './styles/dashboard.css';
 import './styles/responsive.css';
+import './styles/dark-mode.css';
 import { currentRoute, navigate } from './utils/router.js';
 import { bindLayout } from './components/layout.js';
 import { homePage, aboutPage, howPage, privacyPage, termsPage } from './pages/public.js';
