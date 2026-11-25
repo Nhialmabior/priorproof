@@ -37,8 +37,15 @@ function safeFileName(name) {
 }
 
 export async function saveEvidenceFile(id, file) {
-  if (!file || !file.size) return null;
-  if (file.size > 5 * 1024 * 1024) throw new Error('Please choose a file smaller than 5 MB.');
+  if (!file) return null;
+  if (!file.size) throw new Error('The selected file is empty. Please choose a different file.');
+  if (file.size > 5 * 1024 * 1024) throw new Error('Please choose a file that is 5 MB or smaller.');
+
+  const allowedExtensions = new Set(['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx', 'txt']);
+  const extension = String(file.name || '').split('.').pop().toLowerCase();
+  if (!allowedExtensions.has(extension)) {
+    throw new Error('Unsupported file type. Choose a PDF, PNG, JPG, Word document or TXT file.');
+  }
 
   const user = await currentUser();
   const path = user.id + '/' + id + '/' + crypto.randomUUID() + '-' + safeFileName(file.name);
