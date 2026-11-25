@@ -144,18 +144,41 @@ async function render() {
     event.currentTarget.textContent = show ? 'Hide' : 'Show';
     event.currentTarget.setAttribute('aria-label', show ? 'Hide confirmation password' : 'Show confirmation password');
   });
-  document.getElementById('forgotPassword')?.addEventListener('click', async () => {
-    const email = document.querySelector('#authForm input[name="email"]')?.value.trim();
-    if (!email) return setFeedback('Enter your email address first, then select Forgot password.', 'error');
+  document.getElementById('forgotPassword')?.addEventListener('click', async event => {
+    const emailField = document.querySelector('#authForm input[name="email"]');
+    const email = emailField?.value.trim() || '';
+    if (!emailField || !email) {
+      setFeedback('Enter your email address first, then select Forgot password.', 'error');
+      emailField?.focus();
+      return;
+    }
+    if (!emailField.checkValidity()) {
+      emailField.reportValidity();
+      setFeedback('Enter a valid email address before requesting a password reset.', 'error');
+      return;
+    }
+    const button = event.currentTarget;
+    if (button.disabled) return;
+    button.disabled = true;
+    button.textContent = 'Sending…';
     try {
       const { error } = await sendPasswordReset(email);
       if (error) throw error;
       setFeedback('If an account exists for that email, a password reset link has been sent.');
     } catch (error) {
       setFeedback(error.message || 'Could not send the password reset email.', 'error');
+    } finally {
+      if (button.isConnected) {
+        button.disabled = false;
+        button.textContent = 'Forgot password?';
+      }
     }
   });
-  document.getElementById('googleSignIn')?.addEventListener('click', async () => {
+  document.getElementById('googleSignIn')?.addEventListener('click', async event => {
+    const button = event.currentTarget;
+    if (button.disabled) return;
+    button.disabled = true;
+    button.textContent = 'Preparing Google sign-in…';
     const width = 520;
     const height = 680;
     const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2);
@@ -168,6 +191,8 @@ async function render() {
 
     if (!popup) {
       setFeedback('Your browser blocked the sign-in pop-up. Allow pop-ups for this site and try again.', 'error');
+      button.disabled = false;
+      button.innerHTML = '<svg class="google-logo" viewBox="0 0 48 48" role="img" aria-label="Google"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.3A20 20 0 0 0 24 44z"/><path fill="#FBBC05" d="M12.8 27.7a12 12 0 0 1 0-7.4V15H5.9a20 20 0 0 0 0 18z"/><path fill="#EA4335" d="M24 12.1c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6.1 29.5 4 24 4A20 20 0 0 0 5.9 15l6.9 5.3c1.6-4.7 6-8.2 11.2-8.2z"/></svg> Continue with Google';
       return;
     }
 
@@ -181,6 +206,10 @@ async function render() {
     } catch (error) {
       popup.close();
       setFeedback(error.message || 'Google sign-in could not be started.', 'error');
+      if (button.isConnected) {
+        button.disabled = false;
+        button.innerHTML = '<svg class="google-logo" viewBox="0 0 48 48" role="img" aria-label="Google"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.3A20 20 0 0 0 24 44z"/><path fill="#FBBC05" d="M12.8 27.7a12 12 0 0 1 0-7.4V15H5.9a20 20 0 0 0 0 18z"/><path fill="#EA4335" d="M24 12.1c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6.1 29.5 4 24 4A20 20 0 0 0 5.9 15l6.9 5.3c1.6-4.7 6-8.2 11.2-8.2z"/></svg> Continue with Google';
+      }
     }
   });
   document.getElementById('signOutButton')?.addEventListener('click', async event => {
@@ -205,9 +234,19 @@ async function start() {
     currentSession = await getCurrentSession();
 
     // Supabase completes the OAuth code exchange on this same-origin popup page.
-    // The session is persisted in shared browser storage before this window closes.
-    if (currentRoute() === '/auth/popup-callback' && window.opener) {
-      window.close();
+    // Close the popup when possible; if the browser has isolated the opener,
+    // continue in this tab rather than leaving a blank callback page.
+    if (currentRoute() === '/auth/popup-callback') {
+      if (window.opener) {
+        window.close();
+        return;
+      }
+      if (currentSession?.user) {
+        await loadUserWorkspace(currentSession.user);
+        navigate('/app/dashboard');
+      } else {
+        navigate('/login');
+      }
       return;
     }
 
