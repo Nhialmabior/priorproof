@@ -437,3 +437,30 @@
  background:#49391f;
  color:#f1cf83;
 }
+
+
+/* Public navigation theme surfaces, including the expanded mobile menu */
+:root[data-theme="dark"] .public-nav nav{
+  background:var(--surface);
+  color:var(--muted);
+  border-color:var(--line);
+  box-shadow:0 16px 24px rgba(0,0,0,.28);
+}
+:root[data-theme="dark"] .public-nav nav a{
+  color:var(--muted);
+}
+:root[data-theme="dark"] .public-nav nav a.active,
+:root[data-theme="dark"] .public-nav nav a:hover{
+  color:var(--blue);
+}
+:root[data-theme="dark"] .public-nav .public-profile-trigger{
+  border-color:var(--line);
+}
+:root[data-theme="dark"] .public-nav .public-account-menu a{
+  border-color:var(--line);
+  color:var(--blue);
+}
+:root[data-theme="dark"] .public-nav .public-account-menu a:hover{
+  background:#202f45;
+  color:#dce8f8;
+}
