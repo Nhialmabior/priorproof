@@ -5,6 +5,7 @@ import { navigate } from '../utils/router.js';
 import { saveEvidenceFile, getEvidenceFile, deleteEvidenceFile, clearEvidenceFiles } from '../services/evidenceFiles.js';
 import { updateAccountProfile } from '../services/supabase.js';
 import { MAX_BACKUP_FILE_SIZE, prepareRestoredWorkspace } from '../utils/backupValidation.js';
+import { syncExperienceCompetencies, removeExperienceRelations, syncEvidenceCompetencyLinks, removeEvidenceRelations } from '../utils/workspaceRelations.js';
 
 const stat=(label,value,sub,icon)=>`<article class="stat-card"><div class="stat-top"><span>${label}</span><i>${icon}</i></div><strong>${value}</strong><small>${sub}</small></article>`;
 const heading=(eyebrow,title,desc,action='')=>`<div class="page-heading"><div><span class="eyebrow">${eyebrow}</span><h1>${title}</h1><p>${desc}</p></div>${action}</div>`;
@@ -466,16 +467,7 @@ function openEntryDialog(kind,editId=null){
    const skills=String(f.get('skills')||'').split(',').map(s=>s.trim()).filter(Boolean);
    const exp={id:editRecord?editRecord.id:crypto.randomUUID(),title:String(f.get('title')).trim(),organisation:String(f.get('organisation')||'').trim()||'Independent experience',category:f.get('category'),description:String(f.get('description')).trim(),contribution:String(f.get('contribution')||'').trim(),outcome:String(f.get('outcome')||'').trim(),learning:String(f.get('learning')||'').trim(),startDate:f.get('startDate')||'',endDate:f.get('endDate')||'',skills};
    if(editRecord){const index=d.experiences.findIndex(item=>item.id===editRecord.id);if(index>=0)d.experiences[index]=exp;}else d.experiences.unshift(exp);
-   d.competencies.forEach(c=>{c.experienceIds=(c.experienceIds||[]).filter(id=>id!==exp.id);});
-   skills.forEach(skill=>{const definition=skillDefinition(skill);let competency=d.competencies.find(c=>skillDefinition(c.name).name.toLowerCase()===definition.name.toLowerCase());if(!competency){competency={id:crypto.randomUUID(),name:definition.name,category:definition.category,status:'Suggested',experienceIds:[],evidenceIds:[]};d.competencies.push(competency);}competency.category=definition.category==='General'?(competency.category||'General'):definition.category;competency.sourceSkills=[...new Set([...(competency.sourceSkills||[]),skill])];competency.experienceIds=[...new Set([...(competency.experienceIds||[]),exp.id])];});
-   // Rebuild skill provenance from current experience records to avoid stale suggestions after edits.
-   d.competencies.forEach(c=>{
-    c.experienceIds=(c.experienceIds||[]).filter(id=>d.experiences.some(x=>x.id===id));
-    c.evidenceIds=(c.evidenceIds||[]).filter(id=>d.evidence.some(x=>x.id===id));
-    c.sourceSkills=[...new Set(d.experiences.filter(x=>(c.experienceIds||[]).includes(x.id)).flatMap(x=>x.skills||[]).filter(skill=>skillDefinition(skill).name.toLowerCase()===skillDefinition(c.name).name.toLowerCase()))];
-   });
-   d.competencies=d.competencies.filter(c=>(c.experienceIds||[]).length||(c.evidenceIds||[]).length);
-   d.assessments=(d.assessments||[]).map(p=>({...p,evidenceIds:(p.evidenceIds||[]).filter(id=>d.evidence.some(x=>x.id===id))}));
+   syncExperienceCompetencies(d,exp,skillDefinition);
 
   }else{
    const file=f.get('file'),evId=editRecord?editRecord.id:crypto.randomUUID();
@@ -487,12 +479,7 @@ function openEntryDialog(kind,editId=null){
    if(editRecord){const index=d.evidence.findIndex(item=>item.id===editRecord.id);if(index>=0)d.evidence[index]=ev;}else d.evidence.unshift(ev);
    // Preserve manually selected competency links when only evidence details change.
    // Rebuild links only for a new record or when its related experience changes.
-   if(!editRecord||editRecord.experienceId!==ev.experienceId){
-    d.competencies.forEach(c=>{
-     c.evidenceIds=(c.evidenceIds||[]).filter(id=>id!==ev.id);
-     if(ev.experienceId&&(c.experienceIds||[]).includes(ev.experienceId))c.evidenceIds=[...new Set([...(c.evidenceIds||[]),ev.id])];
-    });
-   }
+   syncEvidenceCompetencyLinks(d,ev,!editRecord||editRecord.experienceId!==ev.experienceId);
   }
   try{
    // Wait for the new record and attachment reference to be saved before removing an older file.
@@ -568,13 +555,7 @@ export function bindAppActions(){
  document.querySelectorAll('[data-delete-experience]').forEach(button=>button.addEventListener('click',async()=>{
   if(!confirm('Remove this experience and its linked evidence records?'))return;
   const d=getData(),id=button.dataset.deleteExperience;
-  const removed=d.evidence.filter(e=>e.experienceId===id);
-  d.experiences=d.experiences.filter(e=>e.id!==id);
-  const removedIds=removed.map(e=>e.id);
-  d.evidence=d.evidence.filter(e=>e.experienceId!==id);
-  d.competencies.forEach(c=>{c.experienceIds=(c.experienceIds||[]).filter(x=>x!==id);c.evidenceIds=(c.evidenceIds||[]).filter(x=>!removedIds.includes(x));c.sourceSkills=[...new Set(d.experiences.filter(x=>(c.experienceIds||[]).includes(x.id)).flatMap(x=>x.skills||[]).filter(skill=>skillDefinition(skill).name.toLowerCase()===skillDefinition(c.name).name.toLowerCase()))];});
-  d.competencies=d.competencies.filter(c=>(c.experienceIds||[]).length||(c.evidenceIds||[]).length);
-  d.assessments=(d.assessments||[]).map(p=>({...p,evidenceIds:(p.evidenceIds||[]).filter(x=>!removedIds.includes(x))}));
+  const removed=removeExperienceRelations(d,id,skillDefinition);
   try{
    // Commit record removal before deleting files, so a failed save never leaves broken attachment references.
    await saveDataAndWait(d);
@@ -593,10 +574,7 @@ export function bindAppActions(){
  document.querySelectorAll('[data-delete-evidence]').forEach(button=>button.addEventListener('click',async()=>{
   if(!confirm('Remove this evidence record?'))return;
   const d=getData(),id=button.dataset.deleteEvidence,item=d.evidence.find(e=>e.id===id);
-  d.evidence=d.evidence.filter(e=>e.id!==id);
-  d.competencies.forEach(c=>c.evidenceIds=(c.evidenceIds||[]).filter(x=>x!==id));
-  d.assessments=(d.assessments||[]).map(p=>({...p,evidenceIds:(p.evidenceIds||[]).filter(x=>x!==id)}));
-  d.competencies=d.competencies.filter(c=>(c.experienceIds||[]).length||(c.evidenceIds||[]).length);
+  removeEvidenceRelations(d,id);
   try{
    // Persist the record change before attempting file deletion.
    await saveDataAndWait(d);
