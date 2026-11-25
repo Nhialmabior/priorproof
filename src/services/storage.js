@@ -5,6 +5,8 @@ const LEGACY_KEY = 'priorproof-demo-v1';
 let activeUserId = null;
 let saveTimer = null;
 let saveQueue = Promise.resolve();
+let saveVersion = 0;
+let loadVersion = 0;
 
 function blankWorkspace(user) {
   return {
@@ -34,6 +36,10 @@ function workspaceKey(userId) {
   return `priorproof-workspace-v1:${userId}`;
 }
 
+function pendingKey(userId) {
+  return `priorproof-workspace-pending-v1:${userId}`;
+}
+
 function validWorkspace(value) {
   return value && typeof value === 'object' && !Array.isArray(value)
     && value.user && typeof value.user === 'object'
@@ -55,34 +61,151 @@ function writeLocal(userId, data) {
   localStorage.setItem(workspaceKey(userId), JSON.stringify(data));
 }
 
+function hasPendingSave(userId) {
+  return localStorage.getItem(pendingKey(userId)) === 'true';
+}
+
+function markPendingSave(userId) {
+  localStorage.setItem(pendingKey(userId), 'true');
+}
+
+function clearPendingSave(userId) {
+  localStorage.removeItem(pendingKey(userId));
+}
+
 export function getData() {
   if (!activeUserId) return structuredClone(initialData);
   return readLocal(activeUserId) || structuredClone(initialData);
 }
 
-export async function loadUserWorkspace(user) {
-  if (!user?.id) throw new Error('A signed-in user is required to load a workspace.');
+async function persistWorkspace(userId, workspace) {
+  const { error } = await getSupabase()
+    .from('user_workspaces')
+    .upsert({ user_id: userId, workspace, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  if (error) throw error;
+}
+
+function queueWorkspaceSave(userId, workspace, version) {
+  const task = saveQueue
+    .catch(() => {})
+    .then(() => persistWorkspace(userId, workspace));
+
+  saveQueue = task;
+  return task.then(() => {
+    // A completed older write must never clear the pending marker for a newer edit.
+    if (activeUserId === userId && saveVersion === version) {
+      clearPendingSave(userId);
+      dispatchSyncStatus('saved');
+    }
+  });
+}
+
+export async function flushWorkspaceSave() {
+  const userId = activeUserId;
+  if (!userId) return;
+
   if (saveTimer) {
     clearTimeout(saveTimer);
     saveTimer = null;
+    const latest = readLocal(userId);
+    if (latest) {
+      const version = saveVersion;
+      markPendingSave(userId);
+      dispatchSyncStatus('saving');
+      try {
+        await queueWorkspaceSave(userId, latest, version);
+      } catch (error) {
+        dispatchSyncStatus('error', error.message || 'Cloud save failed.');
+        throw new Error('Your latest workspace changes could not be saved to the cloud. Please check your connection and try again before signing out.');
+      }
+    }
   }
-  activeUserId = user.id;
+
+  try {
+    await saveQueue;
+  } catch (error) {
+    dispatchSyncStatus('error', error.message || 'Cloud save failed.');
+    throw new Error('A workspace save is still pending. Please check your connection and try again.');
+  }
+
+  if (hasPendingSave(userId)) {
+    const latest = readLocal(userId);
+    if (!latest) throw new Error('Your unsynchronised workspace copy could not be recovered from this browser.');
+    const version = saveVersion;
+    try {
+      await queueWorkspaceSave(userId, latest, version);
+    } catch (error) {
+      dispatchSyncStatus('error', error.message || 'Cloud save failed.');
+      throw new Error('Your latest workspace changes could not be saved to the cloud. Please check your connection and try again.');
+    }
+  }
+}
+
+export async function loadUserWorkspace(user) {
+  if (!user?.id) throw new Error('A signed-in user is required to load a workspace.');
+
+  const userId = user.id;
+  const thisLoad = ++loadVersion;
+  const revisionAtStart = saveVersion;
+
+  // Finish any in-flight edit before asking the cloud for a potentially older copy.
+  if (activeUserId === userId && (saveTimer || hasPendingSave(userId))) {
+    try {
+      await flushWorkspaceSave();
+    } catch {
+      // Keep the browser copy available; the sync indicator reports the cloud failure.
+      const local = readLocal(userId);
+      if (local) return local;
+    }
+  }
+
+  activeUserId = userId;
+
+  // A pending local copy is more recent than the last confirmed cloud copy.
+  // Retry it instead of replacing it with stale cloud data on refresh or reconnect.
+  if (hasPendingSave(userId)) {
+    const local = readLocal(userId);
+    if (local) {
+      const version = saveVersion;
+      try {
+        await queueWorkspaceSave(userId, local, version);
+      } catch (error) {
+        dispatchSyncStatus('error', error.message || 'Cloud save failed.');
+      }
+      return local;
+    }
+  }
 
   const supabase = getSupabase();
   const { data: row, error } = await supabase
     .from('user_workspaces')
     .select('workspace')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .maybeSingle();
 
-  if (error) throw new Error('Could not load your cloud workspace: ' + error.message);
+  if (error) {
+    const local = readLocal(userId);
+    if (local) {
+      dispatchSyncStatus('error', 'Using this browser’s saved copy because the cloud workspace could not be loaded.');
+      return local;
+    }
+    throw new Error('Could not load your cloud workspace: ' + error.message);
+  }
+
+  // A newer local edit or a newer login/load cycle took place while the request ran.
+  if (thisLoad !== loadVersion || activeUserId !== userId) return readLocal(userId) || blankWorkspace(user);
+
+  if (saveVersion !== revisionAtStart || hasPendingSave(userId)) {
+    const local = readLocal(userId);
+    if (local) return local;
+  }
 
   if (row?.workspace && validWorkspace(row.workspace)) {
     const workspace = {
       ...row.workspace,
       user: {
         ...row.workspace.user,
-        id: user.id,
+        id: userId,
         email: user.email || row.workspace.user.email || '',
         fullName: user.user_metadata?.full_name || user.user_metadata?.name || row.workspace.user.fullName || ''
       },
@@ -91,7 +214,8 @@ export async function loadUserWorkspace(user) {
       competencies: row.workspace.competencies,
       assessments: Array.isArray(row.workspace.assessments) ? row.workspace.assessments : []
     };
-    writeLocal(user.id, workspace);
+    writeLocal(userId, workspace);
+    dispatchSyncStatus('saved');
     return workspace;
   }
 
@@ -102,7 +226,7 @@ export async function loadUserWorkspace(user) {
     if (validWorkspace(legacy) && String(legacy.user.email || '').toLowerCase() === String(user.email || '').toLowerCase()) {
       workspace = {
         ...legacy,
-        user: { ...legacy.user, id: user.id, email: user.email || legacy.user.email },
+        user: { ...legacy.user, id: userId, email: user.email || legacy.user.email },
         experiences: legacy.experiences,
         evidence: legacy.evidence,
         competencies: legacy.competencies,
@@ -114,16 +238,14 @@ export async function loadUserWorkspace(user) {
   }
 
   workspace ||= blankWorkspace(user);
-  writeLocal(user.id, workspace);
-  await persistWorkspace(user.id, workspace);
+  writeLocal(userId, workspace);
+  markPendingSave(userId);
+  try {
+    await queueWorkspaceSave(userId, workspace, saveVersion);
+  } catch (saveError) {
+    dispatchSyncStatus('error', saveError.message || 'Cloud save failed.');
+  }
   return workspace;
-}
-
-async function persistWorkspace(userId, workspace) {
-  const { error } = await getSupabase()
-    .from('user_workspaces')
-    .upsert({ user_id: userId, workspace, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-  if (error) throw error;
 }
 
 export function saveData(data) {
@@ -132,24 +254,30 @@ export function saveData(data) {
     return;
   }
 
+  const userId = activeUserId;
   const snapshot = structuredClone(data);
-  snapshot.user = { ...snapshot.user, id: activeUserId };
-  writeLocal(activeUserId, snapshot);
+  snapshot.user = { ...snapshot.user, id: userId };
+  const version = ++saveVersion;
+
+  try {
+    writeLocal(userId, snapshot);
+    markPendingSave(userId);
+  } catch (error) {
+    console.error('PriorProof local workspace save failed:', error);
+    dispatchSyncStatus('error', 'Could not save a local recovery copy. Your browser storage may be full or unavailable.');
+    return;
+  }
+
   window.dispatchEvent(new CustomEvent('priorproof:data-updated'));
   dispatchSyncStatus('saving');
 
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     saveTimer = null;
-    const userId = activeUserId;
-    saveQueue = saveQueue
-      .catch(() => {})
-      .then(() => persistWorkspace(userId, snapshot))
-      .then(() => dispatchSyncStatus('saved'))
-      .catch(error => {
-        console.error('PriorProof cloud save failed:', error);
-        dispatchSyncStatus('error', error.message || 'Cloud save failed.');
-      });
+    queueWorkspaceSave(userId, snapshot, version).catch(error => {
+      console.error('PriorProof cloud save failed:', error);
+      dispatchSyncStatus('error', error.message || 'Cloud save failed. Your browser copy is being kept for recovery.');
+    });
   }, 450);
 }
 
@@ -168,7 +296,21 @@ export function resetData() {
 }
 
 export function clearActiveWorkspace() {
+  // Capture the current local copy before clearing the account context.
+  // The explicit sign-out flow awaits flushWorkspaceSave while auth is still valid.
+  if (saveTimer && activeUserId) {
+    const userId = activeUserId;
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    const latest = readLocal(userId);
+    if (latest) {
+      const version = saveVersion;
+      markPendingSave(userId);
+      queueWorkspaceSave(userId, latest, version).catch(error => {
+        console.error('PriorProof final workspace sync failed:', error);
+      });
+    }
+  }
   activeUserId = null;
-  if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = null;
+  loadVersion++;
 }
