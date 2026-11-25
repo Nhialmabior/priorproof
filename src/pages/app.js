@@ -357,7 +357,7 @@ export function bindAppActions(){
   if(!p)return;
   const c=d.competencies.find(x=>x.id===p.competencyId);
   const items=(p.evidenceIds||[]).map(id=>d.evidence.find(x=>x.id===id)).filter(Boolean);
-  const clean=value=>String(value??'').replace(/\\r\\n?/g,'\\n').trim();
+  const clean=value=>String(value??'').replace(/\r\n?/g,'\n').trim();
   const lines=[
    'PRIORPROOF — EVIDENCE REVIEW BRIEF',
    'Prepared by: '+(clean(d.user.fullName)||'Not provided'),
@@ -391,7 +391,7 @@ export function bindAppActions(){
    'Evidence descriptions and status labels are user-entered and have not been authenticated by PriorProof.',
    'This brief has not been submitted to, assessed by, or approved by an external reviewer.'
   ];
-  const blob=new Blob([lines.join('\\n')],{type:'text/plain;charset=utf-8'});
+  const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='priorproof-review-brief-'+new Date().toISOString().slice(0,10)+'.txt';
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
