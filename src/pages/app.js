@@ -106,7 +106,7 @@ const skillCatalog={
  'safeguarding awareness':{name:'Safeguarding awareness',category:'Programme support'},
  'referral coordination':{name:'Referral coordination',category:'Programme support'}
 };
-const normalizeSkill=value=>String(value||'').normalize('NFKC').trim().toLowerCase().replace(/[^a-z0-9+#. ]/g,' ').replace(/\\s+/g,' ').trim();
+const normalizeSkill=value=>String(value||'').normalize('NFKC').trim().toLowerCase().replace(/[^a-z0-9+#. ]/g,' ').replace(/\s+/g,' ').trim();
 const skillDefinition=value=>{const key=normalizeSkill(value);return {key,...(skillCatalog[key]||{name:String(value||'').trim(),category:'General'})};};
 
 export function dashboardPage(){
