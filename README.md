@@ -45,7 +45,11 @@ PriorProof is a skills-documentation and prior-learning support platform. It doe
 5. In Supabase SQL Editor, run the complete `supabase/schema.sql` script.
 6. Configure Supabase Authentication:
    - Enable Google provider if you want Google sign-in.
-   - Add your local app URL (for example, `http://localhost:5173`) to the allowed redirect URLs.
+   - Set the local Site URL to `http://localhost:5173` while testing locally.
+   - Add the exact email-confirmation redirect `http://localhost:5173/app/dashboard` to Authentication → URL Configuration → Redirect URLs. Add the matching `127.0.0.1` URL only if you actually use that host.
+   - Keep `/app/dashboard` allowed because email confirmation returns there and the app completes the Supabase PKCE session exchange before opening the workspace.
+   - When testing locally, open the email link on the same computer and browser where the Vite server is running; a `localhost` link opened on a phone points to the phone, not your computer.
+   - In Authentication → Settings, configure the server-side minimum password length to 12 and enable uppercase, lowercase, number and symbol requirements if those controls are available. The app also checks these requirements before registration and password reset.
    - For Google OAuth, set the authorized redirect URI to the Supabase Auth callback shown in your Supabase Google provider settings.
 7. Start the development server:
 
