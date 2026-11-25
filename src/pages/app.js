@@ -106,7 +106,7 @@ export function gapPage(){
   const experienceIds=new Set(c.experienceIds||[]);
   const unrelated=items.filter(e=>e.experienceId&&!experienceIds.has(e.experienceId));
   const withFiles=items.filter(e=>Boolean(e.fileName)).length;
-  return {competency:c,items,unrelated,withFiles};return {competency:c,items,reviewed,independentlyVerified,unrelated};
+  return {competency:c,items,unrelated,withFiles};
  });
  const total=rows.length,withEvidence=rows.filter(r=>r.items.length).length,missing=total-withEvidence;
   const relevanceChecks=rows.filter(r=>r.unrelated.length).length;
@@ -339,7 +339,7 @@ export function bindAppActions(){
    saveData(d);
    window.dispatchEvent(new PopStateEvent('popstate'));
   }));
-  const evidenceSearch=const evidenceSearch=document.getElementById('evidenceSearch'),evidenceType=document.getElementById('evidenceTypeFilter'),evidenceStatus=document.getElementById('evidenceStatusFilter');
+  const evidenceSearch=document.getElementById('evidenceSearch'),evidenceType=document.getElementById('evidenceTypeFilter'),evidenceStatus=document.getElementById('evidenceStatusFilter');
  if(evidenceSearch&&evidenceType&&evidenceStatus){
   const cards=[...document.querySelectorAll('[data-evidence-card]')],count=document.getElementById('evidenceResultCount'),empty=document.getElementById('evidenceNoResults');
   const applyEvidenceFilters=()=>{const q=evidenceSearch.value.trim().toLowerCase(),type=evidenceType.value,status=evidenceStatus.value;let visible=0;cards.forEach(card=>{const match=card.textContent.toLowerCase().includes(q)&&(!type||card.dataset.evidenceType===type)&&(!status||card.dataset.evidenceStatus===status);card.hidden=!match;if(match)visible++;});if(count)count.textContent=visible+' of '+cards.length+' record(s)';if(empty)empty.hidden=visible!==0;};
