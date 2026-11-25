@@ -156,9 +156,6 @@ async function render() {
       setFeedback(error.message || 'Google sign-in could not be started.', 'error');
     }
   });
-  document.getElementById('demoLogin')?.addEventListener('click', () => {
-    setFeedback('The demonstration workspace is separate from authenticated accounts. It is not available while signed-in authentication is enabled.');
-  });
   document.getElementById('signOutButton')?.addEventListener('click', async event => {
     event.currentTarget.disabled = true;
     try {
