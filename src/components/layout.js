@@ -5,8 +5,8 @@ let syncStatusHideTimer = null;
 const avatarMarkup = user => user.profilePhoto ? `<img src="${escapeHtml(user.profilePhoto)}" alt="Profile photo">` : escapeHtml((user.fullName||'A').slice(0,1).toUpperCase());
 export function publicNav(active = '') {
   return `<header class="public-nav"><a class="brand" href="/" data-link><img src="/logo.svg" alt="PriorProof"></a>
-  <div class="nav-tools"><button class="theme-toggle public-theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">◐ <span>Dark mode</span></button><button class="mobile-menu" type="button" aria-label="Open navigation" aria-controls="publicLinks" aria-expanded="false" id="mobileMenu">☰</button></div>
-  <nav id="publicLinks" aria-label="Main navigation"><a class="${active==='home'?'active':''}" href="/" data-link>Home</a><a class="${active==='how'?'active':''}" href="/how-it-works" data-link>How it works</a><a class="${active==='about'?'active':''}" href="/about" data-link>About</a><a class="nav-login" href="/login" data-link>Sign in</a><a class="btn btn-primary btn-small" href="/register" data-link>Get started</a></nav></header>`;
+  <div class="nav-tools"><button class="mobile-menu" type="button" aria-label="Open navigation" aria-controls="publicLinks" aria-expanded="false" id="mobileMenu">☰</button></div>
+  <nav id="publicLinks" aria-label="Main navigation"><a class="${active==='home'?'active':''}" href="/" data-link>Home</a><a class="${active==='how'?'active':''}" href="/how-it-works" data-link>How it works</a><a class="${active==='about'?'active':''}" href="/about" data-link>About</a><button class="theme-toggle public-theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">◐ <span>Dark mode</span></button><a class="nav-login" href="/login" data-link>Sign in</a><a class="btn btn-primary btn-small" href="/register" data-link>Get started</a></nav></header>`;
 }
 const menu = [
   ['Overview','/app/dashboard','▦'],['Experience','/app/experience','▤'],['Evidence','/app/evidence','▧'],
