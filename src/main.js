@@ -25,6 +25,10 @@ async function render() {
   const route = currentRoute();
   if (route === '/auth/popup-callback') return;
   const protectedRoute = route.startsWith('/app/');
+  // Public pages always use the public light theme; the saved preference belongs to the workspace.
+  document.documentElement.dataset.theme = protectedRoute
+    ? (localStorage.getItem('priorproof-theme') === 'dark' ? 'dark' : 'light')
+    : 'light';
   if ((protectedRoute || route === '/reset-password') && !currentSession) {
     navigate('/login');
     return;
@@ -59,6 +63,24 @@ async function render() {
   }
 
   document.querySelector('#app').innerHTML = html;
+
+  // Keep the public homepage public-facing while exposing workspace actions to signed-in users.
+  if (!protectedRoute && currentSession?.user) {
+    const publicLinks = document.getElementById('publicLinks');
+    if (publicLinks) {
+      publicLinks.innerHTML = '<a class="active" href="/" data-link>Home</a><a href="/how-it-works" data-link>How it works</a><a href="/about" data-link>About</a><a class="nav-workspace" href="/app/dashboard" data-link>My Workspace</a><a class="nav-account" href="/app/profile" data-link>My Account</a><button class="nav-signout" type="button" id="signOutButton">Sign out</button>';
+    }
+    document.querySelectorAll('.footer-links a[href="/login"], .footer-links a[href="/register"]').forEach(link => {
+      if (link.getAttribute('href') === '/login') {
+        link.textContent = 'My Workspace';
+        link.setAttribute('href', '/app/dashboard');
+      } else {
+        link.textContent = 'My Account';
+        link.setAttribute('href', '/app/profile');
+      }
+    });
+  }
+
   bindLayout();
   bindAppActions();
 
