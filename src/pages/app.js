@@ -370,27 +370,45 @@ export function bindAppActions(){
   if(!confirm('Remove this experience and its linked evidence records?'))return;
   const d=getData(),id=button.dataset.deleteExperience;
   const removed=d.evidence.filter(e=>e.experienceId===id);
-  try{for(const item of removed){if(item.fileId)await deleteEvidenceFile(item.fileId,item.filePath);}}
-  catch(error){alert(error.message||'Could not remove the linked evidence attachments. No workspace records were changed.');return;}
   d.experiences=d.experiences.filter(e=>e.id!==id);
   const removedIds=removed.map(e=>e.id);
   d.evidence=d.evidence.filter(e=>e.experienceId!==id);
   d.competencies.forEach(c=>{c.experienceIds=(c.experienceIds||[]).filter(x=>x!==id);c.evidenceIds=(c.evidenceIds||[]).filter(x=>!removedIds.includes(x));c.sourceSkills=[...new Set(d.experiences.filter(x=>(c.experienceIds||[]).includes(x.id)).flatMap(x=>x.skills||[]).filter(skill=>skillDefinition(skill).name.toLowerCase()===skillDefinition(c.name).name.toLowerCase()))];});
   d.competencies=d.competencies.filter(c=>(c.experienceIds||[]).length||(c.evidenceIds||[]).length);
   d.assessments=(d.assessments||[]).map(p=>({...p,evidenceIds:(p.evidenceIds||[]).filter(x=>!removedIds.includes(x))}));
-  saveData(d);
+  try{
+   // Commit record removal before deleting files, so a failed save never leaves broken attachment references.
+   await saveDataAndWait(d);
+  }catch(error){
+   alert(error.message||'Could not save the removal. Evidence attachments were kept.');
+   return;
+  }
+  let failed=0;
+  for(const item of removed){
+   if(!item.fileId&&!item.filePath)continue;
+   try{await deleteEvidenceFile(item.fileId,item.filePath);}catch(error){failed++;}
+  }
+  if(failed)alert('The experience and its evidence records were removed and saved, but '+failed+' attachment file(s) could not be deleted. They are no longer linked to your records and may remain in private storage.');
  }));
  document.querySelectorAll('[data-edit-evidence]').forEach(button=>button.addEventListener('click',()=>openEntryDialog('evidence',button.dataset.editEvidence)));
  document.querySelectorAll('[data-delete-evidence]').forEach(button=>button.addEventListener('click',async()=>{
   if(!confirm('Remove this evidence record?'))return;
   const d=getData(),id=button.dataset.deleteEvidence,item=d.evidence.find(e=>e.id===id);
-  try{if(item?.fileId)await deleteEvidenceFile(item.fileId,item.filePath);}
-  catch(error){alert(error.message||'Could not remove the evidence attachment. The record has been kept.');return;}
   d.evidence=d.evidence.filter(e=>e.id!==id);
   d.competencies.forEach(c=>c.evidenceIds=(c.evidenceIds||[]).filter(x=>x!==id));
   d.assessments=(d.assessments||[]).map(p=>({...p,evidenceIds:(p.evidenceIds||[]).filter(x=>x!==id)}));
   d.competencies=d.competencies.filter(c=>(c.experienceIds||[]).length||(c.evidenceIds||[]).length);
-  saveData(d);
+  try{
+   // Persist the record change before attempting file deletion.
+   await saveDataAndWait(d);
+  }catch(error){
+   alert(error.message||'Could not save the removal. The evidence attachment was kept.');
+   return;
+  }
+  if(item?.fileId||item?.filePath){
+   try{await deleteEvidenceFile(item.fileId,item.filePath);}
+   catch(error){alert('The evidence record was removed and saved, but its attachment could not be deleted. The file is no longer linked to your records and may remain in private storage.');}
+  }
  }));
  document.querySelectorAll('[data-map-form]').forEach(form=>form.addEventListener('submit',e=>{
    e.preventDefault();
