@@ -218,6 +218,9 @@ async function start() {
     if (!authListenerReady) {
       onAuthStateChange((event, session) => {
         currentSession = session;
+        // Session refreshes and the initial session notification do not change
+        // the workspace view. Avoid reloading data or replacing an active form.
+        if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') return;
         // Defer Supabase data queries until the auth callback has returned.
         window.setTimeout(async () => {
           try {
@@ -232,7 +235,7 @@ async function start() {
             }
             return;
           }
-          if (['SIGNED_IN', 'SIGNED_OUT', 'PASSWORD_RECOVERY', 'INITIAL_SESSION', 'TOKEN_REFRESHED'].includes(event)) render();
+          if (['SIGNED_IN', 'SIGNED_OUT', 'PASSWORD_RECOVERY'].includes(event)) render();
         }, 0);
       });
       authListenerReady = true;
