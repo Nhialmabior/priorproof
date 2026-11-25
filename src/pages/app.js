@@ -185,9 +185,30 @@ const skillDefinition=value=>{
 };
 export function dashboardPage(){
  const d=getData();
- const content=`${heading('YOUR WORKSPACE',`Welcome back, ${escapeHtml((d.user.fullName||'there').split(' ')[0])}.`,'Here is a snapshot of your recognition journey.',btn('Add experience','addExperience'))}
- <div class="stats-grid">${stat('Experience records',d.experiences.length,'Your learning and work history','▤')}${stat('Evidence items',d.evidence.length,'Supporting materials saved','▧')}${stat('Competency suggestions',d.competencies.length,'Potential skills identified','◇')}</div>
- <div class="dashboard-grid"><section class="panel"><div class="panel-head"><div><h2>Getting started</h2><p>Complete these steps to document your skills.</p></div><span class="pill">${[d.experiences.length>0,d.evidence.length>0].filter(Boolean).length} of 2 started</span></div><a class="journey-row" href="/app/experience" data-link><span class="journey-number ${d.experiences.length?'done':''}">2</span><div><b>Document experience</b><small>Work, volunteering, learning or community activities</small></div><span class="complete">${d.experiences.length?d.experiences.length+' added':'Add first'}</span></a><a class="journey-row" href="/app/evidence" data-link><span class="journey-number ${d.evidence.length?'done':''}">3</span><div><b>Organise supporting evidence</b><small>Connect documents, work samples or references</small></div><span class="complete">${d.evidence.length?d.evidence.length+' added':'Add first'}</span></a><a class="journey-row" href="/app/portfolio" data-link><span class="journey-number ${d.experiences.length||d.evidence.length?'done':''}">4</span><div><b>Preview your portfolio</b><small>Review and print your current profile</small></div><span class="complete">Preview →</span></a></section>
+ const experienceCount=d.experiences.length;
+ const evidenceCount=d.evidence.length;
+ const competencyCount=d.competencies.length;
+ const milestonesRecorded=[experienceCount>0,evidenceCount>0,competencyCount>0].filter(Boolean).length;
+ const nextStep=experienceCount===0
+  ?{title:'Add your first experience',description:'Start with work, volunteering, learning or a community activity.',href:'/app/experience',action:'Add experience',step:'STEP 1'}
+  :evidenceCount===0
+   ?{title:'Add sup <div class="dashboard-grid">
+ <section class="panel dashboard-next-step">
+  <div class="panel-head"><div><span class="eyebrow">YOUR NEXT STEP</span><h2>\${nextStep.title}</h2><p>\${nextStep.description}</p></div></div>
+  <div class="dashboard-step-meta"><span class="pill">\${nextStep.step}</span><span>\${milestonesRecorded} of 3 record milestones added</span></div>
+  <div class="dashboard-progress" role="progressbar" aria-label="Record milestones added" aria-valuemin="0" aria-valuemax="3" aria-valuenow="\${milestonesRecorded}"><span style="width:\${Math.round(milestonesRecorded/3*100)}%"></span></div>
+  <a class="btn btn-primary dashboard-next-button" href="\${nextStep.href}" data-link>\${nextStep.action} <span>→</span></a>
+  <p class="dashboard-progress-note">These milestones help organise your record. They do not assess or verify your skills.</p>
+ </section>
+ <section class="panel dashboard-shortcuts">
+  <div class="panel-head"><div><h2>Go to a section</h2><p>Find your records and tools.</p></div></div>
+  <a class="quick-action" href="/app/experience" data-link><span>▤</span><div><b>Experience</b><small>View and edit your records</small></div><i>→</i></a>
+  <a class="quick-action" href="/app/evidence" data-link><span>▧</span><div><b>Evidence</b><small>Manage supporting materials</small></div><i>→</i></a>
+  <a class="quick-action" href="/app/competencies" data-link><span>◇</span><div><b>Skills</b><small>Review catalogue matches</small></div><i>→</i></a>
+  <a class="quick-action" href="/app/portfolio" data-link><span>▣</span><div><b>Portfolio</b><small>Preview and print your record</small></div><i>→</i></a>
+ </section>
+ </div>
+pp/portfolio" data-link><span class="journey-number ${d.experiences.length||d.evidence.length?'done':''}">4</span><div><b>Preview your portfolio</b><small>Review and print your current profile</small></div><span class="complete">Preview →</span></a></section>
  <section class="panel"><div class="panel-head"><div><h2>Quick actions</h2><p>Continue building your profile.</p></div></div><button class="quick-action" id="addExperience"><span>＋</span><div><b>Add experience</b><small>Record work, learning or volunteering</small></div><i>→</i></button><button class="quick-action" id="addEvidence"><span>↥</span><div><b>Add evidence record</b><small>Connect a document or work sample</small></div><i>→</i></button><a class="quick-action" href="/app/competencies" data-link><span>◇</span><div><b>Explore competencies</b><small>Review potential skills</small></div><i>→</i></a><a class="quick-action" href="/app/portfolio" data-link><span>▣</span><div><b>View my portfolio</b><small>Preview your information</small></div><i>→</i></a></section></div>
  <section class="panel recent-panel"><div class="panel-head"><div><h2>Recent experience</h2><p>Your latest records.</p></div><a href="/app/experience" data-link>View all →</a></div>${d.experiences.length?d.experiences.slice(0,3).map(e=>`<div class="record-row"><div class="record-icon">▤</div><div><b>${escapeHtml(e.title)}</b><small>${escapeHtml(e.organisation||e.category)} · ${escapeHtml(formatExperienceDate(e.startDate)||'Date not provided')}</small></div><span class="pill">${escapeHtml(e.category)}</span></div>`).join(''):'<div class="empty-state">No experience records yet. Add your first experience to begin.</div>'}</section>`;
  return appShell(content,'/app/dashboard',d.user);
