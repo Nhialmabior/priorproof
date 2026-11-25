@@ -304,3 +304,16 @@
  .dashboard-page .stats-grid{grid-template-columns:1fr}
  .dashboard-next-button{width:100%}
 }
+
+
+/* Skills and competencies browsing */
+.competency-tools{margin-top:18px}
+.competency-tools-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.competency-tools-heading h2{font-size:16px;margin:0 0 4px}
+.competency-tools-heading p{font-size:11px;margin:0;color:var(--muted)}
+.competency-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(180px,1fr);gap:14px;margin-top:16px}
+.competency-filters label{display:block;font-size:11px;font-weight:700;color:var(--text)}
+.competency-filters input,.competency-filters select{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:10px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font:inherit;font-size:12px}
+.competency-card[hidden]{display:none!important}
+#competencyNoResults{margin-top:14px}
+@media(max-width:640px){.competency-filters{grid-template-columns:1fr}.competency-tools{padding:16px}}
