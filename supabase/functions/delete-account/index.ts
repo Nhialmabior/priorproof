@@ -1,16 +1,19 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': Deno.env.get('APP_ALLOWED_ORIGIN') || '',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Vary': 'Origin'
-};
+function corsHeaders(origin: string) {
+  const allowedOrigin = Deno.env.get('APP_ALLOWED_ORIGIN') || '';
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin || origin || '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin'
+  };
+}
 
-function json(body: Record<string, unknown>, status = 200) {
+function json(body: Record<string, unknown>, origin: string, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
   });
 }
 
@@ -19,19 +22,19 @@ Deno.serve(async (request) => {
   const allowedOrigin = Deno.env.get('APP_ALLOWED_ORIGIN') || '';
   if (request.method === 'OPTIONS') {
     if (allowedOrigin && origin !== allowedOrigin) return new Response('Forbidden', { status: 403 });
-    return new Response('ok', { headers: { ...corsHeaders, 'Access-Control-Allow-Origin': allowedOrigin || origin } });
+    return new Response('ok', { headers: corsHeaders(origin) });
   }
-  if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
-  if (allowedOrigin && origin !== allowedOrigin) return json({ error: 'Origin not allowed.' }, 403);
+  if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, origin, 405);
+  if (allowedOrigin && origin !== allowedOrigin) return json({ error: 'Origin not allowed.' }, origin, 403);
 
   const authorization = request.headers.get('Authorization') || '';
-  if (!authorization.startsWith('Bearer ')) return json({ error: 'Sign in again to continue.' }, 401);
+  if (!authorization.startsWith('Bearer ')) return json({ error: 'Sign in again to continue.' }, origin, 401);
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!supabaseUrl || !anonKey || !serviceRoleKey) {
-    return json({ error: 'Account deletion is not configured on the server.' }, 503);
+    return json({ error: 'Account deletion is not configured on the server.' }, origin, 503);
   }
 
   const userClient = createClient(supabaseUrl, anonKey, {
@@ -46,9 +49,9 @@ Deno.serve(async (request) => {
     const body = await request.json();
     confirmation = body?.confirmation;
   } catch {
-    return json({ error: 'A valid confirmation is required.' }, 400);
+    return json({ error: 'A valid confirmation is required.' }, origin, 400);
   }
-  if (confirmation !== 'DELETE') return json({ error: 'Type DELETE to confirm permanent account deletion.' }, 400);
+  if (confirmation !== 'DELETE') return json({ error: 'Type DELETE to confirm permanent account deletion.' }, origin, 400);
 
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false }
@@ -80,18 +83,18 @@ Deno.serve(async (request) => {
       if (error) throw new Error('Could not remove private evidence files: ' + error.message);
     }
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : 'Evidence cleanup failed. Account was not deleted.' }, 500);
+    return json({ error: error instanceof Error ? error.message : 'Evidence cleanup failed. Account was not deleted.' }, origin, 500);
   }
 
   const { error: workspaceError } = await admin.from('user_workspaces').delete().eq('user_id', user.id);
   if (workspaceError) {
-    return json({ error: 'Evidence files were removed, but workspace deletion failed. Account was not deleted: ' + workspaceError.message }, 500);
+    return json({ error: 'Evidence files were removed, but workspace deletion failed. Account was not deleted: ' + workspaceError.message }, origin, 500);
   }
 
   const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
   if (deleteError) {
-    return json({ error: 'Workspace and evidence were removed, but account deletion failed. Contact the service operator: ' + deleteError.message }, 500);
+    return json({ error: 'Workspace and evidence were removed, but account deletion failed. Contact the service operator: ' + deleteError.message }, origin, 500);
   }
 
-  return json({ success: true });
+  return json({ success: true }, origin);
 });
