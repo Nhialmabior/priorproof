@@ -349,3 +349,13 @@ export function clearActiveWorkspace() {
   activeUserId = null;
   loadVersion++;
 }
+
+export function clearLocalWorkspaceAfterAccountDeletion(userId) {
+  if (!userId) return;
+  try {
+    localStorage.removeItem(workspaceKey(userId));
+    localStorage.removeItem(pendingKey(userId));
+  } catch (error) {
+    console.warn('Could not clear the local PriorProof workspace copy:', error);
+  }
+}
