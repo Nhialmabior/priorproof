@@ -9,9 +9,9 @@ import { bindLayout, escapeHtml } from './components/layout.js';
 import { homePage, aboutPage, howPage, privacyPage, termsPage } from './pages/public.js';
 import { dashboardPage, profilePage, experiencePage, evidencePage, competenciesPage, gapPage, portfolioPage, assessmentsPage, settingsPage, helpPage, authPage, passwordResetPage, bindAppActions } from './pages/app.js';
 import { getData, loadUserWorkspace, clearActiveWorkspace, flushWorkspaceSave } from './services/storage.js';
-import { getSupabase, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, resendSignupConfirmation, sendPasswordReset, signOut, onAuthStateChange } from './services/supabase.js';
+import { getSupabase, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, resendSignupConfirmation, sendPasswordReset, updateAccountPassword, signOut, onAuthStateChange } from './services/supabase.js';
 import { validateProfileName } from './utils/profileValidation.js';
-import { validateStrongPassword } from './utils/passwordValidation.js';
+import { validateStrongPassword, validatePasswordReset } from './utils/passwordValidation.js';
 import { isEmailConfirmationCallback, getEmailConfirmationError } from './utils/authCallback.js';
 
 let currentSession = null;
@@ -174,6 +174,50 @@ async function render() {
         submit.disabled = false;
         submit.textContent = route === '/login' ? 'Sign in →' : 'Create account →';
       }
+    }
+  });
+
+  document.getElementById('passwordResetForm')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!form.reportValidity()) return;
+
+    const password = document.getElementById('newPassword')?.value || '';
+    const confirmation = document.getElementById('confirmNewPassword')?.value || '';
+    const feedback = document.getElementById('passwordResetFeedback');
+    const submit = form.querySelector('button[type="submit"]');
+    const validationError = validatePasswordReset(password, confirmation);
+    if (validationError) {
+      if (feedback) {
+        feedback.textContent = validationError;
+        feedback.className = 'auth-feedback error';
+      }
+      return;
+    }
+    if (!submit || submit.disabled) return;
+
+    submit.disabled = true;
+    submit.textContent = 'Updating password…';
+    if (feedback) {
+      feedback.textContent = '';
+      feedback.className = 'auth-feedback';
+    }
+    try {
+      const { error } = await updateAccountPassword(password);
+      if (error) throw error;
+      form.reset();
+      if (feedback) {
+        feedback.textContent = 'Password updated successfully. Your new password is ready to use.';
+        feedback.className = 'auth-feedback success';
+      }
+      submit.textContent = 'Password updated';
+    } catch (error) {
+      if (feedback) {
+        feedback.textContent = error.message || 'Could not update your password. Request a fresh reset link and try again.';
+        feedback.className = 'auth-feedback error';
+      }
+      submit.disabled = false;
+      submit.textContent = 'Update password';
     }
   });
 
