@@ -1,8 +1,8 @@
 import { appShell, escapeHtml } from '../components/layout.js';
-import { getData, saveData, saveDataAndWait, resetData } from '../services/storage.js';
+import { getData, saveData, saveDataAndWait, resetData, clearActiveWorkspace, clearLocalWorkspaceAfterAccountDeletion } from '../services/storage.js';
 import { navigate } from '../utils/router.js';
-import { saveEvidenceFile, getEvidenceFile, deleteEvidenceFile, clearEvidenceFiles } from '../services/evidenceFiles.js';
-import { updateAccountProfile } from '../services/supabase.js';
+import { saveEvidenceFile, getEvidenceFile, deleteEvidenceFile, clearEvidenceFiles, clearLocalEvidenceFiles } from '../services/evidenceFiles.js';
+import { updateAccountProfile, requestAccountDeletion, signOut } from '../services/supabase.js';
 import { MAX_BACKUP_FILE_SIZE, prepareRestoredWorkspace } from '../utils/backupValidation.js';
 import { syncExperienceCompetencies, removeExperienceRelations, syncEvidenceCompetencyLinks, removeEvidenceRelations } from '../utils/workspaceRelations.js';
 import { validateProfileName, validateProfilePhoto } from '../utils/profileValidation.js';
@@ -577,6 +577,35 @@ export function bindAppActions(){
    alert(error.message||'Could not update your profile. If you changed your account name or email, check your account settings before retrying.');
   }finally{
    if(submit?.isConnected){submit.disabled=false;submit.textContent='Save profile';}
+  }
+ });
+ document.getElementById('deleteAccountButton')?.addEventListener('click',async()=>{
+  const button=document.getElementById('deleteAccountButton');
+  const feedback=document.getElementById('deleteAccountFeedback');
+  if(!button||button.disabled)return;
+  const confirmation=prompt('This permanently deletes your account, workspace and private cloud evidence. This cannot be undone. Type DELETE to continue.');
+  if(confirmation!=='DELETE'){
+   if(feedback)feedback.textContent='Account deletion was not started. Your account and records are unchanged.';
+   return;
+  }
+  button.disabled=true;
+  button.textContent='Deleting account…';
+  if(feedback)feedback.textContent='Verifying your session and deleting your account data…';
+  const userId=getData().user?.id;
+  const legacyIds=getData().evidence.map(item=>item.fileId||item.id).filter(Boolean);
+  try{
+   const {error}=await requestAccountDeletion();
+   if(error)throw error;
+   await clearLocalEvidenceFiles(legacyIds);
+   clearLocalWorkspaceAfterAccountDeletion(userId);
+   clearActiveWorkspace();
+   await signOut();
+   alert('Your PriorProof account and associated cloud records have been deleted.');
+   navigate('/');
+  }catch(error){
+   if(feedback)feedback.textContent=error.message||'Account deletion could not be completed. Please contact the service operator before retrying.';
+   button.disabled=false;
+   button.textContent='Retry account deletion';
   }
  });
  document.getElementById('resetDemo')?.addEventListener('click',async()=>{
