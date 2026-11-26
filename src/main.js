@@ -235,6 +235,17 @@ async function render() {
     event.currentTarget.textContent = show ? 'Hide' : 'Show';
     event.currentTarget.setAttribute('aria-label', show ? 'Hide confirmation password' : 'Show confirmation password');
   });
+  document.querySelectorAll('[data-toggle-password]').forEach(button => {
+    button.addEventListener('click', () => {
+      const field = document.getElementById(button.dataset.togglePassword);
+      if (!field) return;
+      const show = field.type === 'password';
+      field.type = show ? 'text' : 'password';
+      button.textContent = show ? 'Hide' : 'Show';
+      button.setAttribute('aria-label', `${show ? 'Hide' : 'Show'} password`);
+    });
+  });
+
   document.getElementById('forgotPassword')?.addEventListener('click', async event => {
     const emailField = document.querySelector('#authForm input[name="email"]');
     const email = emailField?.value.trim() || '';
