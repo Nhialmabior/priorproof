@@ -1,13 +1,11 @@
 import { appShell, escapeHtml } from '../components/layout.js';
 import { getData, saveData, saveDataAndWait, resetData } from '../services/storage.js';
-import { updateAccountPassword } from '../services/supabase.js';
 import { navigate } from '../utils/router.js';
 import { saveEvidenceFile, getEvidenceFile, deleteEvidenceFile, clearEvidenceFiles } from '../services/evidenceFiles.js';
 import { updateAccountProfile } from '../services/supabase.js';
 import { MAX_BACKUP_FILE_SIZE, prepareRestoredWorkspace } from '../utils/backupValidation.js';
 import { syncExperienceCompetencies, removeExperienceRelations, syncEvidenceCompetencyLinks, removeEvidenceRelations } from '../utils/workspaceRelations.js';
 import { validateProfileName, validateProfilePhoto } from '../utils/profileValidation.js';
-import { validateStrongPassword } from '../utils/passwordValidation.js';
 
 const stat=(label,value,sub,icon)=>`<article class="stat-card"><div class="stat-top"><span>${label}</span><i>${icon}</i></div><strong>${value}</strong><small>${sub}</small></article>`;
 const heading=(eyebrow,title,desc,action='')=>`<div class="page-heading"><div><span class="eyebrow">${eyebrow}</span><h1>${title}</h1><p>${desc}</p></div>${action}</div>`;
@@ -527,7 +525,6 @@ export function bindAppActions(){
    backupFeedback.className='helper-text'+(type?' '+type:'');
   };
  document.querySelectorAll('[data-toggle-password]').forEach(button=>button.addEventListener('click',()=>{const field=document.getElementById(button.dataset.togglePassword);if(!field)return;const show=field.type==='password';field.type=show?'text':'password';button.textContent=show?'Hide':'Show';}));
- document.getElementById('passwordResetForm')?.addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;if(!form.reportValidity())return;const password=form.elements.namedItem('password').value,confirmation=form.elements.namedItem('confirmPassword').value,feedback=document.getElementById('passwordResetFeedback'),submit=form.querySelector('button[type="submit"]');const passwordError=validateStrongPassword(password);if(passwordError){feedback.textContent=passwordError;feedback.className='auth-feedback error';return;}if(password!==confirmation){feedback.textContent='The passwords do not match.';feedback.className='auth-feedback error';return;}if(submit){submit.disabled=true;submit.textContent='Updating…';}try{const {error}=await updateAccountPassword(password);if(error)throw error;feedback.textContent='Your password has been updated. You can now continue to your workspace.';feedback.className='auth-feedback';form.reset();window.setTimeout(()=>navigate('/app/dashboard'),900);}catch(error){feedback.textContent=error.message||'Could not update your password. Please reopen the reset link and try again.';feedback.className='auth-feedback error';}finally{if(submit?.isConnected){submit.disabled=false;submit.textContent='Update password';}}});
  document.getElementById('printPortfolio')?.addEventListener('click',()=>window.print());
  let profilePhotoReader=null;
  document.getElementById('profilePhotoFile')?.addEventListener('change',event=>{
