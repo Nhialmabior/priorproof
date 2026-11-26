@@ -9,6 +9,7 @@ test('recognises a Supabase PKCE email confirmation return', () => {
 test('recognises an email confirmation error return', () => {
   assert.equal(isEmailConfirmationCallback({ pathname: '/app/dashboard', search: '?error=access_denied' }), true);
   assert.equal(getEmailConfirmationError('?error=access_denied&error_description=Link+expired'), 'Link expired');
+  assert.equal(getEmailConfirmationError('', '#error=access_denied&error_description=Reset+link+expired'), 'Reset link expired');
 });
 
 test('recognises an implicit token confirmation return', () => {
