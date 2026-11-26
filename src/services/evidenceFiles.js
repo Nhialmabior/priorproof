@@ -117,8 +117,9 @@ export async function clearEvidenceFiles(legacyIds = []) {
   }
 
   await collectFiles(user.id);
-  if (objectPaths.length) {
-    const { error } = await storage.remove(objectPaths);
+  // Keep each Storage removal request comfortably below the API batch limit.
+  for (let i = 0; i < objectPaths.length; i += 100) {
+    const { error } = await storage.remove(objectPaths.slice(i, i + 100));
     if (error) throw new Error('Could not clear your cloud evidence files: ' + error.message);
   }
 
