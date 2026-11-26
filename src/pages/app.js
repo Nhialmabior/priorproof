@@ -595,12 +595,15 @@ export function bindAppActions(){
   try{
    const {error}=await requestAccountDeletion();
    if(error)throw error;
-   try{await clearLocalEvidenceFiles(legacyIds);}catch(localCleanupError){console.warn('Account deleted, but local attachment cleanup needs attention:',localCleanupError);}
+   let localAttachmentCleanupFailed=false;
+   try{await clearLocalEvidenceFiles(legacyIds);}catch(localCleanupError){localAttachmentCleanupFailed=true;console.warn('Account deleted, but local attachment cleanup needs attention:',localCleanupError);}
    clearLocalWorkspaceAfterAccountDeletion(userId);
    clearActiveWorkspace();
    // The Auth user is already deleted; clear this browser's session without another server request.
    await signOut({ scope: 'local' });
-   alert('Your PriorProof account and associated cloud records have been deleted.');
+   alert(localAttachmentCleanupFailed
+    ? 'Your PriorProof account and cloud records have been deleted, but some older browser-local attachments could not be cleared. Clear PriorProof site data from this browser before sharing this device.'
+    : 'Your PriorProof account and associated cloud records have been deleted.');
    navigate('/');
   }catch(error){
    if(feedback)feedback.textContent=error.message||'Account deletion could not be completed. Please contact the service operator before retrying.';
