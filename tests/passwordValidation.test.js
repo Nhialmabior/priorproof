@@ -23,3 +23,11 @@ test('rejects null and empty values', () => {
   assert.match(validateStrongPassword(''), /12 characters/);
   assert.match(validateStrongPassword(null), /12 characters/);
 });
+
+import { validatePasswordReset } from '../src/utils/passwordValidation.js';
+
+test('password reset validates strength and matching confirmation', () => {
+  assert.match(validatePasswordReset('short', 'short'), /12 characters/);
+  assert.equal(validatePasswordReset('PriorProofSecure2026!', 'DifferentSecure2026!'), 'Your passwords do not match.');
+  assert.equal(validatePasswordReset('PriorProofSecure2026!', 'PriorProofSecure2026!'), null);
+});
