@@ -433,6 +433,11 @@ async function start() {
       root.innerHTML = `<main style="max-width:680px;margin:10vh auto;padding:28px;font-family:system-ui"><h1>Email confirmation could not be completed</h1><p>${escapeHtml(error.message || 'The confirmation link could not be verified. It may have expired or already been used.')}</p><p>Request a fresh confirmation email or return to sign in if your account is already confirmed.</p><p><a href="/login">Go to sign in</a> · <a href="/">Return to homepage</a></p></main>`;
       return;
     }
+    if (currentRoute() === '/reset-password') {
+      const detail = getEmailConfirmationError(window.location.search, window.location.hash);
+      root.innerHTML = `<main style="max-width:680px;margin:10vh auto;padding:28px;font-family:system-ui"><h1>Password reset link could not be verified</h1><p>${escapeHtml(detail || error.message || 'The password reset link may have expired or could not be verified.')}</p><p>Return to sign in and request a fresh password reset link.</p><p><a href="/login">Go to sign in</a> · <a href="/">Return to homepage</a></p></main>`;
+      return;
+    }
     root.innerHTML = '<main style="max-width:720px;margin:10vh auto;padding:24px;font-family:system-ui"><h1>PriorProof could not start</h1><p>Check your internet connection and refresh the page. If the problem continues, verify that your local Supabase settings are configured correctly.</p><a href="/">Return to PriorProof</a></main>';
     return;
   }
