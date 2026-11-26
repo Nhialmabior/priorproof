@@ -594,7 +594,7 @@ export function bindAppActions(){
   const legacyIds=getData().evidence.map(item=>item.fileId||item.id).filter(Boolean);
   try{
    // Finish pending workspace writes before the server removes the Auth user and workspace row.
-   await prepareWorkspaceForAccountDeletion();
+   await prepareWorkspaceForAccountDeletion(userId);
    const {error}=await requestAccountDeletion();
    if(error)throw error;
    let localAttachmentCleanupFailed=false;
