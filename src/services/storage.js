@@ -142,6 +142,16 @@ export async function flushWorkspaceSave() {
   }
 }
 
+// Ensure no debounced or in-flight workspace write can race with permanent account deletion.
+export async function prepareWorkspaceForAccountDeletion() {
+  const userId = activeUserId;
+  if (!userId) throw new Error('Your workspace is not linked to a signed-in account.');
+  await flushWorkspaceSave();
+  if (activeUserId !== userId) {
+    throw new Error('Your signed-in account changed. Please reload before deleting this account.');
+  }
+}
+
 export async function loadUserWorkspace(user) {
   if (!user?.id) throw new Error('A signed-in user is required to load a workspace.');
 
