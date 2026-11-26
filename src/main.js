@@ -9,9 +9,9 @@ import { bindLayout, escapeHtml } from './components/layout.js';
 import { homePage, aboutPage, howPage, privacyPage, termsPage } from './pages/public.js';
 import { dashboardPage, profilePage, experiencePage, evidencePage, competenciesPage, gapPage, portfolioPage, assessmentsPage, settingsPage, helpPage, authPage, passwordResetPage, bindAppActions } from './pages/app.js';
 import { getData, loadUserWorkspace, clearActiveWorkspace, flushWorkspaceSave } from './services/storage.js';
-import { getSupabase, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, resendSignupConfirmation, sendPasswordReset, signOut, onAuthStateChange } from './services/supabase.js';
+import { getSupabase, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, resendSignupConfirmation, sendPasswordReset, updateAccountPassword, signOut, onAuthStateChange } from './services/supabase.js';
 import { validateProfileName } from './utils/profileValidation.js';
-import { validateStrongPassword } from './utils/passwordValidation.js';
+import { validateStrongPassword, validatePasswordReset } from './utils/passwordValidation.js';
 import { isEmailConfirmationCallback, getEmailConfirmationError } from './utils/authCallback.js';
 
 let currentSession = null;
@@ -102,6 +102,13 @@ async function render() {
 
   document.querySelector('#app').innerHTML = html;
 
+  // Move keyboard and screen-reader focus to the new page heading after SPA navigation.
+  const pageHeading = document.querySelector('#app h1');
+  if (pageHeading) {
+    pageHeading.setAttribute('tabindex', '-1');
+    pageHeading.focus({ preventScroll: true });
+  }
+
   // Signed-in visitors get one profile icon; account actions live inside its dropdown.
   if (!protectedRoute && currentSession?.user) {
     const publicLinks = document.getElementById('publicLinks');
@@ -177,6 +184,50 @@ async function render() {
     }
   });
 
+  document.getElementById('passwordResetForm')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!form.reportValidity()) return;
+
+    const password = document.getElementById('newPassword')?.value || '';
+    const confirmation = document.getElementById('confirmNewPassword')?.value || '';
+    const feedback = document.getElementById('passwordResetFeedback');
+    const submit = form.querySelector('button[type="submit"]');
+    const validationError = validatePasswordReset(password, confirmation);
+    if (validationError) {
+      if (feedback) {
+        feedback.textContent = validationError;
+        feedback.className = 'auth-feedback error';
+      }
+      return;
+    }
+    if (!submit || submit.disabled) return;
+
+    submit.disabled = true;
+    submit.textContent = 'Updating password…';
+    if (feedback) {
+      feedback.textContent = '';
+      feedback.className = 'auth-feedback';
+    }
+    try {
+      const { error } = await updateAccountPassword(password);
+      if (error) throw error;
+      form.reset();
+      if (feedback) {
+        feedback.textContent = 'Password updated successfully. Your new password is ready to use.';
+        feedback.className = 'auth-feedback success';
+      }
+      submit.textContent = 'Password updated';
+    } catch (error) {
+      if (feedback) {
+        feedback.textContent = error.message || 'Could not update your password. Request a fresh reset link and try again.';
+        feedback.className = 'auth-feedback error';
+      }
+      submit.disabled = false;
+      submit.textContent = 'Update password';
+    }
+  });
+
   document.getElementById('togglePassword')?.addEventListener('click', event => {
     const field = document.getElementById('authPassword');
     const show = field.type === 'password';
@@ -191,6 +242,17 @@ async function render() {
     event.currentTarget.textContent = show ? 'Hide' : 'Show';
     event.currentTarget.setAttribute('aria-label', show ? 'Hide confirmation password' : 'Show confirmation password');
   });
+  document.querySelectorAll('[data-toggle-password]').forEach(button => {
+    button.addEventListener('click', () => {
+      const field = document.getElementById(button.dataset.togglePassword);
+      if (!field) return;
+      const show = field.type === 'password';
+      field.type = show ? 'text' : 'password';
+      button.textContent = show ? 'Hide' : 'Show';
+      button.setAttribute('aria-label', `${show ? 'Hide' : 'Show'} password`);
+    });
+  });
+
   document.getElementById('forgotPassword')?.addEventListener('click', async event => {
     const emailField = document.querySelector('#authForm input[name="email"]');
     const email = emailField?.value.trim() || '';
@@ -293,6 +355,15 @@ async function start() {
   try {
     currentSession = await getCurrentSession();
 
+    // Give expired or rejected password-reset links a useful recovery path instead of
+    // silently redirecting the visitor to sign-in with no explanation.
+    if (currentRoute() === '/reset-password' && !currentSession?.user) {
+      const detail = getEmailConfirmationError(window.location.search, window.location.hash);
+      const root = document.querySelector('#app');
+      root.innerHTML = `<main style="max-width:680px;margin:10vh auto;padding:28px;font-family:system-ui"><h1>Password reset link unavailable</h1><p>${escapeHtml(detail || 'This password reset link may have expired, already been used, or could not be verified.')}</p><p>Return to sign in and request a fresh password reset link.</p><p><a href="/login">Go to sign in</a> · <a href="/">Return to homepage</a></p></main>`;
+      return;
+    }
+
     // Email confirmation returns to the existing protected dashboard URL.
     // Supabase's URL detection exchanges the confirmation code before getSession resolves.
     if (emailConfirmationReturn) {
@@ -360,6 +431,11 @@ async function start() {
     const root = document.querySelector('#app');
     if (emailConfirmationReturn) {
       root.innerHTML = `<main style="max-width:680px;margin:10vh auto;padding:28px;font-family:system-ui"><h1>Email confirmation could not be completed</h1><p>${escapeHtml(error.message || 'The confirmation link could not be verified. It may have expired or already been used.')}</p><p>Request a fresh confirmation email or return to sign in if your account is already confirmed.</p><p><a href="/login">Go to sign in</a> · <a href="/">Return to homepage</a></p></main>`;
+      return;
+    }
+    if (currentRoute() === '/reset-password') {
+      const detail = getEmailConfirmationError(window.location.search, window.location.hash);
+      root.innerHTML = `<main style="max-width:680px;margin:10vh auto;padding:28px;font-family:system-ui"><h1>Password reset link could not be verified</h1><p>${escapeHtml(detail || error.message || 'The password reset link may have expired or could not be verified.')}</p><p>Return to sign in and request a fresh password reset link.</p><p><a href="/login">Go to sign in</a> · <a href="/">Return to homepage</a></p></main>`;
       return;
     }
     root.innerHTML = '<main style="max-width:720px;margin:10vh auto;padding:24px;font-family:system-ui"><h1>PriorProof could not start</h1><p>Check your internet connection and refresh the page. If the problem continues, verify that your local Supabase settings are configured correctly.</p><a href="/">Return to PriorProof</a></main>';

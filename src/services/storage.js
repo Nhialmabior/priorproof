@@ -142,12 +142,38 @@ export async function flushWorkspaceSave() {
   }
 }
 
+// Ensure no debounced or in-flight workspace write can race with permanent account deletion.
+export async function prepareWorkspaceForAccountDeletion(expectedUserId) {
+  const userId = activeUserId;
+  if (!userId || !expectedUserId || userId !== expectedUserId) {
+    throw new Error('Your signed-in account changed. Please reload before deleting this account.');
+  }
+
+  await flushWorkspaceSave();
+
+  // A different tab can change the shared Supabase session while this tab is open.
+  // Confirm the server-verified identity again after pending workspace writes finish.
+  const { data, error } = await getSupabase().auth.getUser();
+  if (error || data?.user?.id !== expectedUserId || activeUserId !== expectedUserId) {
+    throw new Error('Your signed-in account changed or could not be verified. Please reload and sign in again before deleting this account.');
+  }
+}
+
 export async function loadUserWorkspace(user) {
   if (!user?.id) throw new Error('A signed-in user is required to load a workspace.');
 
   const userId = user.id;
   const thisLoad = ++loadVersion;
   const revisionAtStart = saveVersion;
+
+  // If another account becomes active (for example, through a second browser tab),
+  // never let the previous account's debounce timer run under the new session.
+  // Keep that account's browser copy and pending marker so it can sync on its next login.
+  if (activeUserId && activeUserId !== userId && saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    if (readLocal(activeUserId)) markPendingSave(activeUserId);
+  }
 
   // Finish any in-flight edit before asking the cloud for a potentially older copy.
   if (activeUserId === userId && (saveTimer || hasPendingSave(userId))) {
@@ -348,4 +374,14 @@ export function clearActiveWorkspace() {
   }
   activeUserId = null;
   loadVersion++;
+}
+
+export function clearLocalWorkspaceAfterAccountDeletion(userId) {
+  if (!userId) return;
+  try {
+    localStorage.removeItem(workspaceKey(userId));
+    localStorage.removeItem(pendingKey(userId));
+  } catch (error) {
+    console.warn('Could not clear the local PriorProof workspace copy:', error);
+  }
 }

@@ -70,8 +70,8 @@ export async function getCurrentSession() {
   return data.session;
 }
 
-export async function signOut() {
-  return getSupabase().auth.signOut();
+export async function signOut(options) {
+  return getSupabase().auth.signOut(options);
 }
 
 export function onAuthStateChange(callback) {
@@ -82,4 +82,10 @@ export async function updateAccountProfile({ fullName, email }) {
   const updates = { data: { full_name: fullName } };
   if (email) updates.email = email;
   return getSupabase().auth.updateUser(updates);
+}
+
+export async function requestAccountDeletion() {
+  return getSupabase().functions.invoke('delete-account', {
+    body: { confirmation: 'DELETE' }
+  });
 }

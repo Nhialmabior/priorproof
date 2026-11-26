@@ -62,7 +62,7 @@ test('restores records under the signed-in identity, not the backup identity', (
   assert.equal(workspace.user.id, account.id);
   assert.equal(workspace.user.email, account.email);
   assert.equal(workspace.user.fullName, 'Backup Owner');
-  assert.deepEqual(counts, { experiences: 1, evidence: 1, competencies: 1 });
+  assert.deepEqual(counts, { experiences: 1, evidence: 1, competencies: 1, assessments: 1 });
 });
 
 test('removes dangling relationships and clears attachment references', () => {

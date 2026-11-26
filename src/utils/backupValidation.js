@@ -97,7 +97,8 @@ export function prepareRestoredWorkspace(input, currentUser) {
     counts: {
       experiences: workspace.experiences.length,
       evidence: workspace.evidence.length,
-      competencies: workspace.competencies.length
+      competencies: workspace.competencies.length,
+      assessments: workspace.assessments.length
     }
   };
 }
