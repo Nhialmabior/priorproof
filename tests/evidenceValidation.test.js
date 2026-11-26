@@ -34,3 +34,16 @@ test('rejects unsupported or misleading extensions even when MIME metadata looks
     assert.match(getEvidenceFileValidationError(makeFile(name, 1, 'application/pdf')), /Unsupported file type/i, name);
   }
 });
+
+import { isEvidencePathOwnedByUser } from '../src/utils/evidencePath.js';
+
+test('evidence storage paths are confined to the exact signed-in account folder', () => {
+  assert.equal(isEvidencePathOwnedByUser('user-1/evidence-1/file.pdf', 'user-1'), true);
+  assert.equal(isEvidencePathOwnedByUser('user-10/evidence-1/file.pdf', 'user-1'), false);
+  assert.equal(isEvidencePathOwnedByUser('other-user/evidence-1/file.pdf', 'user-1'), false);
+  assert.equal(isEvidencePathOwnedByUser('user-1/../other-user/file.pdf', 'user-1'), false);
+  assert.equal(isEvidencePathOwnedByUser('user-1/evidence-1/./file.pdf', 'user-1'), false);
+  assert.equal(isEvidencePathOwnedByUser('user-1//file.pdf', 'user-1'), false);
+  assert.equal(isEvidencePathOwnedByUser('user-1/file.pdf', 'user-1'), false);
+  assert.equal(isEvidencePathOwnedByUser(null, 'user-1'), false);
+});
