@@ -50,7 +50,7 @@ order by policyname, cmd;
 
 -- Expected security properties:
 -- * public.user_workspaces has RLS enabled.
--- * Authenticated users can select/insert/update/delete only rows where user_id = auth.uid().
+-- * Authenticated users can select/insert/update only rows where user_id = auth.uid(). (Workspace clearing is an update; row deletion is not granted.)
 -- * priorproof-evidence exists with public = false.
 -- * Authenticated users can list/read/insert/update/delete only objects whose first
 --   storage folder is their own auth.uid() value.
