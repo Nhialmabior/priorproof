@@ -5,9 +5,11 @@ import {
   getEvidenceFileValidationError
 } from '../src/utils/evidenceValidation.js';
 
+const makeFile = (name, size = 1024, type = '') => ({ name, size, type });
+
 test('allows each supported evidence extension', () => {
   for (const name of ['report.pdf', 'photo.PNG', 'scan.jpg', 'scan.jpeg', 'letter.doc', 'report.docx', 'notes.txt']) {
-    assert.equal(getEvidenceFileValidationError({ name, size: 1 }), null, name);
+    assert.equal(getEvidenceFileValidationError(makeFile(name, 1)), null, name);
   }
 });
 
@@ -16,19 +18,19 @@ test('rejects a missing file without treating it as an error', () => {
 });
 
 test('rejects empty files', () => {
-  assert.match(getEvidenceFileValidationError({ name: 'report.pdf', size: 0 }), /empty/i);
+  assert.match(getEvidenceFileValidationError(makeFile('report.pdf', 0)), /empty/i);
 });
 
-test('accepts files at the 5 MB limit', () => {
-  assert.equal(getEvidenceFileValidationError({ name: 'report.pdf', size: MAX_EVIDENCE_FILE_SIZE }), null);
+test('accepts files at the configured 5 MB limit', () => {
+  assert.equal(getEvidenceFileValidationError(makeFile('report.pdf', MAX_EVIDENCE_FILE_SIZE)), null);
 });
 
 test('rejects files larger than 5 MB', () => {
-  assert.match(getEvidenceFileValidationError({ name: 'report.pdf', size: MAX_EVIDENCE_FILE_SIZE + 1 }), /5 MB/i);
+  assert.match(getEvidenceFileValidationError(makeFile('report.pdf', MAX_EVIDENCE_FILE_SIZE + 1)), /5 MB/i);
 });
 
-test('rejects unsupported or missing extensions', () => {
-  for (const name of ['archive.zip', 'script.exe', 'pdf', '.pdf', 'report.']) {
-    assert.match(getEvidenceFileValidationError({ name, size: 1 }), /Unsupported file type/i, name);
+test('rejects unsupported or misleading extensions even when MIME metadata looks valid', () => {
+  for (const name of ['archive.zip', 'script.exe', 'pdf', '.pdf', 'report.', 'photo.jpg.exe']) {
+    assert.match(getEvidenceFileValidationError(makeFile(name, 1, 'application/pdf')), /Unsupported file type/i, name);
   }
 });
