@@ -487,7 +487,13 @@ function openEntryDialog(kind,editId=null){
    // Wait for the new record and attachment reference to be saved before removing an older file.
    await saveDataAndWait(d);
   }catch(error){
-   alert(error.message||'Your changes could not be confirmed in the cloud. Keep this dialog open and retry; existing attachments have been preserved.');
+   let newUploadCleanupFailed=false;
+   if(uploadedAttachment?.path){
+    try{await deleteEvidenceFile(evId,uploadedAttachment.path);uploadedAttachment=null;}
+    catch(cleanupError){newUploadCleanupFailed=true;}
+   }
+   const saveMessage=error.message||'Your changes could not be confirmed in the cloud.';
+   alert(saveMessage+(newUploadCleanupFailed?' The new upload could not be removed and may remain as an unlinked private file.':' The new upload was removed where possible; any previous attachment was preserved.'));
    restoreSubmit();
    return;
   }
