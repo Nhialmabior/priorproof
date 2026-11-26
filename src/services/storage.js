@@ -143,12 +143,19 @@ export async function flushWorkspaceSave() {
 }
 
 // Ensure no debounced or in-flight workspace write can race with permanent account deletion.
-export async function prepareWorkspaceForAccountDeletion() {
+export async function prepareWorkspaceForAccountDeletion(expectedUserId) {
   const userId = activeUserId;
-  if (!userId) throw new Error('Your workspace is not linked to a signed-in account.');
-  await flushWorkspaceSave();
-  if (activeUserId !== userId) {
+  if (!userId || !expectedUserId || userId !== expectedUserId) {
     throw new Error('Your signed-in account changed. Please reload before deleting this account.');
+  }
+
+  await flushWorkspaceSave();
+
+  // A different tab can change the shared Supabase session while this tab is open.
+  // Confirm the server-verified identity again after pending workspace writes finish.
+  const { data, error } = await getSupabase().auth.getUser();
+  if (error || data?.user?.id !== expectedUserId || activeUserId !== expectedUserId) {
+    throw new Error('Your signed-in account changed or could not be verified. Please reload and sign in again before deleting this account.');
   }
 }
 
