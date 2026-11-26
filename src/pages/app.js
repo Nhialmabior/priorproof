@@ -1,5 +1,5 @@
 import { appShell, escapeHtml } from '../components/layout.js';
-import { getData, saveData, saveDataAndWait, resetData, clearActiveWorkspace, clearLocalWorkspaceAfterAccountDeletion } from '../services/storage.js';
+import { getData, saveData, saveDataAndWait, resetData, clearActiveWorkspace, clearLocalWorkspaceAfterAccountDeletion, prepareWorkspaceForAccountDeletion } from '../services/storage.js';
 import { navigate } from '../utils/router.js';
 import { saveEvidenceFile, getEvidenceFile, deleteEvidenceFile, clearEvidenceFiles, clearLocalEvidenceFiles } from '../services/evidenceFiles.js';
 import { updateAccountProfile, requestAccountDeletion, signOut } from '../services/supabase.js';
@@ -593,6 +593,8 @@ export function bindAppActions(){
   const userId=getData().user?.id;
   const legacyIds=getData().evidence.map(item=>item.fileId||item.id).filter(Boolean);
   try{
+   // Finish pending workspace writes before the server removes the Auth user and workspace row.
+   await prepareWorkspaceForAccountDeletion();
    const {error}=await requestAccountDeletion();
    if(error)throw error;
    let localAttachmentCleanupFailed=false;
