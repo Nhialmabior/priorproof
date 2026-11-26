@@ -70,8 +70,8 @@ export async function getCurrentSession() {
   return data.session;
 }
 
-export async function signOut() {
-  return getSupabase().auth.signOut();
+export async function signOut(options) {
+  return getSupabase().auth.signOut(options);
 }
 
 export function onAuthStateChange(callback) {
