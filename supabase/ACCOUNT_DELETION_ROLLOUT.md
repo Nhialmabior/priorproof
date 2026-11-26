@@ -7,11 +7,11 @@ The Settings control is intentionally disabled until the function has been deplo
 
 1. Install and authenticate the Supabase CLI.
 2. Link the CLI to the correct Supabase project (verify the project reference before proceeding).
-3. Set the Edge Function secret `APP_ALLOWED_ORIGIN` to the exact production origin, for example `https://your-domain.example`. Do not use a wildcard in production.
+3. Set the Edge Function secret `APP_ALLOWED_ORIGIN` to the exact production origin, for example `https://your-domain.example`. Do not use a wildcard. The function fails closed with HTTP 503 when this secret is missing and rejects every request whose `Origin` does not exactly match it.
 4. Confirm the project has the standard `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` Edge Function secrets. Supabase normally provides these; never put the service-role key in frontend code, a Vite environment variable, or Git.
 5. Deploy only this function: `supabase functions deploy delete-account`.
 6. Verify the deployed function has JWT verification enabled. `supabase/config.toml` sets `verify_jwt = true`.
-7. Test with a disposable account that has several evidence files, nested storage paths, and workspace records. Confirm the function rejects requests without a valid session and rejects any confirmation other than the exact string `DELETE`.
+7. Test with a disposable account that has several evidence files, nested storage paths, and workspace records. Confirm the function rejects requests from an unapproved origin, requests without a valid session, and any confirmation other than the exact string `DELETE`. Also confirm a missing `APP_ALLOWED_ORIGIN` fails closed.
 8. Confirm successful deletion removes only that test account's objects, workspace row, and Auth user. Confirm another test account and its files remain intact.
 9. Only after those checks, enable the Settings button in the app and update the privacy notice to reflect the deployed, tested feature.
 
