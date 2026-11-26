@@ -83,3 +83,9 @@ export async function updateAccountProfile({ fullName, email }) {
   if (email) updates.email = email;
   return getSupabase().auth.updateUser(updates);
 }
+
+export async function requestAccountDeletion() {
+  return getSupabase().functions.invoke('delete-account', {
+    body: { confirmation: 'DELETE' }
+  });
+}
