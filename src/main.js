@@ -102,6 +102,13 @@ async function render() {
 
   document.querySelector('#app').innerHTML = html;
 
+  // Move keyboard and screen-reader focus to the new page heading after SPA navigation.
+  const pageHeading = document.querySelector('#app h1');
+  if (pageHeading) {
+    pageHeading.setAttribute('tabindex', '-1');
+    pageHeading.focus({ preventScroll: true });
+  }
+
   // Signed-in visitors get one profile icon; account actions live inside its dropdown.
   if (!protectedRoute && currentSession?.user) {
     const publicLinks = document.getElementById('publicLinks');
