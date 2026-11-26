@@ -467,7 +467,7 @@ function openEntryDialog(kind,editId=null){
   dialog.querySelectorAll('#closeEntry,#cancelEntry').forEach(button=>button.disabled=true);
   if(submitButton){submitButton.disabled=true;submitButton.textContent='Saving…';}
   const restoreSubmit=()=>{isSavingEntry=false;dialog.querySelectorAll('#closeEntry,#cancelEntry').forEach(button=>button.disabled=false);if(submitButton?.isConnected){submitButton.disabled=false;submitButton.textContent=editRecord?'Save changes':'Save record';}};
-  const f=new FormData(e.currentTarget),d=getData();
+  const f=new FormData(e.currentTarget),d=structuredClone(getData());
   let uploadedAttachment=null,previousAttachment=null,uploadedAttachmentId=null;
   if(isExperience){
    const skills=String(f.get('skills')||'').split(',').map(s=>s.trim()).filter(Boolean);
@@ -492,12 +492,20 @@ function openEntryDialog(kind,editId=null){
    // Wait for the new record and attachment reference to be saved before removing an older file.
    await saveDataAndWait(d);
   }catch(error){
+   const cloudSyncPending=String(error.message||'').includes('recovery copy is pending synchronisation');
+   if(cloudSyncPending){
+    isSavingEntry=false;
+    close();
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    alert('Your record was saved in this browser and is pending cloud synchronisation. The attachment remains linked to your recovery copy. Reconnect and refresh PriorProof to retry synchronisation.');
+    return;
+   }
    let newUploadCleanupFailed=false;
    if(uploadedAttachment?.path){
     try{await deleteEvidenceFile(uploadedAttachmentId,uploadedAttachment.path);uploadedAttachment=null;}
     catch(cleanupError){newUploadCleanupFailed=true;}
    }
-   const saveMessage=error.message||'Your changes could not be confirmed in the cloud.';
+   const saveMessage=error.message||'Your changes could not be saved locally.';
    alert(saveMessage+(newUploadCleanupFailed?' The new upload could not be removed and may remain as an unlinked private file.':' The new upload was removed where possible; any previous attachment was preserved.'));
    restoreSubmit();
    return;
