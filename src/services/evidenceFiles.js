@@ -93,7 +93,7 @@ export async function deleteEvidenceFile(id, path = null) {
   });
 }
 
-export async function clearEvidenceFiles() {
+export async function clearEvidenceFiles(legacyIds = []) {
   // Remove this user's cloud attachments before clearing the legacy browser cache.
   const user = await currentUser();
   const storage = getSupabase().storage.from(BUCKET);
@@ -122,12 +122,17 @@ export async function clearEvidenceFiles() {
     if (error) throw new Error('Could not clear your cloud evidence files: ' + error.message);
   }
 
-  if (!('indexedDB' in window)) return;
+  // Legacy IndexedDB attachments are keyed by evidence record ID, not account ID.
+  // Delete only IDs supplied from the signed-in user's previous workspace. Clearing
+  // the entire object store here could erase another account's files on a shared browser.
+  const ids = [...new Set((legacyIds || []).filter(id => typeof id === 'string' && id))];
+  if (!ids.length || !('indexedDB' in window)) return;
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).clear();
+    const store = tx.objectStore(STORE_NAME);
+    ids.forEach(id => store.delete(id));
     tx.oncomplete = () => { db.close(); resolve(); };
-    tx.onerror = () => { db.close(); reject(tx.error || new Error('Could not clear local files.')); };
+    tx.onerror = () => { db.close(); reject(tx.error || new Error('Could not clear this account’s legacy files.')); };
   });
 }
