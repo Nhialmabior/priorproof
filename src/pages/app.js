@@ -440,7 +440,9 @@ function openEntryDialog(kind,editId=null){
   if(editRecord){const form=dialog.querySelector('#entryForm');['title','type','experienceId','source','evidenceDate','description'].forEach(name=>{const field=form.elements.namedItem(name);if(field)field.value=editRecord[name]||'';});}
  }
  document.body.appendChild(dialog);
- const close=()=>{if(dialog.open)dialog.close();else dialog.remove();};
+ let isSavingEntry=false;
+ const close=()=>{if(isSavingEntry)return;if(dialog.open)dialog.close();else dialog.remove();};
+ dialog.addEventListener('cancel',event=>{if(isSavingEntry)event.preventDefault();});
  dialog.addEventListener('close',()=>dialog.remove(),{once:true});
  dialog.querySelector('#closeEntry').addEventListener('click',close);
  dialog.querySelector('#cancelEntry').addEventListener('click',close);
@@ -461,8 +463,10 @@ function openEntryDialog(kind,editId=null){
   e.preventDefault();
   const submitButton=e.currentTarget.querySelector('button[type="submit"]');
   if(submitButton?.disabled)return;
+  isSavingEntry=true;
+  dialog.querySelectorAll('#closeEntry,#cancelEntry').forEach(button=>button.disabled=true);
   if(submitButton){submitButton.disabled=true;submitButton.textContent='Saving…';}
-  const restoreSubmit=()=>{if(submitButton?.isConnected){submitButton.disabled=false;submitButton.textContent=editRecord?'Save changes':'Save record';}};
+  const restoreSubmit=()=>{isSavingEntry=false;dialog.querySelectorAll('#closeEntry,#cancelEntry').forEach(button=>button.disabled=false);if(submitButton?.isConnected){submitButton.disabled=false;submitButton.textContent=editRecord?'Save changes':'Save record';}};
   const f=new FormData(e.currentTarget),d=getData();
   let uploadedAttachment=null,previousAttachment=null,uploadedAttachmentId=null;
   if(isExperience){
@@ -502,6 +506,7 @@ function openEntryDialog(kind,editId=null){
    try{await deleteEvidenceFile(editRecord.id,previousAttachment);}
    catch(error){alert('Your updated evidence record and new attachment were saved, but the previous attachment could not be removed. It is no longer linked and may remain in private storage.');}
   }
+  isSavingEntry=false;
   close();window.dispatchEvent(new PopStateEvent('popstate'));
  });
  dialog.showModal();
