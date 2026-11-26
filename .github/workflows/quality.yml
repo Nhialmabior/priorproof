@@ -43,7 +43,7 @@ jobs:
           deno-version: v2.x
 
       - name: Test account deletion HTTP helpers
-        run: deno test supabase/functions/delete-account/http_test.ts
+        run: deno test supabase/functions/delete-account/http.deno.ts
 
       - name: Type-check account deletion function
-        run: deno check supabase/functions/delete-account/index.ts supabase/functions/delete-account/http_test.ts
+        run: deno check supabase/functions/delete-account/index.ts supabase/functions/delete-account/http.deno.ts
