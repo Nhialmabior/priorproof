@@ -149,6 +149,15 @@ export async function loadUserWorkspace(user) {
   const thisLoad = ++loadVersion;
   const revisionAtStart = saveVersion;
 
+  // If another account becomes active (for example, through a second browser tab),
+  // never let the previous account's debounce timer run under the new session.
+  // Keep that account's browser copy and pending marker so it can sync on its next login.
+  if (activeUserId && activeUserId !== userId && saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    if (readLocal(activeUserId)) markPendingSave(activeUserId);
+  }
+
   // Finish any in-flight edit before asking the cloud for a potentially older copy.
   if (activeUserId === userId && (saveTimer || hasPendingSave(userId))) {
     try {
