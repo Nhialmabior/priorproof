@@ -598,7 +598,8 @@ export function bindAppActions(){
    try{await clearLocalEvidenceFiles(legacyIds);}catch(localCleanupError){console.warn('Account deleted, but local attachment cleanup needs attention:',localCleanupError);}
    clearLocalWorkspaceAfterAccountDeletion(userId);
    clearActiveWorkspace();
-   await signOut();
+   // The Auth user is already deleted; clear this browser's session without another server request.
+   await signOut({ scope: 'local' });
    alert('Your PriorProof account and associated cloud records have been deleted.');
    navigate('/');
   }catch(error){
