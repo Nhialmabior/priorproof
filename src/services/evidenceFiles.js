@@ -136,3 +136,16 @@ export async function clearEvidenceFiles(legacyIds = []) {
     tx.onerror = () => { db.close(); reject(tx.error || new Error('Could not clear this account’s legacy files.')); };
   });
 }
+
+export async function clearLocalEvidenceFiles(ids = []) {
+  const uniqueIds = [...new Set((ids || []).filter(id => typeof id === 'string' && id))];
+  if (!uniqueIds.length || !('indexedDB' in window)) return;
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    uniqueIds.forEach(id => store.delete(id));
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error || new Error('Could not clear local evidence files.')); };
+  });
+}
