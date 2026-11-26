@@ -583,6 +583,7 @@ export function bindAppActions(){
   if(!confirm('Clear all experience, evidence, competency and review records from your account? Your profile will remain. Private evidence attachments will also be deleted.'))return;
   const button=document.getElementById('resetDemo');
   if(button){button.disabled=true;button.textContent='Saving changes…';}
+  const legacyEvidenceIds=getData().evidence.map(item=>item.fileId||item.id).filter(Boolean);
   try{
    // Save the empty workspace first. Never delete attachments before the record change is confirmed.
    await resetData();
@@ -592,7 +593,7 @@ export function bindAppActions(){
    return;
   }
   try{
-   await clearEvidenceFiles();
+   await clearEvidenceFiles(legacyEvidenceIds);
    alert('Your workspace records were cleared and saved. Evidence attachments were also removed.');
   }catch(error){
    alert('Your workspace records were cleared and saved, but attachment cleanup did not finish. Your records are safe. Select Clear workspace records again to retry attachment cleanup.');
@@ -634,14 +635,16 @@ export function bindAppActions(){
    try{
     if(file.size>MAX_BACKUP_FILE_SIZE)throw new Error('The backup file is larger than 10 MB.');
     const parsed=JSON.parse(await file.text());
-    const currentUser=getData().user||{};
+    const currentWorkspace=getData();
+    const currentUser=currentWorkspace.user||{};
+    const legacyEvidenceIds=currentWorkspace.evidence.map(item=>item.fileId||item.id).filter(Boolean);
     const {workspace:restored,counts:backupCounts}=prepareRestoredWorkspace(parsed,currentUser);
     const counts=backupCounts.experiences+' experience record(s), '+backupCounts.evidence+' evidence record(s) and '+backupCounts.competencies+' competency suggestion(s)';
     if(!confirm('Restore this backup? It contains '+counts+'. The current workspace will be replaced. Attachments are not included in JSON backups. Continue?'))return;
     await saveDataAndWait(restored);
     let cleanupMessage='Backup restored and saved. Attachments are not included in JSON backups; add them again from your original files if needed.';
     try{
-     await clearEvidenceFiles();
+     await clearEvidenceFiles(legacyEvidenceIds);
     }catch(cleanupError){
      cleanupMessage+=' Some old attachment files could not be removed. They are no longer linked to the restored records and may remain in private storage until a dedicated cleanup control is available.';
     }
