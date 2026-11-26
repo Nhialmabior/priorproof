@@ -464,7 +464,7 @@ function openEntryDialog(kind,editId=null){
   if(submitButton){submitButton.disabled=true;submitButton.textContent='Saving…';}
   const restoreSubmit=()=>{if(submitButton?.isConnected){submitButton.disabled=false;submitButton.textContent=editRecord?'Save changes':'Save record';}};
   const f=new FormData(e.currentTarget),d=getData();
-  let uploadedAttachment=null,previousAttachment=null;
+  let uploadedAttachment=null,previousAttachment=null,uploadedAttachmentId=null;
   if(isExperience){
    const skills=String(f.get('skills')||'').split(',').map(s=>s.trim()).filter(Boolean);
    const exp={id:editRecord?editRecord.id:crypto.randomUUID(),title:String(f.get('title')).trim(),organisation:String(f.get('organisation')||'').trim()||'Independent experience',category:f.get('category'),description:String(f.get('description')).trim(),contribution:String(f.get('contribution')||'').trim(),outcome:String(f.get('outcome')||'').trim(),learning:String(f.get('learning')||'').trim(),startDate:f.get('startDate')||'',endDate:f.get('endDate')||'',skills};
@@ -473,6 +473,7 @@ function openEntryDialog(kind,editId=null){
 
   }else{
    const file=f.get('file'),evId=editRecord?editRecord.id:crypto.randomUUID();
+   uploadedAttachmentId=evId;
    if(file&&file.name&&!file.size){alert('The selected file is empty. Please choose a different file.');restoreSubmit();return;}
    const hasNewFile=Boolean(file&&file.name&&file.size);
    let attachment=null;
@@ -489,7 +490,7 @@ function openEntryDialog(kind,editId=null){
   }catch(error){
    let newUploadCleanupFailed=false;
    if(uploadedAttachment?.path){
-    try{await deleteEvidenceFile(evId,uploadedAttachment.path);uploadedAttachment=null;}
+    try{await deleteEvidenceFile(uploadedAttachmentId,uploadedAttachment.path);uploadedAttachment=null;}
     catch(cleanupError){newUploadCleanupFailed=true;}
    }
    const saveMessage=error.message||'Your changes could not be confirmed in the cloud.';
