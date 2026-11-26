@@ -42,7 +42,7 @@ export async function saveEvidenceFile(id, file) {
   if (!file) return null;
   const validationError = getEvidenceFileValidationError(file);
   if (validationError) throw new Error(validationError);
-  if (typeof id !== 'string' || !id.trim() || id.includes('/') || id.includes('\\\\')) {
+  if (typeof id !== 'string' || !id.trim() || id.includes('/') || id.includes(String.fromCharCode(92))) {
     throw new Error('This evidence record has an invalid identifier. Refresh and try again.');
   }
 
