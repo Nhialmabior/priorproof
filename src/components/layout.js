@@ -97,7 +97,7 @@ export function bindLayout() {
   const sidebar=document.getElementById('sidebar');
   const sidebarToggle=document.getElementById('sidebarToggle');
   const appLayout=document.querySelector('.app-layout');
-  const closeSidebar=()=>{sidebar?.classList.remove('open');appLayout?.classList.remove('sidebar-open');sidebarToggle?.setAttribute('aria-expanded','false');sidebarToggle?.setAttribute('aria-label','Open menu');};
+  const closeSidebar=({restoreFocus=false}={})=>{sidebar?.classList.remove('open');appLayout?.classList.remove('sidebar-open');sidebarToggle?.setAttribute('aria-expanded','false');sidebarToggle?.setAttribute('aria-label','Open menu');if(restoreFocus)sidebarToggle?.focus();};
   sidebarToggle?.addEventListener('click',()=>{const open=sidebar?.classList.toggle('open')||false;appLayout?.classList.toggle('sidebar-open',open);sidebarToggle.setAttribute('aria-expanded',String(open));sidebarToggle.setAttribute('aria-label',open?'Close menu':'Open menu');});
   // Close the drawer after choosing a destination or tapping the dimmed page area.
   document.addEventListener('click',event=>{
@@ -106,13 +106,13 @@ export function bindLayout() {
     if(event.target.closest('#sidebar [data-link]')){closeSidebar();return;}
     if(event.target===appLayout)closeSidebar();
   },{capture:true,signal:bindingOptions.signal});
-  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeSidebar();},bindingOptions);
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeSidebar({restoreFocus:true});},bindingOptions);
   const accountToggle=document.getElementById('accountMenuToggle'),accountMenu=document.getElementById('accountMenu');
-  const closeAccountMenu=()=>{if(accountMenu){accountMenu.hidden=true;accountToggle?.setAttribute('aria-expanded','false');}document.removeEventListener('click',outsideAccountClick);};
+  const closeAccountMenu=({restoreFocus=false}={})=>{if(accountMenu){accountMenu.hidden=true;accountToggle?.setAttribute('aria-expanded','false');}document.removeEventListener('click',outsideAccountClick);if(restoreFocus)accountToggle?.focus();};
   const outsideAccountClick=event=>{if(!accountMenu?.contains(event.target)&&!accountToggle?.contains(event.target))closeAccountMenu();};
-  accountToggle?.addEventListener('click',event=>{event.stopPropagation();if(!accountMenu)return;accountMenu.hidden=!accountMenu.hidden;accountToggle.setAttribute('aria-expanded',String(!accountMenu.hidden));if(!accountMenu.hidden)document.addEventListener('click',outsideAccountClick);else document.removeEventListener('click',outsideAccountClick);});
+  accountToggle?.addEventListener('click',event=>{event.stopPropagation();if(!accountMenu)return;accountMenu.hidden=!accountMenu.hidden;accountToggle.setAttribute('aria-expanded',String(!accountMenu.hidden));if(!accountMenu.hidden)document.addEventListener('click',outsideAccountClick,bindingOptions);else document.removeEventListener('click',outsideAccountClick);});
   accountMenu?.addEventListener('click',event=>event.stopPropagation());
-  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeAccountMenu();},bindingOptions);
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeAccountMenu({restoreFocus:true});},bindingOptions);
   document.getElementById('accountMenuSignOut')?.addEventListener('click',()=>document.getElementById('signOutButton')?.click());
 }
 export function escapeHtml(value='') { return String(value).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
