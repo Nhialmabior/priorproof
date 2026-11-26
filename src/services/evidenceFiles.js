@@ -1,5 +1,6 @@
 import { getSupabase } from './supabase.js';
 import { getEvidenceFileValidationError } from '../utils/evidenceValidation.js';
+import { isEvidencePathOwnedByUser } from '../utils/evidencePath.js';
 
 const DB_NAME = 'priorproof-evidence-files';
 const STORE_NAME = 'files';
@@ -41,6 +42,9 @@ export async function saveEvidenceFile(id, file) {
   if (!file) return null;
   const validationError = getEvidenceFileValidationError(file);
   if (validationError) throw new Error(validationError);
+  if (typeof id !== 'string' || !id.trim() || id.includes('/') || id.includes('\\\\')) {
+    throw new Error('This evidence record has an invalid identifier. Refresh and try again.');
+  }
 
   const user = await currentUser();
   const path = user.id + '/' + id + '/' + crypto.randomUUID() + '-' + safeFileName(file.name);
@@ -51,14 +55,13 @@ export async function saveEvidenceFile(id, file) {
   if (error) throw new Error('Could not upload your evidence file: ' + error.message);
 
   // Keep any previous attachment until the new workspace metadata is safely saved.
-
   return { id, name: file.name, type: file.type, size: file.size, path };
 }
 
 export async function getEvidenceFile(id, path = null) {
   if (path) {
     const user = await currentUser();
-    if (!path.startsWith(user.id + '/')) throw new Error('You do not have permission to access this evidence file.');
+    if (!isEvidencePathOwnedByUser(path, user.id)) throw new Error('You do not have permission to access this evidence file.');
     const { data, error } = await getSupabase().storage.from(BUCKET).download(path);
     if (error) throw new Error('Could not download your evidence file: ' + error.message);
     return { id, name: path.split('/').pop() || 'evidence-file', type: data.type, size: data.size, blob: data };
@@ -77,7 +80,7 @@ export async function getEvidenceFile(id, path = null) {
 export async function deleteEvidenceFile(id, path = null) {
   if (path) {
     const user = await currentUser();
-    if (!path.startsWith(user.id + '/')) throw new Error('You do not have permission to remove this evidence file.');
+    if (!isEvidencePathOwnedByUser(path, user.id)) throw new Error('You do not have permission to remove this evidence file.');
     const { error } = await getSupabase().storage.from(BUCKET).remove([path]);
     if (error) throw new Error('Could not remove your evidence file: ' + error.message);
     return;
