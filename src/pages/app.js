@@ -524,7 +524,6 @@ export function bindAppActions(){
    backupFeedback.textContent=message;
    backupFeedback.className='helper-text'+(type?' '+type:'');
   };
- document.querySelectorAll('[data-toggle-password]').forEach(button=>button.addEventListener('click',()=>{const field=document.getElementById(button.dataset.togglePassword);if(!field)return;const show=field.type==='password';field.type=show?'text':'password';button.textContent=show?'Hide':'Show';}));
  document.getElementById('printPortfolio')?.addEventListener('click',()=>window.print());
  let profilePhotoReader=null;
  document.getElementById('profilePhotoFile')?.addEventListener('change',event=>{
