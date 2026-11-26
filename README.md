@@ -9,11 +9,12 @@ PriorProof is a skills-documentation and prior-learning support platform. It doe
 ## Current capabilities
 
 - Responsive public pages and authenticated application
-- Email/password and Google sign-in through Supabase Auth
+- Email/password and Google sign-in through Supabase Auth, with email-confirmation resend
 - User workspace persistence in Supabase
 - Experience and evidence records
 - Private evidence attachments in Supabase Storage
 - Competency mapping and evidence gap analysis
+- Clear illustrative homepage preview (no fake account statistics)
 - Portfolio and assessment-review preparation
 - Account settings, JSON data export and workspace reset controls (permanent account deletion is not implemented)
 

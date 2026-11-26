@@ -9,7 +9,7 @@ import { bindLayout, escapeHtml } from './components/layout.js';
 import { homePage, aboutPage, howPage, privacyPage, termsPage } from './pages/public.js';
 import { dashboardPage, profilePage, experiencePage, evidencePage, competenciesPage, gapPage, portfolioPage, assessmentsPage, settingsPage, helpPage, authPage, passwordResetPage, bindAppActions } from './pages/app.js';
 import { getData, loadUserWorkspace, clearActiveWorkspace, flushWorkspaceSave } from './services/storage.js';
-import { getSupabase, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, sendPasswordReset, signOut, onAuthStateChange } from './services/supabase.js';
+import { getSupabase, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, resendSignupConfirmation, sendPasswordReset, signOut, onAuthStateChange } from './services/supabase.js';
 import { validateProfileName } from './utils/profileValidation.js';
 import { validateStrongPassword } from './utils/passwordValidation.js';
 import { isEmailConfirmationCallback, getEmailConfirmationError } from './utils/authCallback.js';
@@ -23,6 +23,34 @@ const setFeedback = (message, type = '') => {
   feedback.textContent = message;
   feedback.className = 'auth-feedback' + (type ? ' ' + type : '');
 };
+
+function showResendConfirmation(email) {
+  const feedback = document.getElementById('authFeedback');
+  if (!feedback || !email) return;
+  document.getElementById('resendConfirmation')?.remove();
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.id = 'resendConfirmation';
+  button.className = 'text-link';
+  button.textContent = 'Resend confirmation email';
+  feedback.insertAdjacentElement('afterend', button);
+  button.addEventListener('click', async () => {
+    if (button.disabled) return;
+    button.disabled = true;
+    button.textContent = 'Sending…';
+    try {
+      const { error } = await resendSignupConfirmation(email);
+      if (error) throw error;
+      setFeedback('If this address has a pending account, a fresh confirmation email has been sent.');
+      button.textContent = 'Send another confirmation email';
+    } catch (error) {
+      setFeedback(error.message || 'Could not resend the confirmation email. Please try again.', 'error');
+      button.textContent = 'Retry confirmation email';
+    } finally {
+      if (button.isConnected) button.disabled = false;
+    }
+  });
+}
 
 async function render() {
   const route = currentRoute();
@@ -125,6 +153,7 @@ async function render() {
           navigate('/app/dashboard');
         } else {
           setFeedback('Account created. Check your email for the confirmation link before signing in.');
+          showResendConfirmation(email);
         }
       } else {
         const { data, error } = await signInWithPassword(email, password);
@@ -134,7 +163,12 @@ async function render() {
         navigate('/app/dashboard');
       }
     } catch (error) {
-      setFeedback(error.message || 'Authentication failed. Please try again.', 'error');
+      if (route === '/login' && (error.code === 'email_not_confirmed' || String(error.message || '').toLowerCase().includes('email not confirmed'))) {
+        setFeedback('Please confirm your email address before signing in. You can request a fresh confirmation email below.');
+        showResendConfirmation(email);
+      } else {
+        setFeedback(error.message || 'Authentication failed. Please try again.', 'error');
+      }
     } finally {
       if (submit.isConnected) {
         submit.disabled = false;

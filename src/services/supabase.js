@@ -46,6 +46,14 @@ export async function signUpWithPassword({ email, password, fullName }) {
   });
 }
 
+export async function resendSignupConfirmation(email) {
+  return getSupabase().auth.resend({
+    type: 'signup',
+    email,
+    options: { emailRedirectTo: `${window.location.origin}/app/dashboard` }
+  });
+}
+
 export async function sendPasswordReset(email) {
   return getSupabase().auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`
