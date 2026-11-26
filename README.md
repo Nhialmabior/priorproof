@@ -16,7 +16,8 @@ PriorProof is a skills-documentation and prior-learning support platform. It doe
 - Competency mapping and evidence gap analysis
 - Clear illustrative homepage preview (no fake account statistics)
 - Portfolio and assessment-review preparation
-- Account settings, JSON data export and workspace reset controls (permanent account deletion is not implemented)
+- Account settings, JSON data export and workspace reset controls
+- A server-side account-deletion Edge Function in the codebase; the user-facing control remains disabled until deployment and live verification
 
 ## Technology
 
@@ -91,4 +92,4 @@ The `public/_redirects` file provides the Netlify single-page-app fallback so di
 
 ## Project status
 
-PriorProof is an evolving demonstration product. Test authentication, workspace persistence, evidence upload/download and workspace reset flows in a controlled environment before inviting real users. The current application does not provide permanent self-service account deletion; the service operator must establish and test a secure account-closure and data-deletion process before public launch. Do not claim formal credential recognition or assessor certification.
+PriorProof is an evolving product under development. Test authentication, workspace persistence, evidence upload/download, workspace reset, account isolation and recovery flows in a controlled environment before inviting real users. A JWT-verified account-deletion Edge Function is present in the codebase, but its Settings control intentionally remains disabled until the function is deployed to the correct Supabase project and successfully tested with disposable accounts. Do not treat workspace clearing as account deletion. Complete the rollout steps in `supabase/ACCOUNT_DELETION_ROLLOUT.md` before enabling that control. Do not claim formal credential recognition or assessor certification.
