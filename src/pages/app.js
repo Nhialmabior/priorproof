@@ -596,7 +596,7 @@ export function bindAppActions(){
   try{
    const {error}=await requestAccountDeletion();
    if(error)throw error;
-   await clearLocalEvidenceFiles(legacyIds);
+   try{await clearLocalEvidenceFiles(legacyIds);}catch(localCleanupError){console.warn('Account deleted, but local attachment cleanup needs attention:',localCleanupError);}
    clearLocalWorkspaceAfterAccountDeletion(userId);
    clearActiveWorkspace();
    await signOut();
