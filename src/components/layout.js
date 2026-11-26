@@ -2,6 +2,7 @@ import { navigate } from '../utils/router.js';
 
 let syncStatusListenerBound = false;
 let syncStatusHideTimer = null;
+let layoutBindingController = null;
 const avatarMarkup = user => user.profilePhoto ? `<img src="${escapeHtml(user.profilePhoto)}" alt="Profile photo">` : escapeHtml((user.fullName||'A').slice(0,1).toUpperCase());
 export function publicNav(active = '') {
   return `<header class="public-nav"><a class="brand" href="/" data-link><img src="/logo.svg" alt="PriorProof"></a>
@@ -27,6 +28,10 @@ export function appShell(content, active = '/app/dashboard', user = {}) {
   <main class="app-main"><header class="app-topbar"><button class="icon-btn" id="sidebarToggle" type="button" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">☰</button><div class="crumb">Workspace <span>/</span> ${routeLabels[active]||active.split('/').pop().replaceAll('-',' ')}</div><div class="top-actions"><span class="sync-status" id="workspaceSyncStatus" data-status="saved" role="status" aria-live="polite" title="Workspace changes sync to your account" hidden>✓ <span>Changes saved</span></span><button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">◐ <span>Theme</span></button><button class="btn btn-outline btn-small" type="button" id="signOutButton">Sign out</button><div class="account-menu-wrap"><button class="avatar small account-trigger" id="accountMenuToggle" type="button" aria-label="Open account menu" aria-expanded="false">${avatarMarkup(user)}</button><div class="account-menu" id="accountMenu" hidden><div class="account-menu-profile"><div class="avatar account-menu-avatar">${avatarMarkup(user)}</div><div><strong>${escapeHtml(user.fullName||'Your account')}</strong><small>${escapeHtml(user.email||'')}</small></div></div><div class="account-menu-details"><span>Phone</span><b>${escapeHtml(user.phoneNumber||'Not added')}</b><span>Location</span><b>${escapeHtml(user.location||'Not added')}</b></div><a href="/app/profile" data-link>View and edit profile <span>→</span></a><button type="button" class="account-menu-signout" id="accountMenuSignOut">Sign out</button></div></div></div></header><section class="app-content">${content}</section></main></div>`;
 }
 export function bindLayout() {
+  // Each render replaces the page DOM. Abort document-level handlers from the previous render.
+  layoutBindingController?.abort();
+  layoutBindingController = new AbortController();
+  const bindingOptions = { signal: layoutBindingController.signal };
   if (!syncStatusListenerBound) {
     window.addEventListener('priorproof:sync-status', event => {
       const indicator = document.getElementById('workspaceSyncStatus');
@@ -83,12 +88,12 @@ export function bindLayout() {
   publicLinks?.querySelectorAll('a[data-link]').forEach(link=>link.addEventListener('click',()=>closePublicMenu()));
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'&&publicLinks?.classList.contains('open'))closePublicMenu({restoreFocus:true});
-  });
+  },bindingOptions);
   document.addEventListener('click',event=>{
     if(!publicLinks?.classList.contains('open'))return;
     if(publicLinks.contains(event.target)||publicMenuButton?.contains(event.target))return;
     closePublicMenu();
-  });
+  },bindingOptions);
   const sidebar=document.getElementById('sidebar');
   const sidebarToggle=document.getElementById('sidebarToggle');
   const appLayout=document.querySelector('.app-layout');
@@ -100,14 +105,14 @@ export function bindLayout() {
     if(event.target.closest('#sidebarToggle'))return;
     if(event.target.closest('#sidebar [data-link]')){closeSidebar();return;}
     if(event.target===appLayout)closeSidebar();
-  },true);
-  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeSidebar();});
+  },{capture:true,signal:bindingOptions.signal});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeSidebar();},bindingOptions);
   const accountToggle=document.getElementById('accountMenuToggle'),accountMenu=document.getElementById('accountMenu');
   const closeAccountMenu=()=>{if(accountMenu){accountMenu.hidden=true;accountToggle?.setAttribute('aria-expanded','false');}document.removeEventListener('click',outsideAccountClick);};
   const outsideAccountClick=event=>{if(!accountMenu?.contains(event.target)&&!accountToggle?.contains(event.target))closeAccountMenu();};
   accountToggle?.addEventListener('click',event=>{event.stopPropagation();if(!accountMenu)return;accountMenu.hidden=!accountMenu.hidden;accountToggle.setAttribute('aria-expanded',String(!accountMenu.hidden));if(!accountMenu.hidden)document.addEventListener('click',outsideAccountClick);else document.removeEventListener('click',outsideAccountClick);});
   accountMenu?.addEventListener('click',event=>event.stopPropagation());
-  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeAccountMenu();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeAccountMenu();},bindingOptions);
   document.getElementById('accountMenuSignOut')?.addEventListener('click',()=>document.getElementById('signOutButton')?.click());
 }
 export function escapeHtml(value='') { return String(value).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
