@@ -355,6 +355,15 @@ async function start() {
   try {
     currentSession = await getCurrentSession();
 
+    // Give expired or rejected password-reset links a useful recovery path instead of
+    // silently redirecting the visitor to sign-in with no explanation.
+    if (currentRoute() === '/reset-password' && !currentSession?.user) {
+      const detail = getEmailConfirmationError(window.location.search, window.location.hash);
+      const root = document.querySelector('#app');
+      root.innerHTML = `<main style="max-width:680px;margin:10vh auto;padding:28px;font-family:system-ui"><h1>Password reset link unavailable</h1><p>${escapeHtml(detail || 'This password reset link may have expired, already been used, or could not be verified.')}</p><p>Return to sign in and request a fresh password reset link.</p><p><a href="/login">Go to sign in</a> · <a href="/">Return to homepage</a></p></main>`;
+      return;
+    }
+
     // Email confirmation returns to the existing protected dashboard URL.
     // Supabase's URL detection exchanges the confirmation code before getSession resolves.
     if (emailConfirmationReturn) {
