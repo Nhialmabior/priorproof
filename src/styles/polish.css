@@ -177,7 +177,7 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
   .sidebar { padding-top: 22px; }
 }
 @media (max-width: 600px) {
-  .wrap { width: min(100% - 36px, 1160px); }
+  .wrap { width: min(calc(100% - 36px), 1160px); }
   .brand img, .side-brand img { width: 164px; }
   .hero { padding-top: 38px; padding-bottom: 44px; }
   .hero h1 { font-size: clamp(35px, 10vw, 46px); line-height: 1.09; }
