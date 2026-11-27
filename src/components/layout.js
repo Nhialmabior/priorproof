@@ -1,11 +1,13 @@
 import { navigate } from '../utils/router.js';
 
+const logoUrl = `${import.meta.env.BASE_URL}logo.svg`;
+
 let syncStatusListenerBound = false;
 let syncStatusHideTimer = null;
 let layoutBindingController = null;
 const avatarMarkup = user => user.profilePhoto ? `<img src="${escapeHtml(user.profilePhoto)}" alt="Profile photo">` : escapeHtml((user.fullName||'A').slice(0,1).toUpperCase());
 export function publicNav(active = '') {
-  return `<header class="public-nav"><a class="brand" href="/" data-link><img src="/logo.svg" alt="PriorProof"></a>
+  return `<header class="public-nav"><a class="brand" href="/" data-link><img src="${logoUrl}" alt="PriorProof"></a>
   <div class="nav-tools"><button class="mobile-menu" type="button" aria-label="Open navigation" aria-controls="publicLinks" aria-expanded="false" id="mobileMenu">☰</button></div>
   <nav id="publicLinks" aria-label="Main navigation"><a class="${active==='home'?'active':''}" href="/" data-link>Home</a><a class="${active==='how'?'active':''}" href="/how-it-works" data-link>How it works</a><a class="${active==='about'?'active':''}" href="/about" data-link>About</a><button class="theme-toggle public-theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">◐ <span>Dark mode</span></button><a class="nav-login" href="/login" data-link>Sign in</a><a class="btn btn-primary btn-small" href="/register" data-link>Get started</a></nav></header>`;
 }
@@ -16,7 +18,7 @@ const menu = [
 ];
 const routeLabels={'/app/dashboard':'Overview','/app/profile':'Profile','/app/experience':'Experience','/app/evidence':'Evidence','/app/competencies':'Skills','/app/gap-analysis':'Skills review','/app/portfolio':'Portfolio','/app/assessments':'Review packs','/app/settings':'Settings','/app/help':'Help & support'};
 export function appShell(content, active = '/app/dashboard', user = {}) {
-  return `<div class="app-layout"><aside class="sidebar" id="sidebar"><a href="/" data-link class="side-brand" aria-label="PriorProof home"><img src="/logo.svg" alt="PriorProof"></a><nav class="side-navigation" aria-label="Workspace navigation">
+  return `<div class="app-layout"><aside class="sidebar" id="sidebar"><a href="/" data-link class="side-brand" aria-label="PriorProof home"><img src="${logoUrl}" alt="PriorProof"></a><nav class="side-navigation" aria-label="Workspace navigation">
   <div class="side-label">WORKSPACE</div>
   ${menu.slice(0,3).map(item=>'<a class="side-link '+(active===item[1]?'selected':'')+'" href="'+item[1]+'" data-link aria-current="'+(active===item[1]?'page':'false')+'"><span class="side-icon" aria-hidden="true">'+item[2]+'</span><span>'+item[0]+'</span></a>').join('')}
   <div class="side-label">SKILLS &amp; PORTFOLIO</div>
