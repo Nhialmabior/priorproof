@@ -10,7 +10,7 @@ import { bindLayout, escapeHtml } from './components/layout.js';
 import { homePage, aboutPage, howPage, privacyPage, termsPage } from './pages/public.js';
 import { dashboardPage, profilePage, experiencePage, evidencePage, competenciesPage, gapPage, portfolioPage, assessmentsPage, settingsPage, helpPage, authPage, passwordResetPage, bindAppActions } from './pages/app.js';
 import { getData, loadUserWorkspace, clearActiveWorkspace, flushWorkspaceSave } from './services/storage.js';
-import { getSupabase, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, resendSignupConfirmation, sendPasswordReset, updateAccountPassword, signOut, onAuthStateChange } from './services/supabase.js';
+import { getSupabase, isSupabaseConfigured, getCurrentSession, signInWithGoogle, signInWithPassword, signUpWithPassword, resendSignupConfirmation, sendPasswordReset, updateAccountPassword, signOut, onAuthStateChange } from './services/supabase.js';
 import { validateProfileName } from './utils/profileValidation.js';
 import { validateStrongPassword, validatePasswordReset } from './utils/passwordValidation.js';
 import { isEmailConfirmationCallback, getEmailConfirmationError } from './utils/authCallback.js';
@@ -102,6 +102,9 @@ async function render() {
   }
 
   document.querySelector('#app').innerHTML = html;
+  if ((route === '/login' || route === '/register') && !isSupabaseConfigured()) {
+    setFeedback('Account access is not configured yet. You can browse the public site, but sign-in and workspace features are temporarily unavailable.', 'error');
+  }
 
   // Move keyboard and screen-reader focus to the new page heading after SPA navigation.
   const pageHeading = document.querySelector('#app h1');

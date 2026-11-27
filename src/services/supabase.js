@@ -2,11 +2,17 @@ import { createClient } from '@supabase/supabase-js';
 
 let client;
 
+// GitHub Pages can serve the public site without backend credentials.
+// Authentication and workspace features remain unavailable until Supabase is configured.
+export function isSupabaseConfigured() {
+  return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+}
+
 export function getSupabase() {
   const url = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   if (!url || !anonKey) {
-    throw new Error('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your local .env file.');
+    throw new Error('Account access is not configured yet. The public PriorProof website is available, but sign-in and workspace features require the Supabase project settings.');
   }
   if (!client) {
     client = createClient(url, anonKey, {
@@ -65,6 +71,7 @@ export async function updateAccountPassword(password) {
 }
 
 export async function getCurrentSession() {
+  if (!isSupabaseConfigured()) return null;
   const { data, error } = await getSupabase().auth.getSession();
   if (error) throw error;
   return data.session;
@@ -75,6 +82,7 @@ export async function signOut(options) {
 }
 
 export function onAuthStateChange(callback) {
+  if (!isSupabaseConfigured()) return { data: { subscription: { unsubscribe() {} } } };
   return getSupabase().auth.onAuthStateChange(callback);
 }
 
