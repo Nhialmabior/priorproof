@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex">
+  <title>Redirecting · PriorProof</title>
+  <script>
+    (function () {
+      var base = '/priorproof';
+      var path = window.location.pathname;
+      var route = path.indexOf(base) === 0 ? path.slice(base.length) : '/';
+      var query = window.location.search || '';
+      var hash = window.location.hash || '';
+      window.location.replace(base + '/?__route=' + encodeURIComponent(route + query + hash));
+    })();
+  </script>
+</head>
+<body>
+  <p>Returning to PriorProof…</p>
+</body>
+</html>

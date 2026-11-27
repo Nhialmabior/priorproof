@@ -1,2 +1,4 @@
 import { defineConfig } from 'vite';
-export default defineConfig({ base: '/' });
+
+// GitHub Pages publishes this repository under /priorproof/.
+export default defineConfig({ base: '/priorproof/' });
