@@ -4,6 +4,7 @@ import './styles/public.css';
 import './styles/dashboard.css';
 import './styles/responsive.css';
 import './styles/dark-mode.css';
+import './styles/polish.css';
 import { currentRoute, navigate } from './utils/router.js';
 import { bindLayout, escapeHtml } from './components/layout.js';
 import { homePage, aboutPage, howPage, privacyPage, termsPage } from './pages/public.js';
